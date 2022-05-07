@@ -3,17 +3,15 @@ import syntax.syntaxCL semantics.semanticsCL
 variable {agents : Type}
 variable {N : set agents}
 
-open formCL
-open set
-open frame model
-open classical
+open formCL frameCL modelCL
+open set classical
 
 
-def regular (f : frame agents) :=
+def regular (f : frameCL agents) :=
   ∀ s: f.states, ∀ G: set agents, ∀ X: set f.states, 
     X ∈ f.E (s) (G) → Xᶜ ∉ f.E (s) (Gᶜ)
 
-def N_max (f : frame agents):= 
+def N_max (f : frameCL agents):= 
   ∀ s: f.states, ∀ X: set f.states, 
     Xᶜ ∉ f.E (s) (∅) → X ∈ f.E (s) (univ)
 
@@ -21,7 +19,7 @@ def N_max (f : frame agents):=
 -- Structures
 ----------------------------------------------------------
 structure playable_effectivity_fun (agents: Type) :=
-(f : frame agents)
+(f : frameCL agents)
 (liveness:  ∀ s: f.states, ∀ G: set agents,
               ∅ ∉ f.E (s) (G))
 (safety:    ∀ s: f.states, ∀ G: set agents,
@@ -34,7 +32,7 @@ structure playable_effectivity_fun (agents: Type) :=
                 X ∩ Y ∈ f.E (s) (G ∪ F))
 
 structure semi_playable_effectivity_fun (agents: Type) :=
-(f : frame agents)
+(f : frameCL agents)
 (semi_liveness:  ∀ s: f.states, ∀ G: set agents,
                     G ⊂ univ → ∅ ∉ f.E (s) (G))
 (semi_safety:    ∀ s: f.states, ∀ G: set agents,

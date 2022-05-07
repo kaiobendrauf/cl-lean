@@ -4,44 +4,33 @@ import syntax.syntaxCL data.set.basic
 local attribute [instance] classical.prop_decidable
 
 variable {agents : Type}
--- open formPA s
-open formCL
-open set
 
+open formCL
 
 ---------------------- Semantics ----------------------
 
-structure frame (agents : Type) :=
+structure frameCL (agents : Type) :=
 (states : Type)
 (hs : nonempty states)
 (ha : nonempty agents)
 (E : states → ((set agents) → (set (set (states)))))
+-- (E: states → (set agents) → Prop)
 
-structure model (agents : Type) :=
-(f : frame agents)
+structure modelCL (agents : Type) :=
+(f : frameCL agents)
 (v : f.states → set ℕ)
 
 -- Definition of semantic entailment
-def s_entails : ∀ m : model agents,
+def s_entails : ∀ m : modelCL agents,
   m.f.states → formCL agents → Prop
   | m s bot           := false
   | m s (var n)       := n ∈ m.v s
   | m s (imp φ ψ)     := (s_entails m s φ) → (s_entails m s ψ)
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
-  | m s ([G] φ)       := (∃ ts, ts ∈ (m.f.E s G) ∧ ∀ t, (t ∈ ts → s_entails m t φ))
-
-
--- def s_entails : ∀ f : frame agents, 
---   (nat → f.states → Prop) → f.states → formCL agents → Prop
---   | f v s bot           := false
---   | f v s (var n)       := v n s
---   | f v s (imp φ ψ)     := (s_entails f v s φ) → (s_entails f v s ψ)
---   | f v s (and φ ψ)     := (s_entails f v s φ) ∧ (s_entails f v s ψ)
---   | f v s (E C φ)       := (∃ os, os ∈ (f.e s C) ∧ ∀ s', (s' ∈ os → s_entails f v s' φ))
-
+  | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E (s) (G)
 
 -- φ is valid in a model M = (f,v)
-def m_valid (φ : formCL agents) (m: model agents) := 
+def valid_m (φ : formCL agents) (m: modelCL agents) := 
   ∀ s, s_entails m s φ
 
 -- -- φ is valid in a frame f
@@ -69,7 +58,7 @@ def m_valid (φ : formCL agents) (m: model agents) :=
 --   ∀ f v, s_entails_ctx f v Γ → ∀ x, s_entails f v x φ
 
 
-lemma not_s_entails_imp (m : model agents) : ∀ s φ, 
+lemma not_s_entails_imp (m : modelCL agents) : ∀ s φ, 
   (¬(s_entails m s φ)) ↔ (s_entails m s (¬ φ)) :=
 begin
 intros s φ, split, 
