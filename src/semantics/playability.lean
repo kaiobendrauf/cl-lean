@@ -8,6 +8,7 @@ open set
 open frame model
 open classical
 
+
 def regular (f : frame agents) :=
   ∀ s: f.states, ∀ G: set agents, ∀ X: set f.states, 
     X ∈ f.E (s) (G) → Xᶜ ∉ f.E (s) (Gᶜ)
@@ -16,7 +17,9 @@ def N_max (f : frame agents):=
   ∀ s: f.states, ∀ X: set f.states, 
     Xᶜ ∉ f.E (s) (∅) → X ∈ f.E (s) (univ)
 
-
+----------------------------------------------------------
+-- Structures
+----------------------------------------------------------
 structure playable_effectivity_fun (agents: Type) :=
 (f : frame agents)
 (liveness:  ∀ s: f.states, ∀ G: set agents,
@@ -42,62 +45,44 @@ structure semi_playable_effectivity_fun (agents: Type) :=
                     G ∪ F ⊂ univ → X ∈ f.E (s) (G) → Y ∈ f.E (s) (F) → G ∩ F = ∅ →
                       X ∩ Y ∈ f.E (s) (G ∪ F))
 
+----------------------------------------------------------
+-- Set Helper Functions
+----------------------------------------------------------
 def empty_subset_univ {α: Type} (h: nonempty α): ∅ ⊂ @univ (α) :=
   by simp[empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
--- begin
---   rw empty_ssubset,
---   exact nonempty_iff_univ_nonempty.mp h,
--- end
   
 def empty_union_subset_univ {α: Type} (h: nonempty α): ∅ ∪ ∅ ⊂ @univ (α) :=
   by simp[union_self, empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
 
 def intersect_complement {α: Type} (X Y: set α): (X ∩ Y)ᶜ ∩ Y = Xᶜ ∩ Y :=
   by simp[compl_inter, inter_distrib_right, compl_inter_self]
---   calc (X ∩ Y)ᶜ ∩ X 
---     = (Xᶜ ∪ Yᶜ) ∩ X:
---       by rw compl_inter
--- ... = (Xᶜ ∩ X) ∪ (Yᶜ ∩ X):
---       by rw inter_distrib_right
--- ... = (∅) ∪ (Yᶜ ∩ X):  
---       by rw compl_inter_self
--- ... = Yᶜ ∩ X:
---       by simp
 
-def show_complement {α: Type} (X Y: set α) (hint: X ∩ Y = ∅) (hunion: X ∪ Y  = univ): Xᶜ = Y :=
+def show_complement {α: Type} (A B: set α) (hint: A ∩ B = ∅) (hunion: A ∪ B  = univ): A = Bᶜ :=
 begin
   ext,
   have huniv: x ∈ univ, from mem_univ x,
-  rw ←hunion at huniv,
+  rw ←hunion at huniv, -- exact hx huniv,
   apply iff.intro,
   {
     intro hx,
-    cases huniv,
-  {
-    by_contradiction,
-    exact hx huniv,
-  },
-    exact huniv,
+    by_contradiction hfalse,
+    simp at hfalse,
+    have hint': x ∈ B ∩ A, from mem_inter hfalse hx,
+      rw inter_comm at hint', -- x ∈ A ∩ B
+    exact eq_empty_iff_forall_not_mem.mp hint x hint',
   },
   {
     intro hx,
+    by_contradiction hfalse,
     cases huniv,
-    {
-      by_contradiction,
-      have hint': x ∈ X ∩ Y, from mem_inter huniv hx,
-      exact eq_empty_iff_forall_not_mem.mp hint x hint'
-    },
-    {
-      by_contradiction,
-      simp at *,
-      have hint': x ∈ X ∩ Y, from mem_inter h hx,
-      exact eq_empty_iff_forall_not_mem.mp hint x hint',
-    }
-  }
-  
+    { exact hfalse huniv, },
+    {exact hx huniv, },
+  },
 end
 
-
+----------------------------------------------------------
+-- Semi & Playable
+----------------------------------------------------------
 def playable_from_semi_Nmax_reg (semi: semi_playable_effectivity_fun agents) (hNmax: N_max semi.f) (hReg: regular semi.f): playable_effectivity_fun agents :=
   have hLiveness: ∀ s: semi.f.states, ∀ G: set agents, ∅ ∉ semi.f.E (s) (G), from
   begin
@@ -147,76 +132,53 @@ def playable_from_semi_Nmax_reg (semi: semi_playable_effectivity_fun agents) (hN
 
   have hSuperadd: ∀ s: semi.f.states, ∀ G F: set agents, ∀ X Y: set semi.f.states, X ∈ semi.f.E (s) (G) → Y ∈ semi.f.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.f.E (s) (G ∪ F), from 
   
-  have hcaseN: ∀ s: semi.f.states, ∀ X Y: set semi.f.states, X ∈ semi.f.E (s) (univ) → Y ∈ semi.f.E (s) (∅) → X ∩ Y ∈ semi.f.E (s) (univ ∪ ∅), from 
-  begin
-    intros s X Y hX hY,
-    by_contradiction hf,
-    simp at *,
-    have hifIntc: (X ∩ Y)ᶜ ∉ semi.f.E s ∅ → X ∩ Y ∈ semi.f.E s univ, from hNmax s (X ∩ Y),
-    have hifInt: X ∩ Y ∉ semi.f.E s univ → ¬(X ∩ Y)ᶜ ∉ semi.f.E s ∅, from mt hifIntc,
-    have hIntc: ¬(X ∩ Y)ᶜ ∉ semi.f.E s ∅, from hifInt hf,
-    simp at *,
-    
-    have hIntc': (X ∩ Y)ᶜ ∩ Y ∈ semi.f.E s (∅ ∪ ∅), from semi.semi_superadd s ∅ ∅ (X ∩ Y)ᶜ Y (empty_union_subset_univ semi.f.ha) hIntc hY (inter_self ∅),
-    simp [intersect_complement, union_self] at hIntc',
-    have hXc: _, from semi.semi_monoticity s ∅ (Xᶜ ∩ Y) Xᶜ (empty_subset_univ semi.f.ha) (by simp) hIntc',
-    have hX': Xᶜᶜ ∉ semi.f.E s ∅ᶜ, from hReg s ∅ Xᶜ hXc,
-    simp[compl_compl, compl_empty] at hX',
-    exact hX' hX,
-  end,
+    have hSuperadd': ∀ s: semi.f.states, ∀ G F: set agents, ∀ X Y: set semi.f.states,
+      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ  → X ∈ semi.f.E (s) (G) → Y ∈ semi.f.E (s) (F) → 
+      X ∩ Y ∈ semi.f.E (s) (G ∪ F), from 
+    begin
+      intros s G F X Y hint hunion hF hX hY,
+      by_contradiction hfalse,
+      rw hunion at hfalse, -- X ∩ Y ∉ semi.f.E s univ
 
+      have hIntc: ¬(X ∩ Y)ᶜ ∉ semi.f.E s ∅, 
+        from (mt (hNmax s (X ∩ Y))) hfalse,
+      simp at hIntc, -- (X ∩ Y)ᶜ ∈ semi.f.E s ∅
+
+      have hIntXc: (X ∩ Y)ᶜ ∩ Y ∈ semi.f.E s (∅ ∪ F),
+        from semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp [hF]) hIntc hY (empty_inter F),
+      simp [intersect_complement] at hIntXc, -- Xᶜ ∩ Y ∈ semi.f.E s F
+
+      have hXc: Xᶜ ∈ semi.f.E s F, 
+        from semi.semi_monoticity s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc,
+
+      have hX': Xᶜᶜ ∉ semi.f.E s Fᶜ, 
+        from hReg s F Xᶜ hXc,
+      simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX', -- hX': X ∉ semi.f.E s G
+  
+      exact hX' hX,
+    end,
 
   begin
-    intros s G F X Y hX hY hInt,
+    intros s G F X Y hX hY hint,
     cases (ssubset_or_eq_of_subset (subset_univ (G ∪ F))),
-    {exact semi.semi_superadd s G F X Y h hX hY hInt,},
+    -- Case: G ∪ F ⊂ N
+    {exact semi.semi_superadd s G F X Y h hX hY hint,},
     {
-      -- by_contradiction hf,
       cases (ssubset_or_eq_of_subset (subset_univ (G))), 
+      -- Case: G ⊂ N
       {
-        cases (ssubset_or_eq_of_subset (subset_univ (F))),
-        {
-          -- Case: G & F both not N
-          by_contradiction hf,
-          simp at *,
-          have hifIntc: _, from hNmax s (X ∩ Y),
-          rw hInt at *,
-          have hifInt: X ∩ Y ∉ semi.f.E s univ → ¬(X ∩ Y)ᶜ ∉ semi.f.E s ∅, from mt hifIntc,
-          rw h at *,
-          have hIntc: _, from hifInt hf,
-          simp at hIntc,
-          have hIntc': _, from semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp [h_2]) hIntc hY (by simp),
-          rw intersect_complement at hIntc',
-          rw union_comm at hIntc',
-          rw union_empty at hIntc',
-          have hXc: _, from semi.semi_monoticity s F (Xᶜ ∩ Y) Xᶜ h_2 (by simp) hIntc',
-          have hX': _, from hReg s F Xᶜ hXc,
-          rw compl_compl X at hX',
-          rw inter_comm at hInt,
-          rw union_comm at h,
-          have hcompl: Fᶜ = G, from show_complement F G hInt h,
-          rw hcompl at hX',
-          exact hX' hX,
-        },
-        {
-          -- Case: F = N
-          simp [h_2] at *,
-          simp [hInt, inter_comm X Y] at *,
-          exact hcaseN s Y X hY hX,
-        },
+        simp[inter_comm X Y, inter_comm G F, union_comm G F] at *,
+        exact hSuperadd' s F G Y X hint h h_1 hY hX,
       },
       {
         cases (ssubset_or_eq_of_subset (subset_univ (F))),
-        {
-          -- Case: G = N
-          simp [h_1] at *,
-          simp [hInt] at *,
-          exact hcaseN s X Y hX hY,
-        },
+        -- Case: G = N, F ⊂ N
+        { exact hSuperadd' s G F X Y hint h h_2 hX hY, },
+        -- Case:G = N, F = N
         {
           by_contradiction,
           simp [h_1, h_2, inter_self (@univ agents)] at *,
-          exact not_is_empty_iff.mpr semi.f.ha hInt,
+          exact not_is_empty_iff.mpr semi.f.ha hint,
         },
       },
     },
