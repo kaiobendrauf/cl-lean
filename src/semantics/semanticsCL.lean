@@ -31,13 +31,16 @@ def s_entails : ∀ m : modelCL agents,
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
   | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
 
+def tilde (m: modelCL agents) (φ : formCL agents)  :=
+{t: m.f.states | s_entails m t φ}
+
 
 -- φ is valid in a model M = (f,v)
-def valid_m (φ : formCL agents) (m: modelCL agents) := 
+def valid_m (m: modelCL agents) (φ : formCL agents) := 
   ∀ s, s_entails m s φ
 
 def global_valid (φ : formCL agents) :=
-  ∀ m, valid_m  φ m
+  ∀ m, valid_m m φ
 
 -- -- φ is valid in a frame f
 -- def f_valid (φ : formCL agents) (f : frame agents) := 
