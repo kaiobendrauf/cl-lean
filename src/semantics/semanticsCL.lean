@@ -1,11 +1,11 @@
-import syntax.syntaxCL data.set.basic
+import syntax.syntaxCL semantics.playability
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
 
 variable {agents : Type}
 
-open formCL
+open formCL set
 
 ---------------------- Semantics ----------------------
 
@@ -13,25 +13,31 @@ structure frameCL (agents : Type) :=
 (states : Type)
 (hs : nonempty states)
 (ha : nonempty agents)
-(E : states → ((set agents) → (set (set (states)))))
+-- (E : states → ((set agents) → (set (set (states)))))
+(E: playable_effectivity_fun agents states ha)
+
 -- (E: states → (set agents) → Prop)
 
 structure modelCL (agents : Type) :=
 (f : frameCL agents)
 (v : f.states → set ℕ)
 
--- Definition of semantic entailment
+-- Definition of semantic entailmentf
 def s_entails : ∀ m : modelCL agents,
   m.f.states → formCL agents → Prop
   | m s bot           := false
   | m s (var n)       := n ∈ m.v s
   | m s (imp φ ψ)     := (s_entails m s φ) → (s_entails m s ψ)
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
-  | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E (s) (G)
+  | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
+
 
 -- φ is valid in a model M = (f,v)
 def valid_m (φ : formCL agents) (m: modelCL agents) := 
   ∀ s, s_entails m s φ
+
+def global_valid (φ : formCL agents) :=
+  ∀ m, valid_m  φ m
 
 -- -- φ is valid in a frame f
 -- def f_valid (φ : formCL agents) (f : frame agents) := 
@@ -84,3 +90,4 @@ end
 -- intro h3,
 -- exact absurd h2 (h3 y h1)
 -- ends
+

@@ -1,4 +1,4 @@
-import syntax.syntaxCL
+import syntax.syntaxCL 
 import data.set.basic
 
 open set
@@ -32,3 +32,4 @@ inductive axCL : formCL agents  → Prop
         (hImp: axCL (φ ~> ψ)) : axCL (ψ)
 | Eq    {φ ψ} {G}
         (h: axCL (φ ↔ ψ))     : axCL ([G] φ ↔ [G] ψ)
+

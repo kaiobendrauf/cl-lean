@@ -1,47 +1,47 @@
-import syntax.syntaxCL semantics.semanticsCL
+import syntax.syntaxCL data.set.basic
 
 variable {agents : Type}
 variable {N : set agents}
 
-open formCL frameCL modelCL
+open formCL 
 open set classical
 
 
-def regular (f : frameCL agents) :=
-  ∀ s: f.states, ∀ G: set agents, ∀ X: set f.states, 
-    X ∈ f.E (s) (G) → Xᶜ ∉ f.E (s) (Gᶜ)
+def regular (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) :=
+  ∀ s: states, ∀ G: set agents, ∀ X: set states, 
+    X ∈ E (s) (G) → Xᶜ ∉ E (s) (Gᶜ)
 
-def N_max (f : frameCL agents):= 
-  ∀ s: f.states, ∀ X: set f.states, 
-    Xᶜ ∉ f.E (s) (∅) → X ∈ f.E (s) (univ)
+def N_max (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) := 
+  ∀ s: states, ∀ X: set states, 
+    Xᶜ ∉ E (s) (∅) → X ∈ E (s) (univ)
 
 ----------------------------------------------------------
 -- Structures
 ----------------------------------------------------------
-structure playable_effectivity_fun (agents: Type) :=
-(f : frameCL agents)
-(liveness:  ∀ s: f.states, ∀ G: set agents,
-              ∅ ∉ f.E (s) (G))
-(safety:    ∀ s: f.states, ∀ G: set agents,
-              univ ∈ f.E (s) (G))
-(N_max     : N_max f)
-(monoticity:∀ s: f.states, ∀ G: set agents, ∀ X Y: set f.states,
-              X ⊆ Y → X ∈ f.E (s) (G) → Y ∈ f.E (s) (G))
-(superadd:  ∀ s: f.states, ∀ G F: set agents, ∀ X Y: set f.states,
-              X ∈ f.E (s) (G) → Y ∈ f.E (s) (F) → G ∩ F = ∅ →
-                X ∩ Y ∈ f.E (s) (G ∪ F))
+structure playable_effectivity_fun (agents: Type) (states: Type) (ha: nonempty agents) :=
+(E : states → ((set agents) → (set (set (states)))))
+(liveness:  ∀ s: states, ∀ G: set agents,
+              ∅ ∉ E (s) (G))
+(safety:    ∀ s: states, ∀ G: set agents,
+              univ ∈ E (s) (G))
+(N_max     : N_max agents states E)
+(monoticity:∀ s: states, ∀ G: set agents, ∀ X Y: set states,
+              X ⊆ Y → X ∈ E (s) (G) → Y ∈ E (s) (G))
+(superadd:  ∀ s: states, ∀ G F: set agents, ∀ X Y: set states,
+              X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
+                X ∩ Y ∈ E (s) (G ∪ F))
 
-structure semi_playable_effectivity_fun (agents: Type) :=
-(f : frameCL agents)
-(semi_liveness:  ∀ s: f.states, ∀ G: set agents,
-                    G ⊂ univ → ∅ ∉ f.E (s) (G))
-(semi_safety:    ∀ s: f.states, ∀ G: set agents,
-                    G ⊂ univ → univ ∈ f.E (s) (G))
-(semi_monoticity:∀ s: f.states, ∀ G: set agents, ∀ X Y: set f.states,
-                    G ⊂ univ → X ⊆ Y → X ∈ f.E (s) (G) → Y ∈ f.E (s) (G))
-(semi_superadd:  ∀ s: f.states, ∀ G F: set agents, ∀ X Y: set f.states,
-                    G ∪ F ⊂ univ → X ∈ f.E (s) (G) → Y ∈ f.E (s) (F) → G ∩ F = ∅ →
-                      X ∩ Y ∈ f.E (s) (G ∪ F))
+structure semi_playable_effectivity_fun (agents: Type) (states: Type) (ha: nonempty agents) :=
+(E : states → ((set agents) → (set (set (states)))))
+(semi_liveness:  ∀ s: states, ∀ G: set agents,
+                    G ⊂ univ → ∅ ∉ E (s) (G))
+(semi_safety:    ∀ s: states, ∀ G: set agents,
+                    G ⊂ univ → univ ∈ E (s) (G))
+(semi_monoticity:∀ s: states, ∀ G: set agents, ∀ X Y: set states,
+                    G ⊂ univ → X ⊆ Y → X ∈ E (s) (G) → Y ∈ E (s) (G))
+(semi_superadd:  ∀ s: states, ∀ G F: set agents, ∀ X Y: set states,
+                    G ∪ F ⊂ univ → X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
+                      X ∩ Y ∈ E (s) (G ∪ F))
 
 ----------------------------------------------------------
 -- Set Helper Functions
@@ -81,77 +81,77 @@ end
 ----------------------------------------------------------
 -- Semi & Playable
 ----------------------------------------------------------
-def playable_from_semi_Nmax_reg (semi: semi_playable_effectivity_fun agents) (hNmax: N_max semi.f) (hReg: regular semi.f): playable_effectivity_fun agents :=
-  have hLiveness: ∀ s: semi.f.states, ∀ G: set agents, ∅ ∉ semi.f.E (s) (G), from
+def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun agents states ha) (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): playable_effectivity_fun agents states ha :=
+  have hLiveness: ∀ s: states, ∀ G: set agents, ∅ ∉ semi.E (s) (G), from
   begin
     intros s G,
     cases (ssubset_or_eq_of_subset (subset_univ G)),
     {exact semi.semi_liveness s G h,},
     {
       rw h,
-      have hS: univ ∈ semi.f.E (s) (∅), from semi.semi_safety s ∅ (empty_subset_univ semi.f.ha),
-      have hif: univ ∈ semi.f.E (s) (∅) → univᶜ ∉ semi.f.E (s) (∅ᶜ), from hReg s ∅ univ,
+      have hS: univ ∈ semi.E (s) (∅), from semi.semi_safety s ∅ (empty_subset_univ ha),
+      have hif: univ ∈ semi.E (s) (∅) → univᶜ ∉ semi.E (s) (∅ᶜ), from hReg s ∅ univ,
       simp[compl_univ, compl_empty] at hif,
       exact hif hS,
     },
   end,
 
-  have hSafety: ∀ s: semi.f.states, ∀ G: set agents, univ ∈ semi.f.E (s) (G), from 
+  have hSafety: ∀ s: states, ∀ G: set agents, univ ∈ semi.E (s) (G), from 
   begin
     intros s G,
     cases (ssubset_or_eq_of_subset (subset_univ G)),
     {exact semi.semi_safety s G h,},
     {
       rw h,
-      have h0: ∅ ∉ semi.f.E (s) (∅), from semi.semi_liveness s ∅ (empty_subset_univ semi.f.ha),
-      have hif: univᶜ ∉ semi.f.E (s) (∅) → univ ∈ semi.f.E (s) (univ), from hNmax s univ,
+      have h0: ∅ ∉ semi.E (s) (∅), from semi.semi_liveness s ∅ (empty_subset_univ ha),
+      have hif: univᶜ ∉ semi.E (s) (∅) → univ ∈ semi.E (s) (univ), from hNmax s univ,
       simp[compl_univ] at hif,
       exact hif h0,
     }
   end,
 
-  have hMonoticity: ∀ s: semi.f.states, ∀ G: set agents, ∀ X Y: set semi.f.states, X ⊆ Y → X ∈ semi.f.E (s) (G) → Y ∈ semi.f.E (s) (G), 
+  have hMonoticity: ∀ s: states, ∀ G: set agents, ∀ X Y: set states, X ⊆ Y → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (G), 
   begin
     intros s G X Y hXY hX,
     cases (ssubset_or_eq_of_subset (subset_univ G)),
     {exact semi.semi_monoticity s G X Y h hXY hX,},
     {
       rw h at *,
-      have hXc: Xᶜ ∉ semi.f.E s univᶜ, from hReg s univ X hX,
+      have hXc: Xᶜ ∉ semi.E s univᶜ, from hReg s univ X hX,
       simp[compl_univ] at hXc,
       have hXYc: Yᶜ ⊆ Xᶜ, from compl_subset_compl.mpr hXY,
-      have hmono: Yᶜ ∈ semi.f.E s ∅ → Xᶜ ∈ semi.f.E s ∅, from semi.semi_monoticity s ∅ Yᶜ Xᶜ (empty_subset_univ semi.f.ha) hXYc,
-      have hmono': Xᶜ ∉ semi.f.E s ∅ → Yᶜ ∉ semi.f.E s ∅, from mt hmono,
+      have hmono: Yᶜ ∈ semi.E s ∅ → Xᶜ ∈ semi.E s ∅, from semi.semi_monoticity s ∅ Yᶜ Xᶜ (empty_subset_univ ha) hXYc,
+      have hmono': Xᶜ ∉ semi.E s ∅ → Yᶜ ∉ semi.E s ∅, from mt hmono,
       have hYc, from hmono' hXc,
-      have hif: Yᶜ ∉ semi.f.E s ∅ → Y ∈ semi.f.E s univ, from hNmax s Y,
+      have hif: Yᶜ ∉ semi.E s ∅ → Y ∈ semi.E s univ, from hNmax s Y,
       exact hif hYc,
     }
   end,
 
-  have hSuperadd: ∀ s: semi.f.states, ∀ G F: set agents, ∀ X Y: set semi.f.states, X ∈ semi.f.E (s) (G) → Y ∈ semi.f.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.f.E (s) (G ∪ F), from 
+  have hSuperadd: ∀ s: states, ∀ G F: set agents, ∀ X Y: set states, X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.E (s) (G ∪ F), from 
   
-    have hSuperadd': ∀ s: semi.f.states, ∀ G F: set agents, ∀ X Y: set semi.f.states,
-      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ  → X ∈ semi.f.E (s) (G) → Y ∈ semi.f.E (s) (F) → 
-      X ∩ Y ∈ semi.f.E (s) (G ∪ F), from 
+    have hSuperadd': ∀ s: states, ∀ G F: set agents, ∀ X Y: set states,
+      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ  → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → 
+      X ∩ Y ∈ semi.E (s) (G ∪ F), from 
     begin
       intros s G F X Y hint hunion hF hX hY,
       by_contradiction hfalse,
-      rw hunion at hfalse, -- X ∩ Y ∉ semi.f.E s univ
+      rw hunion at hfalse, -- X ∩ Y ∉ semi.E s univ
 
-      have hIntc: ¬(X ∩ Y)ᶜ ∉ semi.f.E s ∅, 
+      have hIntc: ¬(X ∩ Y)ᶜ ∉ semi.E s ∅, 
         from (mt (hNmax s (X ∩ Y))) hfalse,
-      simp at hIntc, -- (X ∩ Y)ᶜ ∈ semi.f.E s ∅
+      simp at hIntc, -- (X ∩ Y)ᶜ ∈ semi.E s ∅
 
-      have hIntXc: (X ∩ Y)ᶜ ∩ Y ∈ semi.f.E s (∅ ∪ F),
+      have hIntXc: (X ∩ Y)ᶜ ∩ Y ∈ semi.E s (∅ ∪ F),
         from semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp [hF]) hIntc hY (empty_inter F),
-      simp [intersect_complement] at hIntXc, -- Xᶜ ∩ Y ∈ semi.f.E s F
+      simp [intersect_complement] at hIntXc, -- Xᶜ ∩ Y ∈ semi.E s F
 
-      have hXc: Xᶜ ∈ semi.f.E s F, 
+      have hXc: Xᶜ ∈ semi.E s F, 
         from semi.semi_monoticity s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc,
 
-      have hX': Xᶜᶜ ∉ semi.f.E s Fᶜ, 
+      have hX': Xᶜᶜ ∉ semi.E s Fᶜ, 
         from hReg s F Xᶜ hXc,
-      simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX', -- hX': X ∉ semi.f.E s G
+      simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX', -- hX': X ∉ semi.E s G
   
       exact hX' hX,
     end,
@@ -176,11 +176,12 @@ def playable_from_semi_Nmax_reg (semi: semi_playable_effectivity_fun agents) (hN
         {
           by_contradiction,
           simp [h_1, h_2, inter_self (@univ agents)] at *,
-          exact not_is_empty_iff.mpr semi.f.ha hint,
+          exact hReg s univ X hX (false.rec (Xᶜ ∈ semi.E s univᶜ) hint),
+          -- exact not_is_empty_iff.mpr ha hint,
         },
       },
     },
   end,
 
-  playable_effectivity_fun.mk semi.f hLiveness hSafety hNmax hMonoticity hSuperadd
+  playable_effectivity_fun.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
 
