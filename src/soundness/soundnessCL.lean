@@ -11,7 +11,7 @@ variable {agents : Type}
 
 ---------------------- Soundness ----------------------
 
-theorem soundness (φ : formCL agents) : axCL φ → global_valid φ :=
+theorem soundnessCL (φ : formCL agents) : axCL φ → global_valid φ :=
 begin
 intro h,
 induction h,

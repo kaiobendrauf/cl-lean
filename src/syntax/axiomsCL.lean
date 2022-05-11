@@ -33,3 +33,9 @@ inductive axCL : formCL agents  → Prop
 | Eq    {φ ψ} {G}
         (h: axCL (φ ↔ ψ))     : axCL (([G] φ) ↔ ([G] ψ))
 
+structure formula (form: Type) :=
+(bot : form)
+(and : form → form → form)
+(imp : form → form → form)
+(top : form)
+(ax  : form → Prop)

@@ -19,4 +19,10 @@ notation φ `∨` ψ      := ¬ (( ¬ φ) & (¬ ψ))
 notation φ `↔` ψ      := (φ ~> ψ) & (ψ ~> φ)
 
 
-variable {agents : Type}
+-- variable {agents : Type}
+
+-- structure formula (form: Type) :=
+-- (bot : form)
+-- (and : form → form → form)
+-- (imp : form → form → form)
+-- (top : form)
