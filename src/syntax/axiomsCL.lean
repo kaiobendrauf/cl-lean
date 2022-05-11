@@ -39,3 +39,12 @@ structure formula (form: Type) :=
 (imp : form → form → form)
 (top : form)
 (ax  : form → Prop)
+
+def formulaCL: formula (formCL agents) :=
+{
+  bot := ⊥,
+  and := formCL.and,
+  imp := formCL.imp,
+  top := ⊤,
+  ax  := axCL
+}

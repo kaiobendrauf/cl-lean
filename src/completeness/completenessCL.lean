@@ -1,4 +1,4 @@
-import syntax.axiomsCL semantics.semanticsCL 
+import syntax.axiomsCL semantics.semanticsCL semantics.consistency
 -- import basicmodal.semantics.consistesncy
 
 local attribute [instance] classical.prop_decidable
@@ -34,17 +34,26 @@ namespace canonical
 def canonicalCL (ha: nonempty agents) : frameCL agents := 
 
 { 
-  states := {Γ : (set (formCL agents)) // (max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤)},
-  hs :=
-        begin
-          have h1: max_ax_exists 
-        end,
+  states := {Γ : (set (formCL agents)) // (max_ax_consistent formulaCL Γ)},
+  hs := sorry,
+        -- begin
+        --   have h1: max_ax_exists 
+        -- end,
   ha := ha,
-  E := λ s, λ G, {X | ite (G = univ) 
-      -- condition G = N
-      (∃ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consist Γ}| φ ∈ (t.val)} ⊆ X ∧ ([G] φ) ∈ s.val)
-      -- condition G ≠ N
-      (∀ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consist Γ}| φ ∈ (t.val)} ⊆ Xᶜ → ([∅] φ) ∉ s.val)}
+  E :=
+    { 
+      E := λ s, λ G, {X | ite (G = univ) 
+        -- condition G = N
+        (∃ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consistent formulaCL Γ}| φ ∈ (t.val)} ⊆ X ∧ ([G] φ) ∈ s.val)
+        -- condition G ≠ N
+        (∀ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consistent formulaCL Γ}| φ ∈ (t.val)} ⊆ Xᶜ → ([∅] φ) ∉ s.val)},
+      
+      liveness    := sorry,
+      safety      := sorry,
+      N_max       := sorry,
+      monoticity  := sorry,
+      superadd    := sorry,
+    }
 }
 
 
