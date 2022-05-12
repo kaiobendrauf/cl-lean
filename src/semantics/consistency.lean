@@ -18,7 +18,7 @@ Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
 import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL 
 import data.set.basic order.zorn data.list.basic
 
-open set list 
+open set 
 
 variables {agents : Type}
 
@@ -520,7 +520,7 @@ Prop :=
 -- -- Lemma: if c is a chain of sets, L is a list of elements such that 
 -- -- every element in L is in Union(c), then there is an element m in c such that every 
 -- -- element of L is in m.
-lemma lindenhelper {form : Type} (ft: formula form) (c : set (set form)) (h : c.nonempty) (h1 : chain (⊆) c) (L : list (form)) :
+lemma lindenhelper {form : Type} (ft: formula form) (c : set (set form)) (h : c.nonempty) (h1 : is_chain (⊆) c) (L : list (form)) :
 (∀ φ ∈ L, φ ∈ ⋃₀(c)) → ∃ m ∈ c, (∀ ψ ∈ L, ψ ∈ m) :=
 begin
 intro h2,
@@ -534,9 +534,9 @@ specialize h2 L_hd,
 simp at h2,
 cases h2 with m' h2,
 cases h2 with h2 h4,
-existsi (m' ∪ m : ctx agents), 
+existsi (m' ∪ m ), 
 have h5 : m' ∪ m ∈ c, 
-{have h6 := chain.total_of_refl h1 h3 h2,
+{have h6 := is_chain.total h1 h3 h2,
 cases h6,
 exact (eq.substr (set.union_eq_self_of_subset_right h6) h2), 
 exact (eq.substr (set.union_eq_self_of_subset_left h6) h3)},
@@ -551,9 +551,9 @@ lemma lindenbaum {form : Type} (ft: formula form) (Γ : set form) (hax : ax_cons
   ∃ Γ', max_ax_consistent ft Γ' ∧ Γ ⊆ Γ' :=
 begin
 let P := { Γ'' | Γ'' ⊇ Γ ∧ ax_consistent ft Γ''},
-have h : ∀ c ⊆ P, chain (⊆) c → c.nonempty → ∃ub ∈ P, ∀ s ∈ c, s ⊆ ub, 
+have h : ∀ c ⊆ P, is_chain (⊆) c → c.nonempty → ∃ub ∈ P, ∀ s ∈ c, s ⊆ ub, 
 {intros c h2 h3 h4, use ⋃₀(c), 
-have h5 := lindenhelper c h4 h3,
+have h5 := lindenhelper ft c h4 h3,
 repeat {split}, 
 cases h4 with Γ'' h4,
 have h6 := set.mem_of_mem_of_subset h4 h2,
@@ -569,7 +569,7 @@ have h1 : Γ ∈ P,
 split,
 exact set.subset.rfl,
 exact hax,
-cases zorn_subset₀ P h Γ h1 with Γ' h2,
+cases zorn_subset_nonempty P h Γ h1 with Γ' h2,
 cases h2 with h2 h3,
 cases h3 with h3 h4,
 use Γ', split, rw max_equiv, split, apply h2.2, 
@@ -584,7 +584,8 @@ end
 -- ef finite_ax_consistent {formula : Type} (ax: formula → Prop) (fs: list (formula)) 
 -- (imp: formula → formula → formula) (bot: formula) (and: formula → formula → formula) (true: formula): 
 
-lemma max_ax_exists_CL (hax : sem_cons agents): ∃ Γ : set (formCL agents), max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤ :=
+lemma max_ax_exists_CL (hax : sem_cons agents): ∃ Γ : set (formCL agents),
+  max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤ :=
 begin
 have h1 : @ax_consistent (formCL agents) ∅ axCL formCL.imp ⊥ formCL.and ⊤,
   begin
