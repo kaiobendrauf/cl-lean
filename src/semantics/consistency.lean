@@ -16,7 +16,7 @@ Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
 -- open S5lemma
 
 import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL 
-import data.set.basic order.zorn data.list.basic
+import data.set.basic data.set.finite order.zorn data.list.basic
 
 open set 
 
@@ -516,66 +516,63 @@ Prop :=
 -- end
 
 
--- open zorn
--- -- Lemma: if c is a chain of sets, L is a list of elements such that 
--- -- every element in L is in Union(c), then there is an element m in c such that every 
--- -- element of L is in m.
-lemma lindenhelper {form : Type} (ft: formula form) (c : set (set form)) (h : c.nonempty) (h1 : is_chain (⊆) c) (L : list (form)) :
-(∀ φ ∈ L, φ ∈ ⋃₀(c)) → ∃ m ∈ c, (∀ ψ ∈ L, ψ ∈ m) :=
+/-- Let `c` be a nonempty chain of sets and `s` a finite set, such that each
+element of `s` is in some set of `c`. Then there is a `t ∈ c` that contains the
+entirety of `s`.
+
+In other words, finitary properties are preserved under unions.
+
+This is useful in combination with Zorn's lemma, if you take `⋃₀ c` as the
+upper bound of a chain of sets.
+-/
+lemma exists_subset_of_finite_of_subset_sUnion_of_chain {α : Type*}
+  (c : set (set α)) (hc : is_chain (⊆) c)
+  (t : set α) (ht : t ∈ c)
+  (s : set α) (hs : s.finite) (hsc : s ⊆ ⋃₀ c) : ∃ t ∈ c, s ⊆ t :=
 begin
-intro h2,
-induction L, simp,
-rw ←set.nonempty_def, exact h,
-have h2b : ∀ φ, φ ∈ L_tl → φ ∈ ⋃₀(c), 
-{intros φ h3, apply h2, exact set.mem_union_right (eq φ) h3},
-cases L_ih h2b with m ih,
-cases ih with h3 ih,
-specialize h2 L_hd, 
-simp at h2,
-cases h2 with m' h2,
-cases h2 with h2 h4,
-existsi (m' ∪ m ), 
-have h5 : m' ∪ m ∈ c, 
-{have h6 := is_chain.total h1 h3 h2,
-cases h6,
-exact (eq.substr (set.union_eq_self_of_subset_right h6) h2), 
-exact (eq.substr (set.union_eq_self_of_subset_left h6) h3)},
-existsi (h5 : m' ∪ m ∈ c),
-intros ψ h6, cases h6,
-subst h6, exact set.mem_union_left m h4,
-exact set.mem_union_right m' (ih ψ h6)
+  revert hsc,
+  refine hs.induction_on _ _,
+  { exact λ _, ⟨t, ht, set.empty_subset _⟩ },
+  rintros x s hxs hs ih hsc,
+  obtain ⟨⟨u, huc, hxu⟩, hsc⟩ := set.insert_subset.mp hsc,
+  obtain ⟨t, htc, hst⟩ := ih hsc,
+  cases hc.total huc htc with h h,
+  { exact ⟨t, htc, insert_subset.mpr ⟨h hxu, hst⟩⟩ },
+  { exact ⟨u, huc, insert_subset.mpr ⟨hxu, hst.trans h⟩⟩ }
 end
 
+/-- The union of a chain of consistent sets is consistent. -/
+lemma ax_consistent_sUnion_chain {form : Type} {ft : formula form}
+  {c : set (set form)} (c_cons : ∀ Γ ∈ c, ax_consistent ft Γ) (c_chain : is_chain (⊆) c)
+  (Γ : set form) (hΓ : Γ ∈ c) :
+  ax_consistent ft (⋃₀ c) :=
+begin
+  -- For consistency, we have to show any finite subset of axioms L does not imply falsum.
+  unfold ax_consistent finite_ax_consistent at ⊢ c_cons,
+  intros L L_subset,
+  -- Since L is finite, it is completely contained in some element of the chain,
+  -- and each element of the chain is consistent, therefore L does not imply falsum.
+  obtain ⟨Γ, hΓc, hΓ⟩ := exists_subset_of_finite_of_subset_sUnion_of_chain c c_chain
+    Γ hΓ
+    { x | x ∈ L } _ L_subset,
+  { exact c_cons Γ hΓc L hΓ },
+  letI := classical.dec_eq form,
+  convert set.finite_mem_finset L.to_finset,
+  ext; simp
+end
 
-lemma lindenbaum {form : Type} (ft: formula form) (Γ : set form) (hax : ax_consistent ft Γ)  : 
+lemma lindenbaum {form : Type} (ft: formula form) (Γ : set form) (hax : ax_consistent ft Γ) :
   ∃ Γ', max_ax_consistent ft Γ' ∧ Γ ⊆ Γ' :=
 begin
-let P := { Γ'' | Γ'' ⊇ Γ ∧ ax_consistent ft Γ''},
-have h : ∀ c ⊆ P, is_chain (⊆) c → c.nonempty → ∃ub ∈ P, ∀ s ∈ c, s ⊆ ub, 
-{intros c h2 h3 h4, use ⋃₀(c), 
-have h5 := lindenhelper ft c h4 h3,
-repeat {split}, 
-cases h4 with Γ'' h4,
-have h6 := set.mem_of_mem_of_subset h4 h2,
-cases h6 with h6 h7,
-apply set.subset_sUnion_of_subset c Γ'' h6 h4,
-intros L h6,
-cases h5 L h6 with m h5,
-cases h5 with h7 h5,
-cases (set.mem_of_mem_of_subset h7 h2) with h8 h9,
-apply h9, exact h5,
-intros s h7, exact set.subset_sUnion_of_mem h7},
-have h1 : Γ ∈ P,
-split,
-exact set.subset.rfl,
-exact hax,
-cases zorn_subset_nonempty P h Γ h1 with Γ' h2,
-cases h2 with h2 h3,
-cases h3 with h3 h4,
-use Γ', split, rw max_equiv, split, apply h2.2, 
-intros m h5 h6, symmetry, apply h4 m, split, 
-apply set.subset.trans h2.1 h6,
-exact h5, exact h6, apply h2.1
+  -- By Zorn's lemma, it suffices to show that the union of a chain of consistent sets of formulas
+  -- is itself consistent.
+  obtain ⟨Γ', consistent, subset, max⟩ := zorn_nonempty_preorder₀ (ax_consistent ft) _ Γ hax,
+  { refine ⟨Γ', ⟨consistent, _⟩, subset⟩,
+    intros Δ hΓΔ hconsΔ,
+    rw ← set.lt_eq_ssubset at hΓΔ,
+    exact hΓΔ.not_le (max Δ hconsΔ hΓΔ.le) },
+  { intros c c_cons c_chain Γ hΓ,
+    exact ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _, set.subset_sUnion_of_mem⟩, }
 end
 
 
