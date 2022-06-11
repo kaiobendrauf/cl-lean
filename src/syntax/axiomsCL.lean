@@ -28,10 +28,12 @@ inductive axCL : formCL agents  → Prop
 | M     {φ ψ} {G}             : axCL (([G] (φ & ψ)) ~> [G] φ)
 | S     {φ ψ} {G F} 
         (hInt: G ∩ F = ∅)     : axCL ((([G]φ) & ([F]ψ)) ~> [G ∪ F] (φ & ψ))
-| MP    {φ ψ} (hL: axCL φ) 
-        (hImp: axCL (φ ~> ψ)) : axCL (ψ)
+| MP    {φ ψ} (hImp: axCL (φ ~> ψ))
+        (hL: axCL φ)          : axCL (ψ)
 | Eq    {φ ψ} {G}
         (h: axCL (φ ↔ ψ))     : axCL (([G] φ) ↔ ([G] ψ))
+
+
 
 structure formula (form: Type) :=
 (bot : form)
@@ -40,11 +42,28 @@ structure formula (form: Type) :=
 (top : form)
 (ax  : form → Prop)
 
+structure formula_agents (agents: Type) (form: Type) :=
+(ft :  formula form)
+(eff : set agents → form → form)
+
 def formulaCL: formula (formCL agents) :=
 {
   bot := ⊥,
-  and := formCL.and,
+  and := λ φ ψ, φ & ψ,
   imp := formCL.imp,
   top := ⊤,
   ax  := axCL
 }
+
+def formulaCL_agents: formula_agents agents (formCL agents) :=
+{
+   ft := {
+           bot := ⊥,
+           and := λ φ ψ, φ & ψ,
+           imp := formCL.imp,
+           top := ⊤,
+           ax  := axCL
+        },
+   eff := formCL.eff,
+}
+
