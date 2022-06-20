@@ -9,17 +9,17 @@ open set classical
 
 def regular (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) :=
   ∀ s: states, ∀ G: set agents, ∀ X: set states, 
-    X ∈ E (s) (G) → Xᶜ ∉ E (s) (Gᶜ)
+    (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
 
 def N_max (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) := 
   ∀ s: states, ∀ X: set states, 
-    Xᶜ ∉ E (s) (∅) → X ∈ E (s) (univ)
+    (Xᶜ ∉ E (s) (∅)) → (X ∈ E (s) (univ))
 
 ----------------------------------------------------------
 -- Structures
 ----------------------------------------------------------
-structure playable_effectivity_fun (agents: Type) (states: Type) (ha: nonempty agents) :=
-(E : states → ((set agents) → (set (set (states)))))
+structure playable_effectivity_fun {agents: Type} (states: Type) (ha: nonempty agents) :=
+(E : states → (set agents) → (set (set (states))))
 (liveness:  ∀ s: states, ∀ G: set agents,
               ∅ ∉ E (s) (G))
 (safety:    ∀ s: states, ∀ G: set agents,
@@ -31,7 +31,7 @@ structure playable_effectivity_fun (agents: Type) (states: Type) (ha: nonempty a
               X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                 X ∩ Y ∈ E (s) (G ∪ F))
 
-structure semi_playable_effectivity_fun (agents: Type) (states: Type) (ha: nonempty agents) :=
+structure semi_playable_effectivity_fun {agents: Type} (states: Type) (ha: nonempty agents) :=
 (E : states → ((set agents) → (set (set (states)))))
 (semi_liveness:  ∀ s: states, ∀ G: set agents,
                     G ⊂ univ → ∅ ∉ E (s) (G))
@@ -46,16 +46,20 @@ structure semi_playable_effectivity_fun (agents: Type) (states: Type) (ha: nonem
 ----------------------------------------------------------
 -- Set Helper Functions
 ----------------------------------------------------------
-def empty_subset_univ {α: Type} (h: nonempty α): ∅ ⊂ @univ (α) :=
-  by simp[empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
+def empty_subset_univ {α: Type} (h: nonempty α): 
+  ∅ ⊂ @univ (α) :=
+by simp[empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
   
-def empty_union_subset_univ {α: Type} (h: nonempty α): ∅ ∪ ∅ ⊂ @univ (α) :=
-  by simp[union_self, empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
+def empty_union_subset_univ {α: Type} (h: nonempty α): 
+  ∅ ∪ ∅ ⊂ @univ (α) :=
+by simp[union_self, empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
 
-def intersect_complement {α: Type} (X Y: set α): (X ∩ Y)ᶜ ∩ Y = Xᶜ ∩ Y :=
-  by simp[compl_inter, inter_distrib_right, compl_inter_self]
+def intersect_complement {α: Type} (A B: set α): 
+  (A ∩ B)ᶜ ∩ B = Aᶜ ∩ B :=
+by simp[compl_inter, inter_distrib_right, compl_inter_self]
 
-def show_complement {α: Type} (A B: set α) (hint: A ∩ B = ∅) (hunion: A ∪ B  = univ): A = Bᶜ :=
+def show_complement {α: Type} (A B: set α) (hint: A ∩ B = ∅) (hunion: A ∪ B  = univ): 
+  A = Bᶜ :=
 begin
   ext,
   have huniv: x ∈ univ, from mem_univ x,
@@ -81,7 +85,7 @@ end
 ----------------------------------------------------------
 -- Semi & Playable
 ----------------------------------------------------------
-def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun agents states ha) (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): playable_effectivity_fun agents states ha :=
+def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun states ha) (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): playable_effectivity_fun states ha :=
   have hLiveness: ∀ s: states, ∀ G: set agents, ∅ ∉ semi.E (s) (G), from
   begin
     intros s G,

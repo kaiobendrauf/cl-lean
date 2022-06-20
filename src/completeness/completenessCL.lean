@@ -1,4 +1,4 @@
-import syntax.axiomsCL semantics.semanticsCL semantics.consistency
+import syntax.axiomsCL semantics.semanticsCL semantics.consistency soundness.soundnessCL
 -- import basicmodal.semantics.consistesncy
 
 local attribute [instance] classical.prop_decidable
@@ -9,6 +9,16 @@ open list
 
 
 variable {agents : Type}
+----------------------------------------------------------
+-- Set Helper Functions
+----------------------------------------------------------
+def union_neq_univ_left {α: Type} {A B: set α} (h: A ∪ B ⊂ univ):
+  A ≠ univ := 
+ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_left A B) h)
+
+def union_neq_univ_right {α: Type} {A B: set α} (h: A ∪ B ⊂ univ):
+  B ≠ univ := 
+ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_right A B) h)
 
 
 ----------------------------------------------------------
@@ -16,44 +26,175 @@ variable {agents : Type}
 ----------------------------------------------------------
 namespace canonical
 
--- structure frameCL (agents : Type) :=
--- (states : Type)
--- (hs : nonempty states)
--- (ha : nonempty agents)
--- (E : states → ((set agents) → (set (set (states)))))
+-- def S_canonical {form: Type} {agents: Type} (ft : formula_agents agents form) := 
+--   {Γ : (set (form)) // (max_ax_consistent ft.ft Γ)}
 
--- def canonical [hax : sem_cons (∅ : ctx agents) equiv_class] : frame agents := 
--- { 
---   states := {xΓ : ctx agents // max_ax_consist xΓ},
---   h := begin have h1 := max_ax_exists hax, choose Γ h1 using h1, exact ⟨⟨Γ, h1⟩⟩ end,
---   rel := λ a, λ xΓ yΔ, ∀ φ : form agents, K a φ ∈ xΓ.val → φ ∈ yΔ.val
--- }
+-- def E_canonical {form: Type} {agents: Type} (ft : formula_agents agents form): 
+--   (S_canonical ft) → set agents → set (set (S_canonical ft)) :=
+--   λ s G, {X | ite (G = univ) 
+--         -- condition G = N
+--         (∀ φ, ({t: (S_canonical ft)| φ ∈ (t.val)} ⊆ Xᶜ) → (ft.eff ∅ φ) ∉ s.val)
+--         -- condition G ≠ N
+--         (∃ φ, {t: (S_canonical ft)| φ ∈ (t.val)} ⊆ X ∧ (ft.eff G φ) ∈ s.val)}
 
+  -- | s univ  := {X | ∀ φ, {t: (S_canonical ft)| φ ∈ (t.val)} ⊆ Xᶜ → (ft.eff ∅ φ) ∉ s.val}
+  -- | s G     := {X | ∃ φ, {t: (S_canonical ft)| φ ∈ (t.val)} ⊆ X ∧ (ft.eff G φ) ∈ s.val}
 
 -- def canonical (max_ax_consist : set (formCL agents) → Prop) (ha: nonempty agents) : frameCL agents := 
-def canonicalCL (ha: nonempty agents) : frameCL agents := 
 
+
+def canonicalCL (ha: nonempty agents) : frameCL agents := 
 { 
   states := {Γ : (set (formCL agents)) // (max_ax_consistent formulaCL Γ)},
-  hs := sorry,
-        -- begin
-        --   have h1: max_ax_exists 
-        -- end,
+  hs := 
+    begin
+      have hax: ax_consistent (@formulaCL agents) {(¬ @formCL.bot agents)}, from sorry,
+      have h1 := lindenbaum formulaCL {(¬ @formCL.bot agents)} hax, 
+      choose Γ h1 using h1, 
+      exact ⟨⟨Γ, h1.left⟩⟩,
+    end,
   ha := ha,
   E :=
-    { 
-      E := λ s, λ G, {X | ite (G = univ) 
-        -- condition G = N
-        (∃ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consistent formulaCL Γ}| φ ∈ (t.val)} ⊆ X ∧ ([G] φ) ∈ s.val)
-        -- condition G ≠ N
-        (∀ φ : (formCL agents), {t: {Γ : (set (formCL agents)) // max_ax_consistent formulaCL Γ}| φ ∈ (t.val)} ⊆ Xᶜ → ([∅] φ) ∉ s.val)},
+    begin
+      let states := {Γ : (set (formCL agents)) // (max_ax_consistent formulaCL Γ)},
+
+      have semi: semi_playable_effectivity_fun states ha :=
+      {
+        E := λ s G, {X | ite (G = univ) 
+          -- condition G = N
+          (∀ φ, ({t: states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
+          -- condition G ≠ N
+          (∃ φ, {t: states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
+        
+        semi_liveness := 
+          begin
+            intros s G hG hf,
+            have hG': G ≠ univ, from ne_of_ssubset hG,
+            simp [hG'] at *,
+            clear hG',
+
+            cases hf with φ hφ,
+            cases hφ,
+            -- have htemp: 
+            -- apply subtype.eq,
+            sorry,
+          end,
+
+        semi_safety :=
+          begin
+            let top := ((@formCL.bot agents) ~> ⊥), 
+
+            have hTop: ∀ s: states, (top) ∈ s.val, from sorry,
+            have hGTop: ∀ s: states, ∀ G: set agents, ([G] top) ∈ s.val, from
+              begin
+                intros s G,
+                sorry,
+              end,
+          
+            intros s G hG,
+            have hG': G ≠ univ, from ne_of_ssubset hG,
+            simp [hG'] at *,
+            clear hG',
+            
+            apply exists.intro ((@formCL.bot agents) ~> ⊥),
+            apply hGTop,
+            -- apply subtype.eq,
+            sorry,
+          end,
+
+        semi_monoticity :=
+          begin
+            intros s G X Y hG hXY hX,
+            have hG': G ≠ univ, from ne_of_ssubset hG,
+            simp [hG'] at *,
+            clear hG',
+
+            cases hX with φ hφ,
+            apply exists.intro φ,
+            cases hφ,
+            apply and.intro,
+            { exact subset.trans hφ_left hXY, },
+            { exact hφ_right, },
+          end,
+
+        semi_superadd   :=
+          begin
+            intros s G F X Y hunion hX hY hintGF,
+            have hunion': G ∪ F ≠ univ, from ne_of_ssubset hunion,
+            simp [hunion', union_neq_univ_left hunion, union_neq_univ_right hunion] at *,
+            clear hunion',
+            cases hX with φ,
+            cases hX_h,
+            cases hY with ψ,
+            cases hY_h,
+            apply exists.intro (φ & ψ),
+            apply and.intro,
+            {
+              apply and.intro,
+              {
+                have hsubset: {t : states | φ & ψ ∈ t.val} ⊆ {t : states | φ ∈ t.val}, from sorry,
+                exact subset.trans hsubset hX_h_left,
+              },
+              {
+                have hsubset: {t : states | φ & ψ ∈ t.val} ⊆ {t : states | ψ ∈ t.val}, from sorry,
+                exact subset.trans hsubset hY_h_left,
+              },
+            },
+            {
+              sorry,
+            },
+          end,
+      },
+
+
+      have hE : semi.E = λ s G, {X | ite (G = univ) 
+          -- condition G = N
+          (∀ φ, ({t: states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
+          -- condition G ≠ N
+          (∃ φ, {t: states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
+        from sorry,
       
-      liveness    := sorry,
-      safety      := sorry,
-      N_max       := sorry,
-      monoticity  := sorry,
-      superadd    := sorry,
-    }
+      have hreg': regular agents states semi.E, from
+        begin
+          intros s G F h,
+          cases eq_or_ssubset_of_subset (subset_univ G),
+          {
+            simp [hE, h_1, (ne_of_ssubset (empty_subset_univ ha))] at *,
+            exact h,
+          },
+          {
+            cases em (G = ∅),
+            {
+              simp [hE, (ne_of_ssubset h_1), h_2, (ne_of_ssubset (empty_subset_univ ha))] at *,
+              exact h,
+            },
+            {
+              simp [hE, (ne_of_ssubset h_1), h_2] at *,
+              cases h with φ h,
+              cases h,
+              intros ψ hψ,
+              by_contradiction,
+              have hS: ([G ∪ Gᶜ](φ & ψ)) ∈ s.val, from sorry,
+              simp at hS,
+              have hempty: {t : states | (φ ∈ t.val) ∧ (ψ ∈ t.val)} = ∅, from sorry,
+              have hempty': {t : states | (φ & ψ ∈ t.val)} = ∅, from sorry,
+              sorry,
+            },
+          },
+
+        end,
+
+      have hNmax': N_max agents states semi.E, from
+        begin
+          intros s X hXif,
+          simp [hE, (ne_of_ssubset (empty_subset_univ ha))] at *,
+          intros φ hX,
+          exact hXif φ hX,
+        end,
+      
+
+      exact playable_from_semi_Nmax_reg states ha semi hNmax' hreg',
+    end,
 }
 
 
