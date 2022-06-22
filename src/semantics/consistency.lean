@@ -26,8 +26,8 @@ variables {agents : Type}
 ---------------------- Consistency ----------------------
 
 
-def sem_cons (agents: Type):= ¬ global_valid (@formCL.bot agents) 
-attribute [class] sem_cons
+-- def sem_cons (agents: Type):= ¬ global_valid (@formCL.bot agents) 
+-- attribute [class] sem_cons
 
 
 -- lemma sem_consS5 : sem_cons (∅ : ctx agents) equiv_class :=

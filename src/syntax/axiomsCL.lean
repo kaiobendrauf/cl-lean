@@ -22,16 +22,16 @@ inductive axCL : formCL agents → Prop
 | Prop5 {φ ψ}                 : axCL ((φ & ψ) ~> φ)
 | Prop6 {φ ψ}                 : axCL ((φ & ψ) ~> ψ)
 | Prop7 {φ ψ}                 : axCL (((¬ φ) ~> (¬ψ)) ~> (ψ ~> φ))
-| Bot   {G}                   : axCL (¬ ([G]' ⊥))
-| Top   {G}                   : axCL ([G]' ⊤)
-| N     {φ}                   : axCL ((¬ ([∅]' (¬ φ))) ~> [univ]' φ)
-| M     {φ ψ} {G}             : axCL (([G]' (φ & ψ)) ~> [G]' φ)
+| Bot   {G}                   : axCL (¬ ([G] ⊥))
+| Top   {G}                   : axCL ([G] ⊤)
+| N     {φ}                   : axCL ((¬ ([∅] (¬ φ))) ~> [univ] φ)
+| M     {φ ψ} {G}             : axCL (([G] (φ & ψ)) ~> [G] φ)
 | S     {φ ψ} {G F} 
-        (hInt: G ∩ F = ∅)     : axCL ((([G]'φ) & ([F]'ψ)) ~> [G ∪ F]' (φ & ψ))
+        (hInt: G ∩ F = ∅)     : axCL ((([G]φ) & ([F]ψ)) ~> [G ∪ F] (φ & ψ))
 | MP    {φ ψ} (hImp: axCL (φ ~> ψ))
         (hL: axCL φ)          : axCL (ψ)
 | Eq    {φ ψ} {G}
-        (h: axCL (φ ↔ ψ))     : axCL (([G]' φ) ↔ ([G]' ψ))
+        (h: axCL (φ ↔ ψ))     : axCL (([G] φ) ↔ ([G] ψ))
 
 
 
