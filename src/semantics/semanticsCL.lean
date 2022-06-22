@@ -14,7 +14,7 @@ structure frameCL (agents : Type) :=
 (hs : nonempty states)
 (ha : nonempty agents)
 -- (E : states → ((set agents) → (set (set (states)))))
-(E: playable_effectivity_fun agents states ha)
+(E: playable_effectivity_fun states ha)
 
 -- (E: states → (set agents) → Prop)
 
@@ -29,11 +29,10 @@ def s_entails : ∀ m : modelCL agents,
   | m s (var n)       := n ∈ m.v s
   | m s (imp φ ψ)     := (s_entails m s φ) → (s_entails m s ψ)
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
-  | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
+  | m s ([G]' φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
 
 def tilde (m: modelCL agents) (φ : formCL agents)  :=
 {t: m.f.states | s_entails m t φ}
-
 
 -- φ is valid in a model M = (f,v)
 def valid_m (m: modelCL agents) (φ : formCL agents) := 

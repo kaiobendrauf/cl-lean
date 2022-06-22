@@ -15,7 +15,7 @@ Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
 -- open prfS5
 -- open S5lemma
 
-import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL 
+import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL syntax.propLemmas
 import data.set.basic data.set.finite order.zorn data.list.basic
 
 open set 
@@ -98,45 +98,65 @@ attribute [class] sem_cons
 --   | _ t list.nil   := t
 --   | a t (f::fs)  := a f (finite_conjunction a t fs)
 
-def finite_conjunction {form: Type} (ft : formula form): (list (form)) → form
+def finite_conjunction {form: Type} (ft : formula form): (list form) → form
   | list.nil   := ft.top
-  | (f::fs)  := ft.and f (finite_conjunction fs)
+  | (f::fs)    := ft.and f (finite_conjunction fs)
 
 
-
--- -- a few helper lemmas about finite conjunctions
--- lemma fin_conj_simp {Γ : ctx agents} : ∀ ψ : form agents, prfS5 Γ (¬fin_conj [ψ, ¬ψ]) :=
--- begin
--- intro ψ, exact (not_and_subst phi_and_true).mpr not_contra
--- end
-
-
--- lemma imp_conj_imp_imp {Γ : ctx agents} {φ ψ χ : form agents} {L : list (form agents)} : 
---   prfS5 Γ ((fin_conj (φ::L)) ⊃ ψ) ↔ prfS5 Γ (fin_conj L ⊃ (φ ⊃ ψ)) :=
--- begin
--- split, 
--- intro h, dsimp [fin_conj] at h, rw and_right_imp at h, exact h,
--- intro h, dsimp [fin_conj], rw and_right_imp, exact h
--- end
+-- a few helper lemmas about finite conjunctions
+lemma fin_conj_simp {form: Type} {ft : formula form}: ∀ ψ : form, ft.ax (ft.not (finite_conjunction ft ((ψ :: (ft.not ψ :: list.nil))))) :=
+begin
+intro ψ,
+simp [finite_conjunction],
+rw not_and_subst,
+exact not_contra,
+simp[topnotbot],
+exact phi_and_true,
+end
 
 
--- lemma fin_conj_cons_imp {Γ : ctx agents} {φ b : form agents} {L : list (form agents)} : 
---  prfS5 Γ (fin_conj (φ::L) ⊃ (φ ⊃ b)) → prfS5 Γ (fin_conj L ⊃ (φ ⊃ b)) :=
--- begin
--- intro h, rw imp_conj_imp_imp at h, rw imp_imp_iff_imp at h, exact h, exact φ,
--- end
+lemma imp_conj_imp_imp {form: Type} {ft : formula form} {Γ : set form} {φ ψ χ : form} {L : list (form)} 
+  (h_and_right_imp: (∀ φ ψ χ : form, ft.ax (ft.imp (ft.and φ ψ) χ) ↔ ft.ax (ft.imp ψ (ft.imp φ χ)))): 
+  ft.ax (ft.imp (finite_conjunction ft (φ::L)) ψ) ↔ ft.ax (ft.imp (finite_conjunction ft L) (ft.imp φ ψ)) :=
+begin
+split, 
+intro h, dsimp [finite_conjunction] at h, rw h_and_right_imp at h, exact h,
+intro h, dsimp [finite_conjunction], rw h_and_right_imp, exact h
+end
 
 
--- lemma fin_conj_append {Γ : ctx agents} {L L' : list (form agents)} :
---   prfS5 Γ ((fin_conj L' & fin_conj L) ↔ (fin_conj (L' ++ L))) :=
--- begin
--- induction L', rw fin_conj,
--- exact (mp (mp pl4 (cut (mp pl6 and_switch) (mp pl5 phi_and_true))) 
---   (cut (mp pl6 phi_and_true) (mp pl5 and_switch))),
--- exact mp (mp pl4 (cut (mp pl5 and_commute) (imp_and_imp (mp pl5 L'_ih)))) 
---   (cut iden (cut (imp_and_imp (mp pl6 L'_ih)) (mp pl6 and_commute)))
--- end 
+lemma fin_conj_s_imp {form: Type} {ft : formula form} {Γ : set form} {φ b : form } {L : list form} : 
+ ft.ax (ft.imp (finite_conjunction ft (φ :: L))  (ft.imp φ  b)) → ft.ax (ft.imp (finite_conjunction ft L) (ft.imp φ b)) :=
+begin
+intro h, rw imp_conj_imp_imp at h, rw imp_imp_iff_imp at h, exact h, exact Γ, exact φ,
+intros _ _ _,
+exact and_right_imp,
+end
 
+
+lemma fin_conj_append {form: Type} {ft : formula form} {Γ : set form} {L L' : list (form)} :
+  ft.ax (ft.iff (ft.and (finite_conjunction ft L') (finite_conjunction ft L)) (finite_conjunction ft (L' ++ L))) :=
+begin
+induction L', rw finite_conjunction,
+simp [ft.iffdef, topnotbot] at *,
+exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (cut (ft.mp _ _ (ft.p6 _ _) and_switch') (ft.mp _ _ (ft.p5 _ _) phi_and_true'))) 
+  (cut (ft.mp _ _ (ft.p6 _ _) phi_and_true') (ft.mp _ _ (ft.p5 _ _) and_switch'))),
+simp [ft.iffdef, topnotbot] at *,
+exact ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (cut (ft.mp _ _ (ft.p5 _ _) and_commute') (imp_and_imp (ft.mp _ _ (ft.p5 _ _) L'_ih)))) 
+  (cut iden (cut (imp_and_imp (ft.mp _ _ (ft.p6 _ _) L'_ih)) (ft.mp _ _ (ft.p6 _ _) and_commute')))
+end 
+
+lemma fin_conj_append' {form: Type} {ft : formula form} {Γ : set form} {L L' : list (form)} :
+  ft.ax (ft.and (ft.imp (ft.and (finite_conjunction ft L') (finite_conjunction ft L)) (finite_conjunction ft (L' ++ L))) (ft.imp (finite_conjunction ft (L' ++ L)) (ft.and (finite_conjunction ft L') (finite_conjunction ft L)))) :=
+begin
+induction L', rw finite_conjunction,
+simp [ft.iffdef, topnotbot] at *,
+exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (cut (ft.mp _ _ (ft.p6 _ _) and_switch') (ft.mp _ _ (ft.p5 _ _) phi_and_true'))) 
+  (cut (ft.mp _ _ (ft.p6 _ _) phi_and_true') (ft.mp _ _ (ft.p5 _ _) and_switch'))),
+simp [ft.iffdef, topnotbot] at *,
+exact ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (cut (ft.mp _ _ (ft.p5 _ _) and_commute') (imp_and_imp (ft.mp _ _ (ft.p5 _ _) L'_ih)))) 
+  (cut iden (cut (imp_and_imp (ft.mp _ _ (ft.p6 _ _) L'_ih)) (ft.mp _ _ (ft.p6 _ _) and_commute')))
+end 
 
 -- lemma fin_conj_empty {L : list (form agents)} 
 --   (hax : sem_cons (∅ : ctx agents) equiv_class) :
@@ -232,119 +252,249 @@ def max_ax_consistent {form : Type} (ft: formula form) (Γ: set (form)):
 Prop := 
   (ax_consistent ft Γ) ∧ (∀ Γ', Γ ⊂ Γ' → ¬ (ax_consistent ft Γ'))
 
-
--- lemma max_imp_ax {Γ : ctx agents} : max_ax_consist Γ → ax_consist Γ :=
+-- lemma max_ax_top {form : Type} (ft: formula form) (Γ: set (form)) 
+--   (h: max_ax_consistent ft Γ):
+--   ft.top ∈ Γ :=
 -- begin
--- intro h1, exact h1.left
+--   cases h,
+--   by_contradiction,
+--   apply h_right (Γ ∪ {ft.top}),
+--   {
+--     rw set.ssubset_iff_of_subset,
+--     apply exists.intro ft.top,
+--     {
+--       apply exists.intro,
+--       { simp, },
+--       { exact h, },
+--     },
+--     { exact subset_union_left Γ {ft.top}, },
+--   },
+--   {
+--     intros fs hψ haxψ,
+--     simp [ax_consistent, finite_ax_consistent] at *,
+--     apply h_left fs,
+--     intros ψ hψ',
+--     apply or.elim (hψ ψ hψ'),
+--     {
+
+--     }
+--   }
 -- end
+
+-- lemma fin_consistent_or_top {form : Type} (ft: formula form) (fs: list form)
+--  ()
+
+lemma temp {form : Type} (ft: formula form) (fs fs': list form)
+  (h: ∀ ψ, ψ ∈ fs' → (ψ = ft.top ∨ ψ ∈ fs)) :
+  ft.ax (finite_conjunction ft fs) ↔ ft.ax (finite_conjunction ft fs') :=
+  sorry
+
+lemma temp2 {form : Type} (ft: formula form) (φ ψ: form)
+  (h: ft.ax φ ↔ ft.ax ψ) :
+  ∀ ϕ, ft.ax (ft.imp φ ϕ) ↔ ft.ax (ft.imp ψ ϕ) :=
+  sorry 
+
+-- def temp3 {form : Type} (ft: formula form) : list form -> set form → list form
+--   | list.nil _ := list.nil,
+--   | (f::fs) Γ  :=
+
+lemma ax_consistent_union_top {form : Type} (ft: formula form) (Γ: set form) 
+  (h: ax_consistent ft Γ) : ax_consistent ft (Γ ∪ {ft.top}) :=
+begin
+  simp[ax_consistent, finite_ax_consistent] at *,
+  intros fs' hψ hf,
+  sorry,
+end
+
+lemma max_ax_top {form : Type} (ft: formula form) (Γ: set (form)) 
+  (h: max_ax_consistent ft Γ):
+  ft.top ∈ Γ :=
+begin
+  cases h,
+  by_contradiction,
+  apply h_right (Γ ∪ {ft.top}),
+  {
+    rw set.ssubset_iff_of_subset,
+    apply exists.intro ft.top,
+    {
+      apply exists.intro,
+      { simp, },
+      { exact h, },
+    },
+    { exact subset_union_left Γ {ft.top}, },
+  },
+  {
+    exact ax_consistent_union_top ft Γ h_left,
+  }
+end
+
+
+lemma max_imp_ax {form : Type} {ft: formula form} {Γ: set form} : 
+  max_ax_consistent ft Γ → ax_consistent ft Γ :=
+begin
+intro h1, exact h1.left
+end
 
 
 -- -- Lemma 5 from class notes
--- lemma five_helper : 
---   ∀ Γ : ctx agents, ∀ φ : form agents, ∀ L : list (form agents), ∀ b : form agents, 
---   (∀ ψ ∈ L, ψ ∈ Γ ∨ ψ = φ) → prfS5 ∅ (fin_conj L ⊃ b) → ∃ L',
---   (∀ ψ ∈ L', ψ ∈ Γ) ∧ prfS5 ∅ (fin_conj L' ⊃ (φ ⊃ b)) :=
--- begin
--- intros Γ φ L b h1 h2, 
--- revert b, 
--- induction L,
--- {intros b h2, existsi ([] : list (form agents)), split, 
--- intros ψ h3, exfalso, apply list.not_mem_nil ψ h3, 
--- exact imp_if_imp_imp h2},
--- {intros b h2,
--- have h1a : ∀ (ψ : form agents), ψ ∈ L_tl → ψ ∈ Γ ∨ ψ = φ, 
---   {intros ψ h2, apply h1 ψ (list.mem_cons_of_mem L_hd h2)},
--- have h1b: L_hd ∈ Γ ∨ L_hd = φ, 
---   {apply h1 L_hd, left, refl},
--- cases h1b, 
--- have h3 := and_right_imp.mp h2,
--- cases L_ih h1a (L_hd ⊃ b) h3 with L' ih, existsi (L_hd::L' : list (form agents)),
--- cases ih, split, intros ψ h4, cases h4, 
--- subst h4, exact h1b, 
--- apply ih_left ψ h4, rw imp_shift at ih_right,
--- rw ←imp_conj_imp_imp at ih_right, exact ih_right,
--- have h3 : prfS5 ∅ (fin_conj (L_hd::L_tl) ⊃ b), 
--- exact h2, exact b,
--- have h4 : prfS5 ∅ (fin_conj L_tl ⊃ (φ ⊃ b)), 
---   from eq.subst h1b (and_right_imp.mp) h2,
--- cases L_ih h1a (φ ⊃ b) h4 with L' ih, 
--- cases ih, existsi (L' : list (form agents)), split, 
--- exact ih_left, exact imp_imp_iff_imp.mp ih_right}
--- end
-
--- lemma five : 
---   ∀ Γ : ctx agents, ∀ φ : form agents, ¬ ax_consist (Γ ∪ φ) → ∃ L',
---   (∀ ψ ∈ L', ψ ∈ Γ) ∧ prfS5 ∅ (fin_conj L' ⊃ ¬φ) :=
--- begin
--- intro Γ, intro φ, intro h1, rw ax_consist at h1, 
--- push_neg at h1,
--- cases h1 with L h1,
--- have h2 : (∀ ψ ∈ L, ψ ∈ Γ ∨ ψ = φ) → prfS5 ∅ (fin_conj L ⊃ ⊥) → ∃ L',
---   (∀ ψ ∈ L', ψ ∈ Γ) ∧ prfS5 ∅ (fin_conj L' ⊃ (φ ⊃ ⊥)), from five_helper Γ φ L ⊥,
--- cases h1,
--- have h3 : (∀ (ψ : form agents), ψ ∈ L → ψ ∈ Γ ∨ ψ = φ), 
--- {intros ψ this, exact or.swap (h1_left ψ this)},
--- apply h2 h3, rw fin_ax_consist at h1_right, rw not_not at h1_right,
--- exact h1_right,
--- end
-
-
--- -- Lemma 6 from class notes
--- lemma six_helper (Γ : ctx agents) (h : ax_consist Γ) :
--- max_ax_consist Γ → ∀ φ : form agents, φ ∈ Γ ∨ (¬φ) ∈ Γ :=
--- begin
--- intros h1 φ, rw or_iff_not_and_not, by_contradiction h2,
--- cases h2 with h2l h2r,
--- cases h1 with h1l h1r, clear h, 
--- have h2 := h1r (Γ ∪ φ),
--- have h3 : ¬ax_consist (Γ ∪ ¬φ), 
--- {apply h1r (Γ ∪ ¬φ), from set.ssubset_insert h2r},
--- have h5 : ¬ax_consist (Γ ∪ φ), 
--- {apply h2, from set.ssubset_insert h2l}, 
--- have h6 := five Γ φ _, have h7 := five Γ (¬φ) _, 
--- cases h6 with L' h6, cases h7 with L h7, cases h6 with h6l h6r,
--- cases h7 with h7l h7r,
--- have h8 := imp_and_and_imp (mp (mp pl4 h6r) h7r),
--- have h12 := cut (mp pl6 fin_conj_append) (cut h8 (mp pl5 contra_equiv_false)),
--- have h13 : (∀ (ψ : form agents), ψ ∈ L' ++ L → ψ ∈ Γ), 
--- intro ψ, intro h13,
--- rw list.mem_append at h13, cases h13, exact h6l ψ h13, exact h7l ψ h13,
--- exact absurd h12 (h1l (L' ++ L) h13),
--- exact h3,
--- exact h5,
--- end
+lemma five_helper {form : Type} {ft: formula form} :
+ ∀ Γ : set form, ∀ φ : form, ∀ L : list (form), ∀ b : form, 
+  (∀ ψ ∈ L, ψ ∈ Γ ∨ ψ = φ) → ft.ax (ft.imp (finite_conjunction ft L) b) → ∃ L',
+  (∀ ψ ∈ L', ψ ∈ Γ) ∧ ft.ax (ft.imp (finite_conjunction ft L') (ft.imp φ b)) :=
+begin
+intros Γ φ L b h1 h2, 
+revert b, 
+induction L,
+{intros b h2, existsi (list.nil : list (form)), split, 
+intros ψ h3, exfalso, apply list.not_mem_nil ψ h3, 
+apply imp_if_imp_imp,
+exact h2,},
+{
+  intros b h2,
+  have h1a : ∀ (ψ : form), ψ ∈ L_tl → ψ ∈ Γ ∨ ψ = φ, 
+    {intros ψ h2, apply h1 ψ (list.mem_cons_of_mem L_hd h2)},
+  have h1b: L_hd ∈ Γ ∨ L_hd = φ, 
+    {apply h1 L_hd, left, refl},
+  cases h1b,
+  { 
+    have h3 := and_right_imp.mp h2,
+    cases L_ih h1a (ft.imp L_hd b) h3 with L' ih, existsi (L_hd::L' : list form),
+    cases ih, split, intros ψ h4, cases h4,
+    {
+      subst h4, exact h1b, 
+    },
+    {
+      apply ih_left ψ h4,
+    },
+    {
+      rw imp_shift at ih_right,
+      rw ←imp_conj_imp_imp at ih_right,
+      exact ih_right,
+      have h3 : ft.ax (ft.imp (finite_conjunction ft (L_hd::L_tl))  b), 
+      exact h2, exact Γ, exact b,
+      intros _ _ _,
+      exact and_right_imp,
+    },
+  },
+  {
+    have h4 := and_right_imp.mp,
+    have h5 : ft.ax (ft.imp (finite_conjunction ft L_tl) (ft.imp φ b)),
+      from eq.subst h1b (h4 h2),
+    cases L_ih h1a (ft.imp φ b) h5 with L' ih, 
+    existsi (L' : list form), split, 
+    exact ih.left, exact imp_imp_iff_imp.mp ih.right,
+  },
+},
+end
 
 
--- lemma six (Γ : ctx agents) (h : ax_consist Γ) :
--- max_ax_consist Γ ↔ ∀ φ, (φ ∈ Γ ∨ (¬φ) ∈ Γ) ∧ ¬(φ ∈ Γ ∧ (¬φ) ∈ Γ) :=
--- begin 
--- simp, split, 
--- intro h1, intro φ, 
--- split, exact six_helper Γ h h1 φ,
--- {rw ←not_and, by_contradiction h2,
--- cases h2 with h2 h3,
--- specialize h ([φ, ¬φ]), simp at *,
--- have h4 : (∀ (ψ : form agents), ψ = φ ∨ ψ = ¬φ → ψ ∈ Γ), 
--- {intros ψ h4, cases h4, subst h4, exact h2, subst h4, exact h3},
--- have h5 : prfS5 ∅ (¬fin_conj [φ, ¬φ]), from fin_conj_simp φ, 
--- exact absurd h5 (h h4)},
--- intro h1, split, exact h,
--- intros Γ' h2,
--- have h3 : Γ ⊆ Γ' ∧ ¬ Γ' ⊆ Γ, from h2,
--- cases h3,
--- rw set.not_subset at h3_right,
--- apply (exists.elim h3_right), simp, intros ψ h4 h5,
--- specialize h1 ψ, cases h1,
--- cases h1_left,
--- apply absurd h1_left h5,
--- have h6 : (¬ψ) ∈ Γ', from set.mem_of_subset_of_mem h3_left h1_left,
--- rw ax_consist, 
--- push_neg,
--- existsi ([ψ,¬ψ] : list (form agents)),
--- simp, split, intros φ h7, cases h7, subst h7, exact h4, 
--- subst h7, exact h6, rw fin_ax_consist, rw not_not,
--- exact fin_conj_simp ψ
--- end
+lemma five {form : Type} {ft: formula form} : 
+  ∀ Γ : set form, ∀ φ : form, ¬ ax_consistent ft (Γ ∪ {φ}) → ∃ L': list form,
+  (∀ ψ ∈ L', ψ ∈ Γ) ∧ ft.ax (ft.imp (finite_conjunction ft L') (ft.not φ)) :=
+begin
+intro Γ, intro φ, intro h1, rw ax_consistent at h1, 
+push_neg at h1,
+cases h1 with L h1,
+have h2 : (∀ ψ ∈ L, ψ ∈ Γ ∨ ψ = φ) → ft.ax (ft.imp (finite_conjunction ft L) ft.bot) → ∃ L',
+  (∀ ψ ∈ L', ψ ∈ Γ) ∧ ft.ax (ft.imp (finite_conjunction ft L') (ft.imp φ ft.bot)), from five_helper Γ φ L ft.bot,
+cases h1,
+have h3 : (∀ (ψ : form), ψ ∈ L → ψ ∈ Γ ∨ ψ = φ), 
+  {
+    intros ψ this,
+    have hor: ψ ∈ Γ ∨ ψ = φ, from h1_left ψ this, 
+    have hor': ψ = φ ∨ ψ ∈ Γ, from or.swap hor,
+    exact or.swap hor',
+  },
+rw finite_ax_consistent at h1_right, 
+rw not_not at h1_right,
+rw ft.notdef at *,
+apply h2 h3,
+exact h1_right,
+end
+
+
+-- Lemma 6 from class notes
+lemma max_ax_contains_phi_or_neg  {form : Type} {ft: formula form} (Γ: set form) 
+(h : ax_consistent ft Γ):
+max_ax_consistent ft Γ → ∀ φ : form, φ ∈ Γ ∨ (ft.not φ) ∈ Γ :=
+begin
+intros h1 φ, rw or_iff_not_and_not, by_contradiction h2,
+cases h2 with h2l h2r,
+cases h1 with h1l h1r, clear h, 
+have h2 := h1r (Γ ∪ {φ}),
+have h3 : ¬ax_consistent ft ({ft.not φ} ∪ Γ), 
+  { 
+    apply h1r,
+    from set.ssubset_insert h2r,
+  },
+have h5 : ¬ax_consistent ft (Γ ∪ {φ}), 
+  {
+    apply h2,
+    have heq: Γ ∪ {φ} = set.insert φ Γ, from by finish,
+    rw heq,
+    from set.ssubset_insert h2l,}, 
+have h6 := five Γ φ _, have h7 := five Γ (ft.not φ) _, 
+cases h6 with L' h6, cases h7 with L h7, cases h6 with h6l h6r,
+cases h7 with h7l h7r,
+have h8 := imp_and_and_imp (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) h6r) h7r),
+have h12 := cut (ft.mp _ _ (ft.p6 _ _) fin_conj_append') (cut h8 (ft.mp _ _ (ft.p5 _ _) (contra_equiv_false'))),
+have h13 : (∀ (ψ : form), ψ ∈ L' ++ L → ψ ∈ Γ), 
+intro ψ, intro h13,
+rw list.mem_append at h13, cases h13, exact h6l ψ h13, exact h7l ψ h13,
+exact absurd h12 (h1l (L' ++ L) h13),
+exact {φ},
+rw union_comm at h3,
+exact h3,
+exact h5,
+end
+
+
+lemma max_ax_contains_phi_xor_neg {form : Type} {ft: formula form} (Γ: set form) (h: ax_consistent ft Γ) :
+max_ax_consistent ft Γ ↔ ∀ φ, (φ ∈ Γ ∨ (ft.not φ) ∈ Γ) ∧ ¬(φ ∈ Γ ∧ (ft.not φ) ∈ Γ) :=
+begin 
+simp, split, 
+intro h1, intro φ, 
+split, exact max_ax_contains_phi_or_neg Γ h h1 φ,
+{rw ←not_and, by_contradiction h2,
+cases h2 with h2 h3,
+simp [ax_consistent] at h,
+
+let l := (φ :: (ft.not φ :: list.nil)),
+specialize h (l), simp at *,
+have h4 : (∀ (ψ : form ), ψ = φ ∨ ψ = ft.not φ → ψ ∈ Γ), 
+{intros ψ h4, cases h4, subst h4, exact h2, subst h4, exact h3},
+have h5 : ft.ax (ft.not (finite_conjunction ft l)), from fin_conj_simp φ, 
+have h6: _, from h h2 h3,
+simp [finite_ax_consistent] at h6,
+simp [ft.notdef] at h5,
+exact h6 h5,
+},
+intro h1, split, exact h,
+intros Γ' h2,
+have h3 : Γ ⊆ Γ' ∧ ¬ Γ' ⊆ Γ, from h2,
+cases h3,
+rw set.not_subset at h3_right,
+apply (exists.elim h3_right), simp, intros ψ h4 h5,
+specialize h1 ψ, cases h1,
+cases h1_left,
+apply absurd h1_left h5,
+have h6 : (ft.not ψ) ∈ Γ', from set.mem_of_subset_of_mem h3_left h1_left,
+rw ax_consistent, 
+push_neg,
+existsi ((ψ :: (ft.not ψ :: list.nil))),
+simp, split, 
+{
+  split,
+  { exact h4, },
+  { exact h6, },
+}, 
+{
+  have hfcs: _, from @fin_conj_simp form ft ψ,
+  simp[finite_ax_consistent],
+  have h: _, from ft.notdef,
+  finish,
+},
+end
 
 
 -- -- Exercise 1 from class notes
@@ -424,13 +574,14 @@ Prop :=
 -- end
 
 
--- lemma max_notiff (Γ : ctx agents) (h : max_ax_consist Γ) (φ : form agents) :
---   φ ∉ Γ ↔ (¬φ) ∈ Γ :=
+-- lemma max_notiff {form : Type} (ft: formula form) (Γ: set form) 
+-- (h : max_ax_consistent ft Γ) (φ : form) :
+--   φ ∉ Γ ↔ (ft.imp φ ft.bot) ∈ Γ :=
 -- begin
 -- split, intro h1,
--- have h2 := max_imp_ax h, 
--- have h3 := six_helper Γ h2 h,
--- specialize h3 φ, cases h3, exact absurd h3 h1, exact h3,
+-- have h2: ax_consistent ft Γ, from max_imp_ax h, 
+-- have h3 := max_forall_ex_or_neg Γ h2 h,
+-- specialize h3 φ, cases h3, exact absurd h3 h1, simp[ft.notdef] at h3, exact h3,
 -- intro h1,
 -- have h2 := max_imp_ax h, 
 -- have h3 := six Γ h2,
@@ -581,30 +732,30 @@ end
 -- ef finite_ax_consistent {formula : Type} (ax: formula → Prop) (fs: list (formula)) 
 -- (imp: formula → formula → formula) (bot: formula) (and: formula → formula → formula) (true: formula): 
 
-lemma max_ax_exists_CL (hax : sem_cons agents): ∃ Γ : set (formCL agents),
-  max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤ :=
-begin
-have h1 : @ax_consistent (formCL agents) ∅ axCL formCL.imp ⊥ formCL.and ⊤,
-  begin
-    intros fs h2 hax,
-    simp[(finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and (¬ formCL.bot))] at *,
-    apply h2,
-    repeat {sorry},
+-- lemma max_ax_exists_CL (hax : sem_cons agents): ∃ Γ : set (formCL agents),
+--   max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤ :=
+-- begin
+-- have h1 : @ax_consistent (formCL agents) ∅ axCL formCL.imp ⊥ formCL.and ⊤,
+--   begin
+--     intros fs h2 hax,
+--     simp[(finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and (¬ formCL.bot))] at *,
+--     apply h2,
+--     repeat {sorry},
 
     
 
-    -- rw (finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and ⊤),
-    -- have h3 := listempty h2, have this : ∅ = ∅, refl,
+--     -- rw (finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and ⊤),
+--     -- have h3 := listempty h2, have this : ∅ = ∅, refl,
 
-  end,
--- {intro fs, intro h2, rw finite_ax_consistent axCL,
--- c
--- have h3 := listempty h2, have this : ∅ = ∅, refl, 
--- specialize h3 this, subst h3, by_contradiction h4, 
--- apply nprfalse hax, exact mp dne h4},
-have h2 := lindenbaum ∅ h1, 
-cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : ctx agents), apply h2
-end
+--   end,
+-- -- {intro fs, intro h2, rw finite_ax_consistent axCL,
+-- -- c
+-- -- have h3 := listempty h2, have this : ∅ = ∅, refl, 
+-- -- specialize h3 this, subst h3, by_contradiction h4, 
+-- -- apply nprfalse hax, exact mp dne h4},
+-- have h2 := lindenbaum ∅ h1, 
+-- cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : ctx agents), apply h2
+-- end
 
 -- lemma max_ax_exists (hax : sem_cons (∅ : ctx agents) equiv_class) : ∃ Γ : ctx agents, max_ax_consist Γ :=
 -- begin
@@ -619,3 +770,4 @@ end
 
 -- (formula : Type) (Γ: set (formula))
 -- (ax: formula → Prop) (imp: formula → formula → formula) (bot: formula) (and: formula → formula → formula) (true: formula):
+
