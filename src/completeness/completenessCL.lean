@@ -128,7 +128,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
     begin
       let states := {Γ : (set (formCL agents)) // (max_ax_consistent formulaCL Γ)},
 
-      have semi: semi_playable_effectivity_fun states ha :=
+      let semi: semi_playable_effectivity_fun states ha :=
       {
         E := λ s G, {X | ite (G = univ) 
           -- condition G = N
@@ -229,7 +229,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
           (∀ φ, ({t: states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
           -- condition G ≠ N
           (∃ φ, {t: states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
-        from sorry,
+        from rfl,
       
       have hreg': regular agents states semi.E, from
         begin
