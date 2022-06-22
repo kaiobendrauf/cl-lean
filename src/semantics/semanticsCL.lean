@@ -14,7 +14,7 @@ structure frameCL (agents : Type) :=
 (hs : nonempty states)
 (ha : nonempty agents)
 -- (E : states → ((set agents) → (set (set (states)))))
-(E: playable_effectivity_fun agents states ha)
+(E: playable_effectivity_fun states ha)
 
 -- (E: states → (set agents) → Prop)
 

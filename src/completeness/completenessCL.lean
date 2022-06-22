@@ -1,4 +1,5 @@
 import syntax.axiomsCL semantics.semanticsCL semantics.consistency soundness.soundnessCL
+import syntax.propLemmas
 -- import basicmodal.semantics.consistesncy
 
 local attribute [instance] classical.prop_decidable
@@ -42,6 +43,75 @@ namespace canonical
 
 -- def canonical (max_ax_consist : set (formCL agents) → Prop) (ha: nonempty agents) : frameCL agents := 
 
+/-- Γ ⊢ φ -/
+def set_proves (Γ : set (formCL agents)) (φ : formCL agents) :=
+∃ (fs : list (formCL agents)), (∀ x ∈ fs, x ∈ Γ) ∧ axCL (formCL.imp (finite_conjunction formulaCL fs) φ)
+
+lemma not_ax_consistent_of_proves_bot (Γ : set (formCL agents))
+  (h : set_proves Γ ⊥) : ¬ (ax_consistent formulaCL Γ) :=
+sorry
+
+-- -- Lemma 6 from class notes
+ lemma six_helper (Γ : set (formCL agents)) :
+   max_ax_consistent formulaCL Γ → ∀ φ : formCL agents, φ ∈ Γ ∨ (¬φ) ∈ Γ :=
+sorry
+
+lemma bot_not_mem_of_ax_consistent (Γ : set (formCL agents))
+  (hΓ : ax_consistent formulaCL Γ) : (⊥ : formCL agents) ∉ Γ :=
+sorry
+
+lemma proves_of_mem (Γ : set (formCL agents)) (φ : formCL agents)
+  (h : φ ∈ Γ) : set_proves Γ φ :=
+⟨list.cons φ list.nil,
+  by simpa using h,
+  have axCL (formulaCL.and φ formulaCL.top~>φ), from sorry,
+  by simpa [finite_conjunction]⟩
+
+lemma mem_max_consistent_iff_proves (Γ : set (formCL agents)) (φ : formCL agents)
+   (hΓ : max_ax_consistent formulaCL Γ) : set_proves Γ φ ↔ φ ∈ Γ :=
+⟨begin
+  intro h,
+  cases six_helper Γ hΓ φ,
+  { assumption },
+  exfalso,
+  refine not_ax_consistent_of_proves_bot Γ _ (hΓ.1),
+  simp [set_proves, finite_conjunction] at ⊢ h,
+  -- exercise in logic
+  sorry,
+ end,
+ proves_of_mem Γ φ⟩
+
+lemma always_true_of_true (φ : formCL agents) (h : axCL φ)
+  (Γ : set (formCL agents)) : set_proves Γ φ :=
+⟨list.nil, by rintro x ⟨⟩, axCL.MP axCL.Prop1 h⟩
+
+lemma false_of_always_false (φ : formCL agents)
+  (h : ∀ (Γ : set (formCL agents)) (hΓ : max_ax_consistent formulaCL Γ), ¬ set_proves Γ φ) :
+  axCL (¬ φ) :=
+begin
+  let Γ := {φ},
+  by_cases hφ : ax_consistent formulaCL Γ,
+  { obtain ⟨Γ', hΓ', sub⟩ := lindenbaum formulaCL Γ hφ,
+    have := h Γ' hΓ',
+    rw mem_max_consistent_iff_proves Γ' φ hΓ' at this,
+    have := sub (set.mem_singleton φ),
+    contradiction },
+  simp [ax_consistent, finite_ax_consistent] at hφ,
+  rcases hφ with ⟨(list.nil | ⟨x, xs⟩), sub, pf⟩,
+  { simp [finite_conjunction] at pf,
+    -- we have ⊥, so (φ → ⊥) should also follow
+    sorry },
+  { -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
+    sorry },
+end
+
+lemma false_of_always_false' (φ : formCL agents)
+  (h : ∀ (Γ : set (formCL agents)) (hΓ : max_ax_consistent formulaCL Γ), φ ∉ Γ) :
+  axCL (φ ↔ ⊥) :=
+begin
+  -- use false_of_always_false
+  sorry
+end
 
 def canonicalCL (ha: nonempty agents) : frameCL agents := 
 { 
@@ -75,9 +145,15 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
 
             cases hf with φ hφ,
             cases hφ,
-            -- have htemp: 
-            -- apply subtype.eq,
-            sorry,
+            have : axCL (φ ↔ ⊥),
+            { refine false_of_always_false' φ (λ Γ hΓ h, hφ_left _),
+              { exact ⟨Γ, hΓ⟩ },
+              { exact h } },
+            have := @axCL.Eq _ _ _ G this,
+            have : set_proves s.1 ([G] ⊥) := sorry, -- by modus ponens on `this`
+            rw mem_max_consistent_iff_proves s.1 _ s.2 at this,
+            -- contradiction
+            sorry
           end,
 
         semi_safety :=
@@ -88,6 +164,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
             have hGTop: ∀ s: states, ∀ G: set agents, ([G] top) ∈ s.val, from
               begin
                 intros s G,
+                have := always_true_of_true top,
                 sorry,
               end,
           
