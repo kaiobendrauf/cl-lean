@@ -104,7 +104,8 @@ def finite_conjunction {form: Type} (ft : formula form): (list form) → form
 
 
 -- a few helper lemmas about finite conjunctions
-lemma fin_conj_simp {form: Type} {ft : formula form}: ∀ ψ : form, ft.ax (ft.not (finite_conjunction ft ((ψ :: (ft.not ψ :: list.nil))))) :=
+lemma fin_conj_simp {form: Type} {ft : formula form}: 
+∀ ψ : form, ft.ax (ft.not (finite_conjunction ft ((ψ :: (ft.not ψ :: list.nil))))) :=
 begin
 intro ψ,
 simp [finite_conjunction],
@@ -126,12 +127,14 @@ end
 
 
 lemma fin_conj_s_imp {form: Type} {ft : formula form} {Γ : set form} {φ b : form } {L : list form} : 
- ft.ax (ft.imp (finite_conjunction ft (φ :: L))  (ft.imp φ  b)) → ft.ax (ft.imp (finite_conjunction ft L) (ft.imp φ b)) :=
+ ft.ax (ft.imp (finite_conjunction ft (φ :: L))  (ft.imp φ b)) → ft.ax (ft.imp (finite_conjunction ft L) (ft.imp φ b)) :=
 begin
 intro h, rw imp_conj_imp_imp at h, rw imp_imp_iff_imp at h, exact h, exact Γ, exact φ,
 intros _ _ _,
 exact and_right_imp,
 end
+
+
 
 
 lemma fin_conj_append {form: Type} {ft : formula form} {Γ : set form} {L L' : list (form)} :
@@ -284,49 +287,49 @@ Prop :=
 -- lemma fin_consistent_or_top {form : Type} (ft: formula form) (fs: list form)
 --  ()
 
-lemma temp {form : Type} (ft: formula form) (fs fs': list form)
-  (h: ∀ ψ, ψ ∈ fs' → (ψ = ft.top ∨ ψ ∈ fs)) :
-  ft.ax (finite_conjunction ft fs) ↔ ft.ax (finite_conjunction ft fs') :=
-  sorry
+-- lemma temp {form : Type} (ft: formula form) (fs fs': list form)
+--   (h: ∀ ψ, ψ ∈ fs' → (ψ = ft.top ∨ ψ ∈ fs)) :
+--   ft.ax (finite_conjunction ft fs) ↔ ft.ax (finite_conjunction ft fs') :=
+--   sorry
 
-lemma temp2 {form : Type} (ft: formula form) (φ ψ: form)
-  (h: ft.ax φ ↔ ft.ax ψ) :
-  ∀ ϕ, ft.ax (ft.imp φ ϕ) ↔ ft.ax (ft.imp ψ ϕ) :=
-  sorry 
+-- lemma temp2 {form : Type} (ft: formula form) (φ ψ: form)
+--   (h: ft.ax φ ↔ ft.ax ψ) :
+--   ∀ ϕ, ft.ax (ft.imp φ ϕ) ↔ ft.ax (ft.imp ψ ϕ) :=
+--   sorry 
 
 -- def temp3 {form : Type} (ft: formula form) : list form -> set form → list form
 --   | list.nil _ := list.nil,
 --   | (f::fs) Γ  :=
 
-lemma ax_consistent_union_top {form : Type} (ft: formula form) (Γ: set form) 
-  (h: ax_consistent ft Γ) : ax_consistent ft (Γ ∪ {ft.top}) :=
-begin
-  simp[ax_consistent, finite_ax_consistent] at *,
-  intros fs' hψ hf,
-  sorry,
-end
+-- lemma ax_consistent_union_top {form : Type} (ft: formula form) (Γ: set form) 
+--   (h: ax_consistent ft Γ) : ax_consistent ft (Γ ∪ {ft.top}) :=
+-- begin
+--   simp[ax_consistent, finite_ax_consistent] at *,
+--   intros fs' hψ hf,
+--   sorry,
+-- end
 
-lemma max_ax_top {form : Type} (ft: formula form) (Γ: set (form)) 
-  (h: max_ax_consistent ft Γ):
-  ft.top ∈ Γ :=
-begin
-  cases h,
-  by_contradiction,
-  apply h_right (Γ ∪ {ft.top}),
-  {
-    rw set.ssubset_iff_of_subset,
-    apply exists.intro ft.top,
-    {
-      apply exists.intro,
-      { simp, },
-      { exact h, },
-    },
-    { exact subset_union_left Γ {ft.top}, },
-  },
-  {
-    exact ax_consistent_union_top ft Γ h_left,
-  }
-end
+-- lemma max_ax_top {form : Type} (ft: formula form) (Γ: set (form)) 
+--   (h: max_ax_consistent ft Γ):
+--   ft.top ∈ Γ :=
+-- begin
+--   cases h,
+--   by_contradiction,
+--   apply h_right (Γ ∪ {ft.top}),
+--   {
+--     rw set.ssubset_iff_of_subset,
+--     apply exists.intro ft.top,
+--     {
+--       apply exists.intro,
+--       { simp, },
+--       { exact h, },
+--     },
+--     { exact subset_union_left Γ {ft.top}, },
+--   },
+--   {
+--     exact ax_consistent_union_top ft Γ h_left,
+--   }
+-- end
 
 
 lemma max_imp_ax {form : Type} {ft: formula form} {Γ: set form} : 
@@ -414,13 +417,12 @@ end
 
 
 -- Lemma 6 from class notes
-lemma max_ax_contains_phi_or_neg  {form : Type} {ft: formula form} (Γ: set form) 
-(h : ax_consistent ft Γ):
+lemma max_ax_contains_phi_or_neg  {form : Type} {ft: formula form} (Γ: set form):
 max_ax_consistent ft Γ → ∀ φ : form, φ ∈ Γ ∨ (ft.not φ) ∈ Γ :=
 begin
 intros h1 φ, rw or_iff_not_and_not, by_contradiction h2,
 cases h2 with h2l h2r,
-cases h1 with h1l h1r, clear h, 
+cases h1 with h1l h1r, 
 have h2 := h1r (Γ ∪ {φ}),
 have h3 : ¬ax_consistent ft ({ft.not φ} ∪ Γ), 
   { 
@@ -454,7 +456,7 @@ max_ax_consistent ft Γ ↔ ∀ φ, (φ ∈ Γ ∨ (ft.not φ) ∈ Γ) ∧ ¬(φ
 begin 
 simp, split, 
 intro h1, intro φ, 
-split, exact max_ax_contains_phi_or_neg Γ h h1 φ,
+split, exact max_ax_contains_phi_or_neg Γ h1 φ,
 {rw ←not_and, by_contradiction h2,
 cases h2 with h2 h3,
 simp [ax_consistent] at h,
@@ -771,3 +773,147 @@ end
 -- (formula : Type) (Γ: set (formula))
 -- (ax: formula → Prop) (imp: formula → formula → formula) (bot: formula) (and: formula → formula → formula) (true: formula):
 
+def set_proves {form : Type} {ft: formula form} (Γ : set (form)) (φ : form) :=
+∃ (fs : list (form)), (∀ x ∈ fs, x ∈ Γ) ∧ ft.ax (ft.imp (finite_conjunction ft fs) φ)
+
+lemma not_ax_consistent_of_proves_bot {form : Type} {ft: formula form} (Γ : set form)
+  (h : @set_proves form ft Γ ft.bot) : ¬ (ax_consistent ft Γ) :=
+begin
+  intro hf,
+  cases h with l h,
+  cases h,
+  apply hf,
+  intros ψ hψ,
+  apply h_left,exact hψ,
+  exact h_right,
+end
+
+
+lemma bot_not_mem_of_ax_consistent {form : Type} {ft: formula form} (Γ : set (form))
+  (hΓ : ax_consistent ft Γ) : (ft.bot) ∉ Γ :=
+begin
+  intro hf,
+  have hbot_proves_bot: @set_proves form ft Γ ft.bot, from 
+  begin
+    -- simp [ax_consistent, finite_ax_consistent] at hΓ,
+    let l := (ft.bot :: list.nil),
+    apply exists.intro l,
+    split,
+    { simp, exact hf, },
+    {
+      simp[l, finite_conjunction],
+      apply cut,
+      { exact ft.p5 _ _, },
+      { exact iden},
+    },
+  end,
+  exact (not_ax_consistent_of_proves_bot Γ hbot_proves_bot) hΓ,
+end
+
+lemma proves_of_mem {form : Type} {ft: formula form} (Γ : set (form)) (φ : form)
+  (h : φ ∈ Γ) : @set_proves form ft Γ φ :=
+⟨list.cons φ list.nil,
+  by simpa using h,
+  have ft.ax (ft.imp (ft.and φ ft.top) φ), from ft.p5 _ _,
+  by simpa [finite_conjunction]⟩
+
+lemma mem_max_consistent_iff_proves {form : Type} {ft: formula form} (Γ : set (form)) (φ : form)
+   (hΓ : max_ax_consistent ft Γ) : @set_proves form ft Γ φ ↔ φ ∈ Γ :=
+⟨begin
+  intro h,
+  cases max_ax_contains_phi_or_neg Γ hΓ φ,
+  { assumption },
+  exfalso,
+  refine not_ax_consistent_of_proves_bot Γ _ (hΓ.1),
+  simp [set_proves, finite_conjunction] at ⊢ h,
+  -- exercise in logic
+  cases h with fs h,
+  cases h,
+  apply exists.intro (ft.not φ :: fs),
+  split,
+  { 
+    intros x hx,
+    cases hx,
+    rw ←hx at h_1, exact h_1,
+    apply h_left x hx,
+  },
+  {
+    have hφ: ft.ax (ft.imp (finite_conjunction ft (ft.not φ :: fs)) (φ)), from cut (imp_and_r h_right) (iden),
+    have hnφ: ft.ax (ft.imp (finite_conjunction ft (ft.not φ :: fs)) (ft.not φ)), from imp_and_l iden,
+    apply cut,
+    { exact imp_imp_and hφ hnφ, },
+    { exact contra_imp_false, },
+  },
+ end,
+ proves_of_mem Γ φ⟩
+
+lemma always_true_of_true {form : Type} {ft: formula form} (φ : form) (h : ft.ax φ)
+  (Γ : set (form)) : @set_proves form ft Γ φ :=
+⟨list.nil, by rintro x ⟨⟩, ft.mp _ _ (ft.p1 _ _) h⟩
+
+lemma false_of_always_false {form : Type} {ft: formula form} (φ : form)
+  (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent ft Γ), ¬ @set_proves form ft Γ φ) :
+  ft.ax (ft.not φ) :=
+begin
+  let Γ := {φ},
+  by_cases hφ : ax_consistent ft Γ,
+  { obtain ⟨Γ', hΓ', sub⟩ := lindenbaum ft Γ hφ,
+    have := h Γ' hΓ',
+    rw mem_max_consistent_iff_proves Γ' φ hΓ' at this,
+    have := sub (set.mem_singleton φ),
+    contradiction },
+  simp [ax_consistent, finite_ax_consistent] at hφ,
+  rcases hφ with ⟨(list.nil | ⟨x, xs⟩), sub, pf⟩,
+  { simp [finite_conjunction] at pf,
+    -- we have ⊥, so (φ → ⊥) should also follow
+    simp [ft.notdef],
+    exact ax_bot_imp pf,
+    },
+  { -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
+    induction xs, 
+    {
+      simp [finite_conjunction] at *,
+      simp [sub] at *,
+      simp [ft.notdef],
+      exact imp_and_top pf,
+    },
+    {
+      simp [finite_conjunction] at *,
+      apply xs_ih,
+      { exact sub.left, },
+      { exact sub.right.right, },
+      {
+        simp [sub.right.left, sub.left] at *,
+        apply remove_and_imp pf,
+      }
+
+    },
+  },
+end
+
+lemma false_of_always_false' {form : Type} {ft: formula form}  (φ : form)
+  (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent ft Γ), φ ∉ Γ) :
+  ft.ax (ft.iff φ ft.bot) :=
+begin
+  rw ft.iffdef,
+  have hfoaf: _, from (@false_of_always_false form ft φ) ,
+  -- have hmmcip: _, from @mem_max_consistent_iff_proves form ft,
+  -- use false_of_always_false
+  simp,
+  apply ft.mp,
+  apply ft.mp,
+  apply ft.p4,
+  {
+    rw ft.notdef at hfoaf,
+    apply hfoaf,
+    intros Γ hΓ hf,
+    apply h,
+    { exact hΓ, },
+    { 
+      apply iff.elim_left (mem_max_consistent_iff_proves Γ φ hΓ),
+      exact hf,
+    },
+  },
+  { exact explosion, },
+  
+end
