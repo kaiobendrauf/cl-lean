@@ -83,9 +83,14 @@ begin
 end
 
 ----------------------------------------------------------
--- Semi & Playable
+-- Playable from Semi
 ----------------------------------------------------------
-def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun states ha) (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): playable_effectivity_fun states ha :=
+def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun states ha) 
+  (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): 
+  playable_effectivity_fun states ha :=
+
+-- E(s) is live: ∅ ∉ E(s)(N)
+-- From semi-playable: S ∈ E(s)(∅) and regularity: S ∈ E(s)(∅) ⇒ ∅ ∉ E(s)(N).
   have hLiveness: ∀ s: states, ∀ G: set agents, ∅ ∉ semi.E (s) (G), from
   begin
     intros s G,
@@ -100,6 +105,8 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
     },
   end,
 
+  -- E(s) is safe: S ∈ E(s)(N) 
+  -- From semi-playable: ∅ ∉ E(s)(∅) and N-maximality: ∅ ∈/ E(s)(∅) ⇒ S ∈ E(s)(N).
   have hSafety: ∀ s: states, ∀ G: set agents, univ ∈ semi.E (s) (G), from 
   begin
     intros s G,
@@ -114,49 +121,67 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
     }
   end,
 
+-- E(s) is outcome monotonic: ∀X ⊆ Y ⊆ S : X ∈ E(s)(N) ⇒ Y ∈ E(s)(N)
   have hMonoticity: ∀ s: states, ∀ G: set agents, ∀ X Y: set states, X ⊆ Y → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (G), 
   begin
+  -- Assume some X and some Y such that X ⊆ Y ⊆ S and X ∈ E(s)(N)
     intros s G X Y hXY hX,
     cases (ssubset_or_eq_of_subset (subset_univ G)),
     {exact semi.semi_monoticity s G X Y h hXY hX,},
     {
       rw h at *,
+      -- Xᶜ ∉ E(s)(∅), from regularity: X ∈ E(s)(N) ⇒ Xᶜ ∉ E(s)(∅), and hX: Xᶜ ∈ E(s)(N)
       have hXc: Xᶜ ∉ semi.E s univᶜ, from hReg s univ X hX,
       simp[compl_univ] at hXc,
+      --  Yᶜ ⊆ Xᶜ, from hXY: X ⊆ Y
       have hXYc: Yᶜ ⊆ Xᶜ, from compl_subset_compl.mpr hXY,
+      -- Yᶜ ∈ E(s)(∅) ⇒ Xᶜ ∈ E(s)(∅), from semi-playable (monoticity) and hXYc
       have hmono: Yᶜ ∈ semi.E s ∅ → Xᶜ ∈ semi.E s ∅, from semi.semi_monoticity s ∅ Yᶜ Xᶜ (empty_subset_univ ha) hXYc,
+      -- Xᶜ ∉ E(s)(∅) ⇒ Yᶜ ∉ E(s)(∅), from the contrapositive of hmono
       have hmono': Xᶜ ∉ semi.E s ∅ → Yᶜ ∉ semi.E s ∅, from mt hmono,
+      --  Yᶜ ∉ E(s)(∅), from hXc and hmono'
       have hYc, from hmono' hXc,
-      have hif: Yᶜ ∉ semi.E s ∅ → Y ∈ semi.E s univ, from hNmax s Y,
-      exact hif hYc,
+      -- Y ∈ E(s)(N), from N-maximality: Yᶜ ∉(s)(∅) ⇒ Y ∈ E(s)(N) and hYc
+      exact (hNmax s Y) hYc,
     }
   end,
 
+-- E(s) is superadditive: ∀G, F ⊆ N (where G ∩ F = ∅ and G ∪ F = N), ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈ E(s)(F) ⇒ X ∩Y ∈ E(s)(G∪F)
   have hSuperadd: ∀ s: states, ∀ G F: set agents, ∀ X Y: set states, X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.E (s) (G ∪ F), from 
   
     have hSuperadd': ∀ s: states, ∀ G F: set agents, ∀ X Y: set states,
       G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ  → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → 
       X ∩ Y ∈ semi.E (s) (G ∪ F), from 
     begin
+      --  Assume some G, F ⊆ N, where G ∩ F = ∅ and G ∪ F = N). Note that G = F. Assume X ∈ E(s)(G) and Y ∈ E(s)(F).
       intros s G F X Y hint hunion hF hX hY,
-      by_contradiction hfalse,
-      rw hunion at hfalse, -- X ∩ Y ∉ semi.E s univ
 
+      -- Assume by contradiction that X ∩ Y ∉ E(s)(G ∪ F = N).
+      by_contradiction hfalse,
+      rw hunion at hfalse, 
+
+    	-- (X ∩ Y) ∉ E(s)(N) ⇒ (X ∩ Y)ᶜ ∈ E(s)(∅), from the contrapositive of N-maximality: (X ∩ Y)ᶜ ∉ E(s)(∅) ⇒ (X ∩ Y) ∈ E(s)(N)
+      -- (X ∩ Y)ᶜ ∈ E(s)(∅), hfalse and above
       have hIntc: ¬(X ∩ Y)ᶜ ∉ semi.E s ∅, 
         from (mt (hNmax s (X ∩ Y))) hfalse,
-      simp at hIntc, -- (X ∩ Y)ᶜ ∈ semi.E s ∅
+      simp at hIntc, 
 
+      -- ((X ∩ Y)ᶜ ∩ Y ) ∈ E(s)(F), from semi-playability: (X ∩ Y)ᶜ ∈ E(s)(∅) and Y ∈ E(s)(F) ⇒ (X ∩ Y ∩ Y ) ∈ E(s)(∅ ∪ F), hIntc and hY
+      -- (X ∩ Y) ∈ E(s)(F), from above
       have hIntXc: (X ∩ Y)ᶜ ∩ Y ∈ semi.E s (∅ ∪ F),
         from semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp [hF]) hIntc hY (empty_inter F),
-      simp [intersect_complement] at hIntXc, -- Xᶜ ∩ Y ∈ semi.E s F
+      simp [intersect_complement] at hIntXc,
 
+      --  Xᶜ ∈ E(s)(F), from semi-playability: (Xᶜ ∩ Y) ∈ E(s)(F) ⇒ Xᶜ ∈ E(s)(F), and hIntXc
       have hXc: Xᶜ ∈ semi.E s F, 
         from semi.semi_monoticity s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc,
 
+      -- X ∉ E(s)(G), from regularity: Xᶜ ∈ E(s)(F) ⇒ X ∉ E(s)(G), and 1.5.9, given Fᶜ = G, from hint and hunion
       have hX': Xᶜᶜ ∉ semi.E s Fᶜ, 
         from hReg s F Xᶜ hXc,
       simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX', -- hX': X ∉ semi.E s G
-  
+
+      -- Contradiction from hX' and hX
       exact hX' hX,
     end,
 
@@ -166,7 +191,8 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
     -- Case: G ∪ F ⊂ N
     {exact semi.semi_superadd s G F X Y h hX hY hint,},
     {
-      cases (ssubset_or_eq_of_subset (subset_univ (G))), 
+      cases (ssubset_or_eq_of_subset (subset_univ (G))),
+
       -- Case: G ⊂ N
       {
         simp[inter_comm X Y, inter_comm G F, union_comm G F] at *,
@@ -174,14 +200,15 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
       },
       {
         cases (ssubset_or_eq_of_subset (subset_univ (F))),
+
         -- Case: G = N, F ⊂ N
         { exact hSuperadd' s G F X Y hint h h_2 hX hY, },
-        -- Case:G = N, F = N
+        
+        -- Case:G = N, F = N (impossible)
         {
           by_contradiction,
           simp [h_1, h_2, inter_self (@univ agents)] at *,
           exact hReg s univ X hX (false.rec (Xᶜ ∈ semi.E s univᶜ) hint),
-          -- exact not_is_empty_iff.mpr ha hint,
         },
       },
     },

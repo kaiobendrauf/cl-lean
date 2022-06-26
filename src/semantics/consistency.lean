@@ -421,7 +421,7 @@ have h3 : ¬ax_consistent ft ({ft.not φ} ∪ Γ),
 have h5 : ¬ax_consistent ft (Γ ∪ {φ}), 
   {
     apply h2,
-    have heq: Γ ∪ {φ} = set.insert φ Γ, from by finish,
+    have heq: Γ ∪ {φ} = insert φ Γ, from by finish,
     rw heq,
     from set.ssubset_insert h2l,}, 
 have h6 := five Γ φ _, have h7 := five Γ (ft.not φ) _, 
@@ -923,6 +923,22 @@ begin
     rw iff_and_top,
     rw and_right_imp,
     exact hproves,
+  },
+end 
+
+lemma max_ax_contains_by_empty_proof {form: Type} {ft: formula form} {φ: form} (Γ: set form)
+  (h_max: max_ax_consistent ft Γ) (hproves: ft.ax (φ)) : φ ∈ Γ :=
+begin
+  rw ←(mem_max_consistent_iff_proves Γ φ h_max),
+  simp[set_proves],
+  apply exists.intro (list.nil),
+  split,
+  { simp },
+  { 
+    simp[finite_conjunction],
+    apply ft.mp,
+    apply ft.p1,
+    exact hproves, 
   },
 end 
 
