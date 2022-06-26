@@ -1,3 +1,6 @@
 [submodule "_target/deps/modal"]
 	path = _target/deps/modal
 	url = https://github.com/paulaneeley/modal.git
+[submodule "_target/deps/mathlib"]
+	path = _target/deps/mathlib
+	url = https://github.com/leanprover-community/mathlib.git
