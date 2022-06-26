@@ -369,6 +369,7 @@ exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (ft.mp _ _ double_imp (cut (ft.p5 _ _) (
 (ft.mp _ _ double_imp (cut (ft.p5 _ _) (imp_switch (cut (ft.p6 _ _) (ft.p4 _ _))))))
 end
 
+
 lemma and_commute {form: Type} {ft: formula form} {φ ψ χ : form} : 
 -- ⊢ ((φ ∧ ψ) ∧ χ) ↔ (φ ∧ (ψ ∧ χ))
 ft.ax (ft.iff (ft.and (ft.and φ ψ) χ) (ft.and φ (ft.and ψ χ))) :=
@@ -389,6 +390,16 @@ exact ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (ft.mp _ _ double_imp (imp_imp_iff_imp.mp
  (imp_switch (cut (ft.p5 _ _) (cut1 (ft.p4 _ _) (cut2 (cut (ft.p6 _ _) (ft.p6 _ _)) (ft.p4 _ _))))))))
 end
 
+lemma contra_imp_false_ax_not {form: Type} {ft: formula form} {φ : form} : 
+-- ⊢ ¬ φ ⇒ ⊢ φ → ⊥
+ ft.ax (ft.not φ) → ft.ax (ft.imp φ ft.bot) :=
+begin
+intro h,
+apply cut (ft.mp _ _ (ft.p4 _ _) h),
+apply cut (ft.mp _ _ (ft.p5 _ _) and_switch'),
+exact contra_imp_false,
+end
+
 lemma imp_and_imp {form: Type} {ft: formula form} {φ ψ χ : form} : 
 -- ⊢ φ → ψ ⇒ ⊢ (χ ∧ φ) → (χ ∧ ψ)
  ft.ax (ft.imp φ ψ) → ft.ax (ft.imp (ft.and χ φ) (ft.and χ ψ)) :=
@@ -399,6 +410,7 @@ end
 
 
 lemma demorgans {form: Type} {ft: formula form} {φ ψ : form} : 
+-- ⊢ ¬ (φ ∧ ψ) ⇔ ⊢ φ → ¬ ψ
 ft.ax (ft.not (ft.and φ ψ)) ↔ ft.ax (ft.imp φ (ft.not ψ)) :=
 begin
 split,
@@ -420,7 +432,9 @@ end
 
 
 
-lemma explosion {form: Type} {ft: formula form} {φ : form} : ft.ax (ft.imp ft.bot φ) :=
+lemma explosion {form: Type} {ft: formula form} {φ : form} : 
+-- ⊢ ⊥ → φ 
+ft.ax (ft.imp ft.bot φ) :=
 begin
 apply contrapos.mp, exact (ft.mp _ _ (ft.p1 _ _) not_bot)
 end
@@ -540,14 +554,23 @@ begin
   exact prtrue,
 end
 
-lemma imp_and_top {form: Type} {ft: formula form} {φ ψ: form}: 
--- ⊢ (φ ∧ ⊤) → ψ ⇒ ⊢ (φ → ψ) 
-ft.ax (ft.imp (ft.and φ ft.top) ψ) → ft.ax (ft.imp φ ψ):=
+lemma iff_and_top {form: Type} {ft: formula form} {φ ψ: form}: 
+-- ⊢ (φ ∧ ⊤) → ψ ⇔ ⊢ (φ → ψ) 
+ft.ax (ft.imp (ft.and φ ft.top) ψ) ↔ ft.ax (ft.imp φ ψ):=
 begin
-intro h,
-apply cut,
-{ exact ft.mp _ _ (ft.p6 _ _ ) phi_and_true', },
-{ rw topnotbot at h, exact h,},
+split,
+{
+  intro h,
+  apply cut,
+  { exact ft.mp _ _ (ft.p6 _ _ ) phi_and_true', },
+  { rw topnotbot at h, exact h,},
+},
+{
+  intro h,
+  apply cut,
+  apply ft.p5,
+  exact h,
+}
 end
 
 lemma remove_and_imp {form: Type} {ft: formula form} {φ ψ χ: form}:

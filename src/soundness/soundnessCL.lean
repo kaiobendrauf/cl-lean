@@ -7,6 +7,8 @@ import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL
 -- import basicmodal.semantics.definability basicmodal.syntax.syntaxlemmas
 local attribute [instance] classical.prop_decidable
 
+open set
+
 variable {agents : Type}
 
 ---------------------- Soundness ----------------------
@@ -198,3 +200,94 @@ end
 -- begin
 -- intro h, apply soundnesshelper, apply h, apply S5_helper
 -- end
+
+inductive single : Type
+  | one: single
+
+
+lemma univ_single : (set.univ: set single) = {single.one} := 
+begin
+  rw eq_comm,
+  rw set.eq_univ_iff_forall,
+  intro x,
+  cases x,
+  simp,
+end
+
+lemma single_nonempty : nonempty single := 
+begin
+  apply exists_true_iff_nonempty.mp,
+  apply exists.intro single.one,
+  exact trivial,
+end
+
+def m_ex (ha: nonempty agents) : modelCL agents  :=
+{
+  f := 
+  {
+    states := single,
+    hs := single_nonempty,
+    ha := ha,
+    E  :=  
+    {
+      E := λ s G, {{single.one}},
+      liveness := 
+      begin 
+        intros _ _ hf, 
+        simp at hf, 
+        rw set.ext_iff at hf, 
+        simp at hf,
+        apply hf single.one,
+        refl, 
+      end,
+      safety:=
+        begin
+          intros _ _, simp at *,
+          exact univ_single,
+        end,
+      N_max :=
+        begin
+          intros _ _ hxc, simp at *,
+          rw ←univ_single at *,
+          have hcond : {single.one} ≠ (∅: set single), 
+            {
+              intro hf,
+              rw set.ext_iff at hf, 
+              simp at *,
+              apply hf single.one,
+              refl,
+            },
+          simp [hcond] at *, by_contradiction,
+          have hex: ∃ x, x ∈ X, from nonempty_def.mp (ne_empty_iff_nonempty.mp hxc),
+          cases hex with s hs,
+          cases s,
+          rw ←singleton_subset_iff at hs,
+          rw ←univ_single at hs,
+          exact h (univ_subset_iff.mp hs),
+        end,
+      monoticity:=
+        begin
+          intros _ _ _ _ hxy hx,
+          simp [←univ_single] at *,
+          rw hx at hxy,
+          exact univ_subset_iff.mp hxy,
+        end,
+      superadd:=
+      begin
+        intros _ _ _ _ _ hX hY hGF,
+        simp at *,
+        simp[hX, hY],
+      end
+    }
+  },
+  v := λ _, {},
+}
+
+lemma nprfalseCL {agents: Type} (ha: nonempty agents): ¬ @axCL agents (⊥) :=
+begin
+apply (mt (soundnessCL (@formCL.bot agents))),
+intro hf ,
+simp[global_valid, valid_m, s_entails] at hf,
+apply hf (m_ex ha),
+exact single.one,
+end

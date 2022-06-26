@@ -62,7 +62,7 @@ variables {agents : Type}
 
 
 -- The S5 axiom system does not prove false
--- lemma nprfalse (hax : sem_cons agents) : ¬ axCL (@formCL.bot agents) :=
+-- lemma nprfalse {form: Type} (ft: formula form) (h_sound: ∀ φ, ft.ax φ → global_valid φ): ¬ ft.ax (ft.bot) :=
 -- begin
 -- have h1 : ¬ global_valid formCL.bot → ¬ axCL formCL.bot,
 -- {have h2 := soundnessS5,
@@ -215,27 +215,16 @@ end
 -- end
 
 
--- lemma listempty {Γ : ctx agents} {L : list (form agents)} :
---   (∀ φ ∈ L, φ ∈ Γ) → Γ = ∅ → L = [] := 
--- begin
--- intros h1 h2,
--- by_contradiction h3,
--- have h4 := list.length_pos_of_ne_nil,
--- have h5 := list.exists_mem_of_length_pos,
--- cases h5 (h4 h3) with φ h5,
--- exact absurd (h1 φ h5) (set.eq_empty_iff_forall_not_mem.mp h2 φ)
--- end
-
--- lemma listempty {formula: Type} {fs : list (formula)} :
---   (∀ φ ∈ fs, φ ∈ Γ) → Γ = ∅ → fs = [] := 
--- begin
--- intros h1 h2,
--- by_contradiction h3,
--- have h4 := list.length_pos_of_ne_nil,
--- have h5 := list.exists_mem_of_length_pos,
--- cases h5 (h4 h3) with φ h5,
--- exact absurd (h1 φ h5) (set.eq_empty_iff_forall_not_mem.mp h2 φ)
--- end
+lemma listempty {form : Type} (ft: formula form) {fs : list form} {Γ : set form}:
+  (∀ φ ∈ fs, φ ∈ Γ) → Γ = ∅ → fs = list.nil := 
+begin
+intros h1 h2,
+by_contradiction h3,
+have h4 := list.length_pos_of_ne_nil,
+have h5 := list.exists_mem_of_length_pos,
+cases h5 (h4 h3) with φ h5,
+exact absurd (h1 φ h5) (set.eq_empty_iff_forall_not_mem.mp h2 φ)
+end
 
 
 -- Consistency for a finite set of formulas L
@@ -731,33 +720,20 @@ end
 
 -- -- Corollary 8 from class notes
 
--- ef finite_ax_consistent {formula : Type} (ax: formula → Prop) (fs: list (formula)) 
--- (imp: formula → formula → formula) (bot: formula) (and: formula → formula → formula) (true: formula): 
-
--- lemma max_ax_exists_CL (hax : sem_cons agents): ∃ Γ : set (formCL agents),
---   max_ax_consistent (formCL agents) Γ axCL formCL.imp ⊥ formCL.and ⊤ :=
--- begin
--- have h1 : @ax_consistent (formCL agents) ∅ axCL formCL.imp ⊥ formCL.and ⊤,
---   begin
---     intros fs h2 hax,
---     simp[(finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and (¬ formCL.bot))] at *,
---     apply h2,
---     repeat {sorry},
-
-    
-
---     -- rw (finite_ax_consistent axCL ∅ formCL.imp formCL.bot formCL.and ⊤),
---     -- have h3 := listempty h2, have this : ∅ = ∅, refl,
-
---   end,
--- -- {intro fs, intro h2, rw finite_ax_consistent axCL,
--- -- c
--- -- have h3 := listempty h2, have this : ∅ = ∅, refl, 
--- -- specialize h3 this, subst h3, by_contradiction h4, 
--- -- apply nprfalse hax, exact mp dne h4},
--- have h2 := lindenbaum ∅ h1, 
--- cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : ctx agents), apply h2
--- end
+lemma max_ax_exists {form : Type} (ft: formula form) (hnprfalseCL: ¬ ft.ax ft.bot) : 
+  ∃ Γ : set form, max_ax_consistent ft Γ :=
+begin
+have h1 : ax_consistent ft ∅,
+{intro L, intro h2, rw finite_ax_consistent, 
+have h3 := listempty ft h2, have this : ∅ = ∅, refl, 
+specialize h3 this, subst h3, by_contradiction h4, 
+apply hnprfalseCL, 
+apply ft.mp,
+exact h4,
+exact prtrue,},
+have h2 := lindenbaum ft (∅: set form) h1, 
+cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : set form), apply h2
+end
 
 -- lemma max_ax_exists (hax : sem_cons (∅ : ctx agents) equiv_class) : ∃ Γ : ctx agents, max_ax_consist Γ :=
 -- begin
@@ -875,7 +851,7 @@ begin
       simp [finite_conjunction] at *,
       simp [sub] at *,
       simp [ft.notdef],
-      exact imp_and_top pf,
+      exact iff_and_top.mp pf,
     },
     {
       simp [finite_conjunction] at *,
@@ -891,7 +867,7 @@ begin
   },
 end
 
-lemma false_of_always_false' {form : Type} {ft: formula form}  (φ : form)
+lemma false_of_always_false' {form : Type} {ft: formula form} (φ : form)
   (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent ft Γ), φ ∉ Γ) :
   ft.ax (ft.iff φ ft.bot) :=
 begin
@@ -915,5 +891,42 @@ begin
     },
   },
   { exact explosion, },
-  
 end
+
+lemma max_ax_contains_by_set_proof {form: Type} {ft: formula form} {φ ψ: form} (Γ: set form)
+  (h_max: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hproves: ft.ax (ft.imp φ ψ)) : ψ ∈ Γ :=
+begin
+  rw ←(mem_max_consistent_iff_proves Γ ψ h_max),
+  simp[set_proves],
+  apply exists.intro (φ :: list.nil),
+  split,
+  { intros x hx, simp at *, rw ←hx at hin, assumption, },
+  { 
+    simp[finite_conjunction],
+    rw iff_and_top,
+    exact hproves, 
+  },
+end 
+
+lemma max_ax_contains_by_set_proof_2h {form: Type} {ft: formula form} {φ ψ χ: form} (Γ: set form)
+  (h_max: max_ax_consistent ft Γ) (hinφ: φ ∈ Γ) (hinψ: ψ ∈ Γ) (hproves: ft.ax (ft.imp φ (ft.imp ψ χ))) : χ ∈ Γ :=
+begin
+  rw ←(mem_max_consistent_iff_proves Γ χ h_max),
+  simp[set_proves],
+  apply exists.intro (ψ :: φ :: list.nil),
+  split,
+  { intros x hx, simp at *, cases hx, repeat{ rw ←hx at *, assumption, },},
+  { 
+    simp[finite_conjunction],
+    apply cut,
+    apply ft.mp _ _ (ft.p6 _ _) and_commute',
+    rw iff_and_top,
+    rw and_right_imp,
+    exact hproves,
+  },
+end 
+
+-- lemma ex_empty_eff {form: Type} {ft: formula form} {Γ: set form} 
+-- (hΓ: max_ax_consistent ft Γ) (hempty : {t : set  | φ ∈ ↑t} = ∅) ∧ ([G]φ) ∈ ↑s
+
+-- {t : states | φ ∈ ↑t} ⊆ ∅ ∧ ([G]φ) ∈ ↑s

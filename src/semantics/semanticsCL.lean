@@ -55,15 +55,15 @@ def global_valid (φ : formCL agents) :=
 --   ∀ f v s, s_entails f v s φ
 
 
--- -- A context is true at a world in a model if each 
--- -- formula of the context is true at that world in that model
--- def s_entails_ctx (f : frame) (v : nat → f.states → Prop) 
---   (Γ : ctx) := ∀ φ, ∀ x, φ ∈ Γ → s_entails f v x φ
+-- A context is true at a world in a model if each 
+-- formula of the context is true at that world in that model
+-- def s_entails_ctx (m : modelCL agents) 
+--   := ∀ φ, ∀ s, s_entails m s φ
 
 
--- -- Global semantic consequence
--- def global_sem_csq (Γ : ctx) (φ : form) :=
---   ∀ f v, s_entails_ctx f v Γ → ∀ x, s_entails f v x φ
+-- Global semantic consequence
+-- def global_sem_csq (φ : formCL agents) :=
+--   ∀ m s, s_entails m s φ
 
 
 lemma not_s_entails_imp (m : modelCL agents) : ∀ s φ, 
