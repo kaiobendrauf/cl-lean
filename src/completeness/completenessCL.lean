@@ -252,12 +252,11 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
     end,
 }
 
-def canonical_model_CL (ha: nonempty agents) : model CL :=
+def canonical_model_CL (ha: nonempty agents) : modelCL agents :=
 {
   f := canonicalCL ha,
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
-  -- (v : f.states → set ℕ)
-  v := sorry,
+  v := λ s, {n : ℕ | (formCL.var n) ∈ s.1},
 }
 
 -- def T_canonical  : frame := @canonical T_axioms sem_consT
