@@ -508,7 +508,7 @@ end
 
 
 lemma imp_imp_and {form: Type} {ft: formula form} {φ ψ χ: form}:
--- ⊢ (φ → ψ) ⇒ ⊢ (φ → χ) ⇒ ⊢ (φ  → (ψ ∧ χ)
+-- ⊢ (φ → ψ) ⇒ ⊢ (φ → χ) ⇒ ⊢ φ → (ψ ∧ χ)
   ft.ax (ft.imp φ ψ) → ft.ax (ft.imp φ χ) → ft.ax (ft.imp φ (ft.and ψ χ)) :=
 begin
 intros h1 h2,

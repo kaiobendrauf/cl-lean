@@ -1,4 +1,5 @@
 inductive formCL (agents  : Type) : Type
+-- φ := ⊥ | p | φ → φ| φ ∧ φ | [G]φ
   | bot                         : formCL
   | var  (n : nat)              : formCL
   | and  (φ ψ : formCL)         : formCL

@@ -15,6 +15,7 @@ Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
 inductive axCL : formCL agents → Prop 
+-- (Prop) Propositional tautologies
 | Prop1 {φ ψ}                 : axCL (φ ~> (ψ ~> φ))
 | Prop2 {φ ψ χ}               : axCL ((φ ~> (ψ ~> χ)) ~> ((φ ~> ψ) ~> (φ ~> χ)))
 | Prop3 {φ ψ}                 : axCL (((¬φ) ~> (¬ψ)) ~> (((¬φ) ~> ψ) ~> φ))
@@ -22,14 +23,22 @@ inductive axCL : formCL agents → Prop
 | Prop5 {φ ψ}                 : axCL ((φ & ψ) ~> φ)
 | Prop6 {φ ψ}                 : axCL ((φ & ψ) ~> ψ)
 | Prop7 {φ ψ}                 : axCL (((¬ φ) ~> (¬ψ)) ~> (ψ ~> φ))
+-- (⊥) ¬[G]⊥
 | Bot   {G}                   : axCL (¬ ([G] ⊥))
+-- (⊤) [G]⊤
 | Top   {G}                   : axCL ([G] ⊤)
+-- (N) (¬[∅]¬φ → [N]φ)
 | N     {φ}                   : axCL ((¬ ([∅] (¬ φ))) ~> [univ] φ)
+-- (M) [G](φ ∧ ψ) → [G]φ
 | M     {φ ψ} {G}             : axCL (([G] (φ & ψ)) ~> [G] φ)
+-- (S) ([G]φ ∧ [F]ψ) → [G ∪ F](φ ∧ ψ), when G ∩ F = ∅
 | S     {φ ψ} {G F} 
         (hInt: G ∩ F = ∅)     : axCL ((([G]φ) & ([F]ψ)) ~> [G ∪ F] (φ & ψ))
-| MP    {φ ψ} (hImp: axCL (φ ~> ψ))
+-- (MP) ⊢ φ, φ → ψ ⇒⊢ ψ
+| MP    {φ ψ} 
+        (hImp: axCL (φ ~> ψ))
         (hL: axCL φ)          : axCL (ψ)
+-- (Eq) ⊢ φ ↔ ψ ⇒⊢ [G]φ ↔ [G]ψ
 | Eq    {φ ψ} {G}
         (h: axCL (φ ↔ ψ))     : axCL (([G] φ) ↔ ([G] ψ))
 

@@ -29,6 +29,7 @@ namespace canonical
 
 def canonicalCL (ha: nonempty agents) : frameCL agents := 
 { 
+  -- S is the set of all maximal CL-consistent set of formulas
   states := {Γ : (set (formCL agents)) // (max_ax_consistent formulaCL Γ)},
   hs := 
     begin
@@ -44,8 +45,10 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
       {
         E := λ s G, {X | ite (G = univ) 
           -- condition G = N
+          --  X ∈ E(s)(N) iff ∀φ˜ ⊆ Xᶜ : [∅]φ /∈ s, where φ˜ := {t ∈ S| φ ∈ t}, and Xᶜ := S\X
           (∀ φ, ({t: states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
           -- condition G ≠ N
+          --  When G ̸= N: X ∈ E(s)(G) iff ∃φ˜ ⊆ X : [G]φ ∈ s
           (∃ φ, {t: states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
         
         semi_liveness := 
@@ -249,6 +252,13 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
     end,
 }
 
+def canonical_model_CL (ha: nonempty agents) : model CL :=
+{
+  f := canonicalCL ha,
+  -- V is as usual, such that s ∈ V (p) iff p ∈ s
+  -- (v : f.states → set ℕ)
+  v := sorry,
+}
 
 -- def T_canonical  : frame := @canonical T_axioms sem_consT
 -- def S4_canonical : frame := @canonical S4_axioms sem_consS4

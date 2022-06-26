@@ -31,8 +31,8 @@ def s_entails : ∀ m : modelCL agents,
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
   | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
 
-def tilde (m: modelCL agents) (φ : formCL agents)  :=
-{t: m.f.states | s_entails m t φ}
+-- def tilde (m: modelCL agents) (φ : formCL agents)  :=
+-- {t: m.f.states | s_entails m t φ}
 
 -- φ is valid in a model M = (f,v)
 def valid_m (m: modelCL agents) (φ : formCL agents) := 
