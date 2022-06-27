@@ -1,5 +1,6 @@
-import syntax.axiomsCL semantics.semanticsCL semantics.consistency soundness.soundnessCL
-import syntax.propLemmas
+import  semantics.consistency soundness.soundnessCL
+import  syntax.CLLemmas
+import tactic.induction
 -- import basicmodal.semantics.consistesncy
 
 local attribute [instance] classical.prop_decidable
@@ -311,7 +312,7 @@ lemma truth_lemma_CL {agents: Type} (ha: nonempty agents) (φ : formCL agents) (
 (s_entails (canonical_model_CL ha) s φ) ↔ (φ ∈ s.1) :=
 begin
   -- This proof is by induction on φ.
-  induction φ,
+  induction' φ with n φ ψ _ _ φ ψ _ _,
   {
     simp [s_entails],
     exact @bot_not_mem_of_ax_consistent (formCL agents) formulaCL s.1 s.2.1,
@@ -320,7 +321,7 @@ begin
     simpa,
   },
   {
-    simp [s_entails, φ_ih_φ, φ_ih_ψ],
+    simp [s_entails, ih_φ, ih_ψ],
     split,
     {
       intro h,
@@ -334,7 +335,7 @@ begin
     },
   },
   {
-    simp [s_entails, φ_ih_φ, φ_ih_ψ],
+    simp [s_entails, ih_φ, ih_ψ],
     split,
     {
       intro h,
@@ -345,7 +346,136 @@ begin
       exact max_ax_contains_by_set_proof_2h s.1 s.2 hφ h likemp,
     },
   },
-  {sorry},
+  {
+    have hE : (canonical_model_CL ha).f.E.E = λ s G, {X | ite (G = univ) 
+      -- condition G = N
+      (∀ φ, ({t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
+      -- condition G ≠ N
+      (∃ φ, {t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
+    from rfl,
+
+    specialize ih ha,
+    
+    -- It is sufficient to consider the case when G ⊂ N, because ⊢ [N]φ ↔ ¬[∅]¬φ
+    suffices hsuffices: G ⊂ univ → (s_entails (canonical_model_CL ha) s ([G]φ) ↔ ([G]φ) ∈ s.val),
+    {
+      cases set.eq_or_ssubset_of_subset (set.subset_univ G),
+      {
+        have hempty: axCL (([univ]φ) ↔ ¬([∅](¬φ))), from sorry,
+        simp [h] at *, clear h,
+        split,
+        {
+          intro h,
+          simp[s_entails, hE] at h,
+          have hnin: ([∅] (¬φ)) ∉ s.val, from
+          begin
+            apply h (¬ φ),
+            apply @eq.subset (canonical_model_CL ha).f.states {t : (canonical_model_CL ha).f.states | (¬ φ) ∈ ↑t} {t : (canonical_model_CL ha).f.states | s_entails (canonical_model_CL ha) t φ}ᶜ,
+            simp[ih],
+            sorry,
+            -- a = b ↔ a ⊆ b ∧ b ⊆ a
+          end,
+          simp at hnin,
+          sorry,
+          -- have hin:  (¬[∅]¬φ) ∈ s.1, from 
+          -- apply max_ax_contains_by_set_proof s.1 s.2 hin,
+          
+        },
+        {
+          sorry,
+        },
+      },
+      {exact hsuffices h,}
+    },
+    {
+      intro hG,
+      split,
+      -- M, s ⊨ [G]φ ⇒ [G]φ ∈ s, when G ⊂ N
+      {
+        -- Assume M, s ⊨ [G]φ
+        intro h,
+        -- {s ∈ S| M, s ⊨ φ} ∈ E(s)(G), from h, by definition ⊨
+        simp[s_entails] at h,
+        -- ∃ψ˜ ⊆ {t ∈ S| M, t ⊨ φ} : [G]ψ ∈ s, from above, by definition EC\
+        have huniv: G ≠ univ, from (set.ssubset_iff_subset_ne.mp hG).right,
+        simp[hE, huniv] at h, clear huniv,
+        -- ∃ψ˜ ⊆ {t ∈ S| M, φ ∈ t} : [G]ψ ∈ s, from above, by IH
+        cases h with ψ hψ, 
+        have hψih: ∀ (a : (canonical_model_CL ha).f.states), ψ ∈ ↑a → φ ∈ a.val, from
+          begin
+            intros t ht, 
+            apply (ih t).mp, 
+            apply hψ.left, 
+            exact ht,
+          end,
+        -- 3.5. ∃ψ˜ ⊆ φ˜ : [G]ψ ∈ s, from hih, by definition ψ˜
+        have hGψ: ([G]ψ) ∈ s.val, from hψ.right,
+        -- 3.6. ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in 3.5 
+        have himp: axCL (ψ ~> φ), from 
+        begin
+          have himp': ∀ (t : (canonical_model_CL ha).f.states), (ψ ~> φ) ∈ t.val, from
+            λ t, max_ax_contains_imp_by_proof t.1 t.2 (hψih t),
+
+          have himpneg: ∀ (t : (canonical_model_CL ha).f.states), (¬(ψ ~> φ)) ∉ t.val, from
+          begin
+            intro t,
+            by_contradiction,
+            simp at *,
+            have hbot: (⊥: formCL agents) ∈ t.1, from
+                max_ax_contains_by_set_proof_2h t.1 t.2 h (himp' t) contra_imp_imp_false,
+              apply bot_not_mem_of_ax_consistent t.1 t.2.left hbot,
+          end,
+
+          simp at *,
+          have hempty: {t : (canonical_model_CL ha).f.states | (¬ (ψ ~> φ)) ∈ t.val} ⊆ ∅, from 
+          begin
+            simp,
+            rw set.subset_empty_iff,
+            rw set.eq_empty_iff_forall_not_mem,
+            simp,
+            exact himpneg,
+          end,
+
+          have hiffbot : axCL ((¬ (ψ ~> φ)) ↔ ⊥),
+            { refine @false_of_always_false' (formCL agents) formulaCL _ (λ Γ hΓ h, hempty _),
+              { exact ⟨Γ, hΓ⟩ },
+              { simp,
+                exact h }},
+
+          simp at *,
+          
+    	    apply @contra_not_imp_false_ax (formCL agents) formulaCL,
+          exact axCL.MP axCL.Prop5 hiffbot,
+         end,
+         
+        -- ⊢ [G]ψ → [G]φ, from himp, by the derived monoticity rule
+        have hGimp: axCL (formulaCL.imp ([G] ψ) ([G] φ)), from derived_monoticity_rule himp,
+        -- [G]φ ∈ s, from hGimp and hGψ
+        exact max_ax_contains_by_set_proof s.1 s.2 hGψ hGimp,
+      },
+      -- [G]φ ∈ s ⇒ M, s ⊨ [G]φ, when G ⊂ N
+      {
+        -- Assume [G]φ ∈ s
+        intro h,
+        -- ˜φ ⊆ {t ∈ S| φ ∈ t} : [G]φ ∈ s, from 4.1
+        simp[s_entails],
+        -- {t ∈ S| φ ∈ t} ∈ E (s)(G), from 4.2, by definition E(s)(G).
+        have huniv: G ≠ univ, from (set.ssubset_iff_subset_ne.mp hG).right,
+        simp[hE, huniv], clear huniv,
+        apply exists.intro φ,
+        -- {t ∈ S | M, t ⊨ φ} ∈ E(s)(G), from 4.3, by IH
+        split,
+        {
+          intros t ht,
+          simp[ih t],
+          exact ht,
+        },
+        {
+          exact h,
+        },
+      },
+    },
+  },
 
 end
 

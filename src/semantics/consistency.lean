@@ -764,14 +764,12 @@ begin
   exact h_right,
 end
 
-
 lemma bot_not_mem_of_ax_consistent {form : Type} {ft: formula form} (Γ : set (form))
   (hΓ : ax_consistent ft Γ) : (ft.bot) ∉ Γ :=
 begin
   intro hf,
   have hbot_proves_bot: @set_proves form ft Γ ft.bot, from 
   begin
-    -- simp [ax_consistent, finite_ax_consistent] at hΓ,
     let l := (ft.bot :: list.nil),
     apply exists.intro l,
     split,
@@ -802,7 +800,6 @@ lemma mem_max_consistent_iff_proves {form : Type} {ft: formula form} (Γ : set (
   exfalso,
   refine not_ax_consistent_of_proves_bot Γ _ (hΓ.1),
   simp [set_proves, finite_conjunction] at ⊢ h,
-  -- exercise in logic
   cases h with fs h,
   cases h,
   apply exists.intro (ft.not φ :: fs),
@@ -826,6 +823,11 @@ lemma mem_max_consistent_iff_proves {form : Type} {ft: formula form} (Γ : set (
 lemma always_true_of_true {form : Type} {ft: formula form} (φ : form) (h : ft.ax φ)
   (Γ : set (form)) : @set_proves form ft Γ φ :=
 ⟨list.nil, by rintro x ⟨⟩, ft.mp _ _ (ft.p1 _ _) h⟩
+
+lemma always_true_of_true_imp {form : Type} {ft: formula form} (φ : form)
+  (Γ : set (form)) :ft.ax φ → @set_proves form ft Γ φ :=
+  assume h,
+  always_true_of_true φ h Γ
 
 lemma false_of_always_false {form : Type} {ft: formula form} (φ : form)
   (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent ft Γ), ¬ @set_proves form ft Γ φ) :
@@ -873,8 +875,6 @@ lemma false_of_always_false' {form : Type} {ft: formula form} (φ : form)
 begin
   rw ft.iffdef,
   have hfoaf: _, from (@false_of_always_false form ft φ) ,
-  -- have hmmcip: _, from @mem_max_consistent_iff_proves form ft,
-  -- use false_of_always_false
   simp,
   apply ft.mp,
   apply ft.mp,
@@ -900,7 +900,7 @@ begin
   simp[set_proves],
   apply exists.intro (φ :: list.nil),
   split,
-  { intros x hx, simp at *, rw ←hx at hin, assumption, },
+  { simp, exact hin, },
   { 
     simp[finite_conjunction],
     rw iff_and_top,
@@ -915,7 +915,7 @@ begin
   simp[set_proves],
   apply exists.intro (ψ :: φ :: list.nil),
   split,
-  { intros x hx, simp at *, cases hx, repeat{ rw ←hx at *, assumption, },},
+  { simp, split, repeat {assumption}},
   { 
     simp[finite_conjunction],
     apply cut,
@@ -933,7 +933,7 @@ begin
   simp[set_proves],
   apply exists.intro (list.nil),
   split,
-  { simp },
+  { simp, },
   { 
     simp[finite_conjunction],
     apply ft.mp,
@@ -942,7 +942,20 @@ begin
   },
 end 
 
--- lemma ex_empty_eff {form: Type} {ft: formula form} {Γ: set form} 
--- (hΓ: max_ax_consistent ft Γ) (hempty : {t : set  | φ ∈ ↑t} = ∅) ∧ ([G]φ) ∈ ↑s
 
--- {t : states | φ ∈ ↑t} ⊆ ∅ ∧ ([G]φ) ∈ ↑s
+lemma max_ax_contains_imp_by_proof {form: Type} {ft: formula form} {φ ψ: form} (Γ: set form)
+  (h_max: max_ax_consistent ft Γ) (himp: φ ∈ Γ → ψ ∈ Γ) : (ft.imp φ ψ) ∈ Γ :=
+begin
+  cases (max_ax_contains_phi_or_neg Γ h_max φ),
+  {
+    apply max_ax_contains_by_set_proof Γ h_max (himp h),
+    apply ft.p1,
+  },
+  {
+    apply max_ax_contains_by_set_proof Γ h_max (h),
+    rw ←and_right_imp,
+    apply cut,
+    exact contra_imp_false,
+    exact explosion, 
+  },
+end 

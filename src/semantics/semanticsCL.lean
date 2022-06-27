@@ -16,6 +16,9 @@ structure frameCL (agents : Type) :=
 -- (E : states → ((set agents) → (set (set (states)))))
 (E: playable_effectivity_fun states ha)
 
+-- def h_nonempty_agents : nonempty agents :=
+--   sorry
+
 -- (E: states → (set agents) → Prop)
 
 structure modelCL (agents : Type) :=

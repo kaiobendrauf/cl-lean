@@ -199,7 +199,7 @@ end
 
 
 lemma double_imp {form: Type} {ft: formula form} {φ ψ : form} :
--- ⊢ (φ → (φ → ψ)) → ((φ → ψ)
+-- ⊢ (φ → (φ → ψ)) → (φ → ψ)
  ft.ax (ft.imp (ft.imp φ (ft.imp φ ψ)) (ft.imp φ ψ)) :=
 begin
 exact ft.mp _ _ (ft.p2 _ _ _) (imp_switch iden)
@@ -219,7 +219,7 @@ end
 
 
 lemma imp_shift {form: Type} {ft: formula form} {θ φ ψ χ : form} : 
--- ⊢ θ → (φ → (ψ → χ)) ⇔ ⊢ θ → (ψ → (φ → χ)
+-- ⊢ θ → (φ → (ψ → χ)) ⇔ ⊢ θ → (ψ → (φ → χ))
  ft.ax (ft.imp θ (ft.imp φ (ft.imp ψ χ))) ↔ ft.ax (ft.imp θ (ft.imp ψ (ft.imp φ χ))) :=
 begin
 split,
@@ -268,6 +268,7 @@ lemma not_contra {form: Type} {ft: formula form} {φ : form} :
 begin
 exact ft.mp _ _ (ft.mp _ _ (ft.p3 _ _) (cut dne (ft.p6 _ _))) (cut dne (ft.p5 _ _))
 end
+
 
 
 lemma phi_and_true {form: Type} {ft: formula form} {φ : form} : 
@@ -352,6 +353,25 @@ begin
 exact ft.mp _ _ (ft.p5 _ _) contra_equiv_false',
 end
 
+lemma contra_imp_imp_false {form: Type} {ft: formula form} {φ : form} : 
+-- ⊢ ¬ φ → φ → ⊥
+ ft.ax (ft.imp (ft.not φ) (ft.imp φ ft.bot)) :=
+begin
+rw ←and_right_imp,
+exact contra_imp_false,
+end
+
+lemma contra_not_imp_false_ax {form: Type} {ft: formula form} {φ : form} : 
+-- ⊢ ¬ φ → ⊥ ⇒ ⊢ φ
+ ft.ax (ft.imp (ft.not (φ)) ft.bot) → ft.ax φ :=
+begin
+intro h,
+apply ft.mp,
+exact dne,
+simp[ft.notdef] at *,
+exact h,
+end
+
 
 lemma and_switch {form: Type} {ft: formula form} {φ ψ : form} : 
 -- ⊢ (φ ∧ ψ) ↔ (ψ ∧ φ)
@@ -400,6 +420,7 @@ apply cut (ft.mp _ _ (ft.p4 _ _) h),
 apply cut (ft.mp _ _ (ft.p5 _ _) and_switch'),
 exact contra_imp_false,
 end
+
 
 lemma imp_and_imp {form: Type} {ft: formula form} {φ ψ χ : form} : 
 -- ⊢ φ → ψ ⇒ ⊢ (χ ∧ φ) → (χ ∧ ψ)
@@ -495,6 +516,7 @@ begin
  exact cut hab hbc,
 end
 
+
 lemma and_ax {form: Type} {ft: formula form} {φ ψ: form}:
 -- ⊢ φ ⇒ ⊢ ψ ⇒ ⊢ φ ∧ ψ
   ft.ax φ → ft.ax ψ → ft.ax (ft.and φ ψ) :=
@@ -540,7 +562,7 @@ end
 
 lemma ax_bot_imp {form: Type} {ft: formula form} {φ: form}: 
 -- ⊢ (⊤ → ⊥) ⇒ ⊢ (φ → ⊥) 
-ft.ax (ft.imp ft.top ft.bot) → ft.ax (ft.imp φ ft.bot):=
+  ft.ax (ft.imp ft.top ft.bot) → ft.ax (ft.imp φ ft.bot):=
 begin
   intro hf,
   apply ft.mp,
@@ -557,7 +579,7 @@ end
 
 lemma iff_and_top {form: Type} {ft: formula form} {φ ψ: form}: 
 -- ⊢ (φ ∧ ⊤) → ψ ⇔ ⊢ (φ → ψ) 
-ft.ax (ft.imp (ft.and φ ft.top) ψ) ↔ ft.ax (ft.imp φ ψ):=
+  ft.ax (ft.imp (ft.and φ ft.top) ψ) ↔ ft.ax (ft.imp φ ψ):=
 begin
 split,
 {
@@ -576,10 +598,11 @@ end
 
 lemma remove_and_imp {form: Type} {ft: formula form} {φ ψ χ: form}:
 -- ⊢ (φ ∧ φ ∧ ψ) → χ ⇒ ⊢ (φ ∧ ψ) → χ
-ft.ax (ft.imp (ft.and φ (ft.and φ (ψ))) χ) → ft.ax (ft.imp (ft.and φ (ψ)) χ) :=
+  ft.ax (ft.imp (ft.and φ (ft.and φ (ψ))) χ) → ft.ax (ft.imp (ft.and φ (ψ)) χ) :=
 begin
 intro h,
 apply cut,
 { exact imp_imp_and (ft.p5 _ _) (iden), },
 { exact h, },
 end
+
