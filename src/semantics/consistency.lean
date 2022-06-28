@@ -959,3 +959,76 @@ begin
     exact explosion, 
   },
 end 
+
+lemma tilde_empty_iff_false {form: Type} {ft: formula form} {φ: form} 
+(hempty: {Γ : {Γ: set form | max_ax_consistent ft Γ }| φ ∈ Γ.val} ⊆ ∅): ft.ax (ft.iff φ ft.bot) :=
+begin
+  refine false_of_always_false' φ (λ Γ hΓ h, hempty _),
+    { exact ⟨Γ, hΓ⟩ },
+    { exact h },
+end
+
+lemma ax_neg_containts_pr_false {form: Type} {ft: formula form} {φ: form} (Γ: set form)
+(hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hax: ft.ax (ft.not φ)): false :=
+begin
+  have hbot: (ft.bot) ∈ Γ, from
+    max_ax_contains_by_set_proof Γ hΓ hin (contra_imp_false_ax_not hax),
+  apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
+end
+
+
+lemma ex_empty_proves_false {form: Type} {ft: formula form} {φ ψ χ: form} (Γ: set form)
+(hΓ: max_ax_consistent ft Γ) (hempty: {Γ : {Γ: set form | max_ax_consistent ft Γ }| ψ ∈ Γ.val} ⊆ ∅) (hin: φ ∈ Γ)
+(hiff: ft.ax (ft.iff ψ ft.bot) → ft.ax (ft.iff φ χ)) (hax: ft.ax (ft.not χ)): false :=
+begin
+  -- ⊢ ψ ↔ ⊥, because {ψ} cannot be extended into a maximally consistent set (by hempty), so {ψ} must be inconsistent.
+  have hiffbot : ft.ax (ft.iff ψ ft.bot), from
+    tilde_empty_iff_false hempty,
+
+  -- ⊢ φ ↔ χ, from hiff
+  have hiff' :ft.ax (ft.iff φ χ), from hiff hiffbot,
+  simp[ft.iffdef] at hiff',
+
+  -- χ ∈ s, from hiff
+  have h: χ ∈ Γ, from 
+    max_ax_contains_by_set_proof Γ hΓ hin (ft.mp _ _ (ft.p5 _ _) hiff'),
+
+  -- Contradiction from hax and h
+  exact ax_neg_containts_pr_false Γ hΓ h hax,
+end
+
+lemma neg_in_from_not_in {form: Type} {ft: formula form} {φ: form} (Γ: set form) (hΓ: max_ax_consistent ft Γ)
+(h: φ ∉ Γ) : ((ft.not) φ ∈ Γ ) :=
+begin
+  cases ((max_ax_contains_phi_xor_neg Γ hΓ.1).mp hΓ φ).left,
+  by_contradiction hf, exact h h_1,
+  exact h_1,
+end
+
+lemma complement_from_contra {form: Type} {ft: formula form} {φ: form} :
+{Γ : {Γ: set form | max_ax_consistent ft Γ }| (ft.not φ) ∈ Γ.val} = {Γ : {Γ: set form | max_ax_consistent ft Γ }| φ ∈ Γ.val}ᶜ :=
+begin
+  rw (set.compl_def {Γ : {Γ: set form | max_ax_consistent ft Γ }| (φ) ∈ Γ.val}),
+  apply set.ext,
+  intro Γ, simp,
+  have hxor: _, from (max_ax_contains_phi_xor_neg Γ.1 Γ.2.1).mp Γ.2 φ,
+  split,
+  {
+    intros h hf,
+    apply hxor.right,
+    split, exact hf, exact h,
+  },
+  {
+    intro h,
+    apply neg_in_from_not_in Γ.1 Γ.2 h,
+  },
+end
+
+lemma contra_containts_pr_false {form: Type} {ft: formula form} {φ: form} {Γ: set form}
+(hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hnin: (ft.not φ) ∈ Γ): false :=
+begin
+  have hbot: (ft.bot) ∈ Γ, from
+    max_ax_contains_by_set_proof_2h Γ hΓ hnin hin contra_imp_imp_false,
+  apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
+end
+

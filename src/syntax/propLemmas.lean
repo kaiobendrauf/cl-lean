@@ -270,7 +270,6 @@ exact ft.mp _ _ (ft.mp _ _ (ft.p3 _ _) (cut dne (ft.p6 _ _))) (cut dne (ft.p5 _ 
 end
 
 
-
 lemma phi_and_true {form: Type} {ft: formula form} {φ : form} : 
 -- ⊢  (φ ∧ ⊤) ↔ φ 
 ft.ax (ft.iff (ft.and φ (ft.not ft.bot)) φ) :=
@@ -278,6 +277,7 @@ begin
 rw ft.iffdef at *,
 exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (ft.p5 _ _)) (ft.mp _ _ (imp_switch (ft.p4 _ _)) not_bot))
 end
+
 
 lemma phi_and_true' {form: Type} {ft: formula form} {φ : form} : 
 ft.ax (ft.and (ft.imp (ft.and φ (ft.not ft.bot)) φ) (ft.imp φ (ft.and φ (ft.not ft.bot)))) :=
@@ -365,17 +365,31 @@ lemma contra_not_imp_false_ax {form: Type} {ft: formula form} {φ : form} :
 -- ⊢ ¬ φ → ⊥ ⇒ ⊢ φ
  ft.ax (ft.imp (ft.not (φ)) ft.bot) → ft.ax φ :=
 begin
-intro h,
-apply ft.mp,
-exact dne,
-simp[ft.notdef] at *,
-exact h,
+  intro h,
+  apply ft.mp,
+  exact dne,
+  simp[ft.notdef] at *,
+  exact h,
 end
 
+lemma contra_imp_false_not_ax {form: Type} {ft: formula form} {φ : form} : 
+-- ⊢  φ → ⊥ ⇒ ⊢ ¬ φ
+ ft.ax (ft.imp φ ft.bot) → ft.ax (ft.not (φ)) :=
+begin
+  intro h,
+  have hnnn: ft.ax (ft.not (ft.not (ft.not φ))) = ft.ax (ft.imp (ft.not (ft.not φ)) ft.bot), from
+    by simp[ft.notdef],
+  apply contra_not_imp_false_ax,
+  rw ← hnnn,
+  apply ft.mp,
+  apply dni,
+  simp[ft.notdef],
+  exact h,
+end
 
 lemma and_switch {form: Type} {ft: formula form} {φ ψ : form} : 
 -- ⊢ (φ ∧ ψ) ↔ (ψ ∧ φ)
-ft.ax (ft.iff (ft.and φ ψ) (ft.and ψ φ)) :=
+  ft.ax (ft.iff (ft.and φ ψ) (ft.and ψ φ)) :=
 begin
 rw ft.iffdef at *,
 exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (ft.mp _ _ double_imp (cut (ft.p5 _ _) (imp_switch (cut (ft.p6 _ _) (ft.p4 _ _)))))) 
@@ -390,6 +404,13 @@ exact (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) (ft.mp _ _ double_imp (cut (ft.p5 _ _) (
 (ft.mp _ _ double_imp (cut (ft.p5 _ _) (imp_switch (cut (ft.p6 _ _) (ft.p4 _ _))))))
 end
 
+lemma and_switch_ax {form: Type} {ft: formula form} {φ ψ : form} : 
+-- ⊢ (φ ∧ ψ) ↔ ⊢ (ψ ∧ φ)
+  (ft.ax (ft.and φ ψ)) ↔ (ft.ax (ft.and ψ φ)) :=
+begin
+  split,
+  repeat { exact λ h, ft.mp _ _ (ft.mp _ _ (ft.p5 _ _) and_switch') h, },
+end
 
 lemma and_commute {form: Type} {ft: formula form} {φ ψ χ : form} : 
 -- ⊢ ((φ ∧ ψ) ∧ χ) ↔ (φ ∧ (ψ ∧ χ))
@@ -414,13 +435,7 @@ end
 lemma contra_imp_false_ax_not {form: Type} {ft: formula form} {φ : form} : 
 -- ⊢ ¬ φ ⇒ ⊢ φ → ⊥
  ft.ax (ft.not φ) → ft.ax (ft.imp φ ft.bot) :=
-begin
-intro h,
-apply cut (ft.mp _ _ (ft.p4 _ _) h),
-apply cut (ft.mp _ _ (ft.p5 _ _) and_switch'),
-exact contra_imp_false,
-end
-
+  by simp[ft.notdef]
 
 lemma imp_and_imp {form: Type} {ft: formula form} {φ ψ χ : form} : 
 -- ⊢ φ → ψ ⇒ ⊢ (χ ∧ φ) → (χ ∧ ψ)
@@ -605,4 +620,11 @@ apply cut,
 { exact imp_imp_and (ft.p5 _ _) (iden), },
 { exact h, },
 end
+
+lemma by_contra_ax {form: Type} {ft: formula form} {φ ψ : form} : 
+-- ⊢ φ → ψ → ⊥ ⇒ ⊢ φ → ¬ ψ
+ ft.ax (ft.imp φ (ft.imp ψ ft.bot)) → ft.ax (ft.imp φ (ft.not ψ)) :=
+  by simp[ft.notdef]
+
+
 
