@@ -70,9 +70,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
           -- Let G ⊂ N. Assume towards contradiction that ∅ ∈ E(s)(G)
             intros s G hG hf,
             --  ∃φ˜ ⊆ ∅ : [G]φ ∈ s, from hf, by definition EC
-            have hG': G ≠ univ, from ne_of_ssubset hG,
-            simp [hG'] at *,
-            clear hG',
+            simp [ne_of_ssubset hG] at *,
 
             -- ⊢ φ ↔ ⊥, because {φ} cannot be extended into a maximally consistent set (by hf), so {φ} must be inconsistent.
             cases hf with φ hφ,
@@ -85,10 +83,10 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
 
             -- [G]⊥ ∈ s, from 2.1.5 and 2.1.3.
             have h: ([G]⊥) ∈ s.1, from 
-              max_ax_contains_by_set_proof s.1 s.2 hφ.right (axCL.MP (axCL.Prop5) hiffGbot),
+              max_ax_contains_by_set_proof s.2 hφ.right (axCL.MP (axCL.Prop5) hiffGbot),
 
             -- Contradiction from axiom (⊥): ¬[G]⊥ and h
-            exact ax_neg_containts_pr_false s.1 s.2 h axCL.Bot,
+            exact ax_neg_containts_pr_false s.2 h axCL.Bot,
           end,
 
 
@@ -104,7 +102,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
             
             --  [G]⊤ ∈ s and ⊤˜ = S, from axiom (⊤): [G]⊤, and definition S
             have hTop: ([G] ⊤) ∈ s.val, from 
-              max_ax_contains_by_empty_proof s.1 s.2 axCL.Top,
+              max_ax_contains_by_empty_proof s.2 axCL.Top,
 
             --  ∃φ˜ ⊆ S: [G]φ ∈ s, where φ = ⊤ from hTop
             apply exists.intro (⊤: formCL agents),
@@ -136,7 +134,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
         ----------------------------------------------------------
         semi_superadd   :=
           begin
-          -- Let G, F ⊆ N(where G ∩ F = ∅ and G ∪ F ⊂ N) and X, Y ⊆ S, where X ∈ E(s)(G) and Y ∈ E(s)(F)
+          -- Let G, F ⊆ N (where G ∩ F = ∅ and G ∪ F ⊂ N) and X, Y ⊆ S, where X ∈ E(s)(G) and Y ∈ E(s)(F)
             intros s G F X Y hunion hX hY hintGF,
             -- ∃φ˜ ⊆ X and ∃ψ˜ ⊆ Y , such that [G]φ ∈ s and [F]ψ ∈ s, from 2.4.1, by definition EC
             have hunion': G ∪ F ≠ univ, from ne_of_ssubset hunion,
@@ -145,11 +143,11 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
             cases hX with φ, cases hY with ψ,
             apply exists.intro (φ & ψ),
 
-            -- [G∪F](φ∧ψ) ∈ s, from hX_h.right and hY_h.right, by axiom (S): ([G]φ∧[F]ψ) → [G ∪ F](φ ∧ ψ)
+            -- [G∪F](φ ∧ ψ) ∈ s, from hX_h.right and hY_h.right, by axiom (S): ([G]φ∧[F]ψ) → [G ∪ F](φ ∧ ψ)
             have hand: (([G]φ) & ([F]ψ)) ∈ s.1, from 
-                max_ax_contains_by_set_proof_2h s.1 s.2 hX_h.right hY_h.right axCL.Prop4,
+                max_ax_contains_by_set_proof_2h s.2 hX_h.right hY_h.right axCL.Prop4,
             have hunionand: (([G ∪ F](φ & ψ)) ∈ s.1), from
-              max_ax_contains_by_set_proof s.1 s.2 hand (axCL.S hintGF),
+              max_ax_contains_by_set_proof s.2 hand (axCL.S hintGF),
 
             -- (φ ∧ ψ)˜ ⊆ X ∩ Y : [G ∪ F](φ ∧ ψ) ∈ s, from hX_h.left and hY_h.left and hunionand
             split,
@@ -160,7 +158,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
                 begin
                   rw set.subset_def,
                   intros t ht, simp at *,
-                  exact max_ax_contains_by_set_proof t.1 t.2 ht axCL.Prop5,
+                  exact max_ax_contains_by_set_proof t.2 ht axCL.Prop5,
                 end,
                 exact subset.trans hsubset hX_h.left,
               },
@@ -169,7 +167,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
                 begin
                   rw set.subset_def,
                   intros t ht, simp at *,
-                  exact max_ax_contains_by_set_proof t.1 t.2 ht axCL.Prop6,
+                  exact max_ax_contains_by_set_proof t.2 ht axCL.Prop6,
                 end,
                 exact subset.trans hsubset hY_h.left,
               },
@@ -221,14 +219,14 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
               have hS: ([G ∪ Gᶜ](φ & ψ)) ∈ s.val,
               {
                 have hand: (([G]φ) & ([Gᶜ]ψ)) ∈ s.1, from 
-                  max_ax_contains_by_set_proof_2h s.1 s.2 h_right hf axCL.Prop4,
-                apply max_ax_contains_by_set_proof s.1 s.2 hand,
+                  max_ax_contains_by_set_proof_2h s.2 h_right hf axCL.Prop4,
+                apply max_ax_contains_by_set_proof s.2 hand,
                 apply axCL.S,
                 simp,
               },
               simp at hS,
 
-              -- (φ ∧ ψ)˜ = ∅, from 3.3.2 and 3.3.4 because X and X are disjoint, meaning φ˜ and ψ˜ are disjoint
+              -- (φ ∧ ψ)˜ = ∅, because X and Xᶜ are disjoint, meaning φ˜ and ψ˜ are disjoint
               have hemptyint: {t : states | (φ ∈ t.val)} ∩ {t : states | (ψ ∈ t.val)} = ∅, from
                 begin
                   rw set.eq_empty_iff_forall_not_mem,
@@ -236,7 +234,7 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
                   rw set.subset_def at *,
                   cases em (t ∈ F),
                   {
-                    simp at *,
+                    simp at hψ,
                     apply hψ t.1 t.2 hf.right,
                     simp, exact h,
                   },
@@ -247,11 +245,10 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
                 end,
               have hempty: {t : states | (φ & ψ ∈ t.val)} ⊆ ∅,
               {
-                rw set.subset_empty_iff,
-                rw set.eq_empty_iff_forall_not_mem,
                 intros t hf',
-                have hφ: φ ∈ t.1, from max_ax_contains_by_set_proof t.1 t.2 hf' axCL.Prop5,
-                have hψ: ψ ∈ t.1, from max_ax_contains_by_set_proof t.1 t.2 hf' axCL.Prop6,
+                simp[set.subset_empty_iff, set.eq_empty_iff_forall_not_mem] at hf',
+                have hφ: φ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' axCL.Prop5,
+                have hψ: ψ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' axCL.Prop6,
                 rw set.eq_empty_iff_forall_not_mem at hemptyint,
                 apply hemptyint t,
                 simp,
@@ -268,10 +265,10 @@ def canonicalCL (ha: nonempty agents) : frameCL agents :=
 
               -- [N]⊥ ∈ s, from 3.3.7 and 3.3.5.
               have h: ([univ] (⊥: formCL agents)) ∈ s.1, from
-                max_ax_contains_by_set_proof s.1 s.2 hS (axCL.MP (axCL.Prop5) hiffNbot),
+                max_ax_contains_by_set_proof s.2 hS (axCL.MP (axCL.Prop5) hiffNbot),
 
               -- Contradiction from axiom (⊥): ¬[N]⊥ and 3.3.8
-              exact ax_neg_containts_pr_false s.1 s.2 h axCL.Bot,
+              exact ax_neg_containts_pr_false s.2 h axCL.Bot,
               },
           },
 
@@ -299,6 +296,9 @@ def canonical_model_CL (ha: nonempty agents) : modelCL agents :=
   v := λ s, {n : ℕ | (formCL.var n) ∈ s.1},
 }
 
+----------------------------------------------------------
+-- Truth Lemma
+----------------------------------------------------------
 lemma truth_lemma_CL {agents: Type} (ha: nonempty agents) (φ : formCL agents) (s: (canonical_model_CL ha).f.states): 
 (s_entails (canonical_model_CL ha) s φ) ↔ (φ ∈ s.1) :=
 begin
@@ -319,13 +319,13 @@ begin
     split,
     {
       intro h,
-      exact max_ax_contains_by_set_proof_2h s.1 s.2 h.left h.right axCL.Prop4,
+      exact max_ax_contains_by_set_proof_2h s.2 h.left h.right axCL.Prop4,
     },
     {
       intro h,
       split,
-      exact max_ax_contains_by_set_proof s.1 s.2 h axCL.Prop5,
-      exact max_ax_contains_by_set_proof s.1 s.2 h axCL.Prop6,
+      exact max_ax_contains_by_set_proof s.2 h axCL.Prop5,
+      exact max_ax_contains_by_set_proof s.2 h axCL.Prop6,
     },
   },
   {
@@ -334,11 +334,11 @@ begin
     split,
     {
       intro h,
-      exact max_ax_contains_imp_by_proof s.1 s.2 h,
+      exact max_ax_contains_imp_by_proof s.2 h,
     },
     {
       intros h hφ,
-      exact max_ax_contains_by_set_proof_2h s.1 s.2 hφ h likemp,
+      exact max_ax_contains_by_set_proof_2h s.2 hφ h likemp,
     },
   },
   {
@@ -349,96 +349,67 @@ begin
       (∀ φ, ({t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
       -- condition G ≠ N
       (∃ φ, {t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
-    from rfl,
+      from rfl,
 
     specialize ih ha,
     
     -- It is sufficient to consider the case when G ⊂ N, because ⊢ [N]φ ↔ ¬[∅]¬φ
-    suffices hsuffices: G ⊂ univ → (s_entails (canonical_model_CL ha) s ([G]φ) ↔ ([G]φ) ∈ s.val),
+    cases set.eq_or_ssubset_of_subset (set.subset_univ G) with hG hG,
+    -- Case G = N 
     {
-      cases set.eq_or_ssubset_of_subset (set.subset_univ G),
+      -- ⊢ [N]φ ↔ ¬[∅]¬φ
+      have hempty: axCL (([univ]φ) ↔ ¬([∅](¬φ))), from univ_iff_empty,
+      simp [hG] at *, clear hG,
+
+      split,
       {
-        clear hsuffices,
-        have hempty: axCL (([univ]φ) ↔ ¬([∅](¬φ))), from univ_iff_empty,
-        simp [h] at *, clear h,
-        split,
-        {
-          intro h,
-          simp[s_entails, hE] at h,
-          have hnin: ([∅] (¬φ)) ∉ s.val, from
-          begin
-            apply h (¬ φ),
-            apply @eq.subset (canonical_model_CL ha).f.states {t : (canonical_model_CL ha).f.states | (¬ φ) ∈ ↑t} {t : (canonical_model_CL ha).f.states | s_entails (canonical_model_CL ha) t φ}ᶜ,
-            simp[ih],
-            exact complement_from_contra,
-          end,
-          simp at hnin,
-          
-          have hin:  (¬[∅]¬φ) ∈ s.val, from neg_in_from_not_in s.1 s.2 hnin,
-          simp at hin,
-          exact max_ax_contains_by_set_proof s.1 s.2 hin (axCL.MP (axCL.Prop6) hempty),
-        },
-        {
-          intro h,
-          simp[s_entails, hE, ih],
-          intros ψ hseubseteq hf,
-   
-          simp[set.subset_def] at hseubseteq,
+        -- M s ⊨ [N] φ ⇒ [N] φ ∈ s
+        intro h,
+        simp[s_entails, hE] at h,
 
-          have himp: ∀ (x : (canonical_model_CL ha).f.states), ψ ∈ x.1 → (¬ φ) ∈ x.1, from
-            λ t ht, neg_in_from_not_in t.1 t.2 (hseubseteq t ht),
-          simp at himp,
+        have hnin: ([∅] (¬φ)) ∉ s.val, from
+        begin
+          apply h (¬ φ),
+          apply @eq.subset (canonical_model_CL ha).f.states {t : (canonical_model_CL ha).f.states | (¬ φ) ∈ ↑t} {t : (canonical_model_CL ha).f.states | s_entails (canonical_model_CL ha) t φ}ᶜ,
+          simp[ih],
+          exact complement_from_contra,
+        end,
+        simp at hnin,
+        
+        have hin:  (¬[∅]¬φ) ∈ s.val, from not_in_from_notin s.2 hnin,
+        simp at hin,
 
-          have hin: _, from max_ax_contains_by_set_proof s.1 s.2 h (axCL.MP (axCL.Prop5) hempty),
-          have hnin: ([∅] (¬φ)) ∉ s.val, from λ hf, contra_containts_pr_false s.2 hf hin,
-          simp at *,
-          have hax: axCL (ψ ~> (¬φ)),
-          {
-            have himp': ∀ (t : (canonical_model_CL ha).f.states), (ψ ~> (¬ φ)) ∈ t.val, from
-            λ t, max_ax_contains_imp_by_proof t.1 t.2 (himp t),
-
-            have himpneg: ∀ (t : (canonical_model_CL ha).f.states), (¬(ψ ~> (¬ φ))) ∉ t.val, from
-            begin
-              intro t,
-              by_contradiction,
-              simp at *,
-              have hbot: (⊥: formCL agents) ∈ t.1, from
-                  max_ax_contains_by_set_proof_2h t.1 t.2 h (himp' t) contra_imp_imp_false,
-                apply bot_not_mem_of_ax_consistent t.1 t.2.left hbot,
-            end,
-
-            simp at *,
-            have hempty: {t : (canonical_model_CL ha).f.states | (¬ (ψ ~> (¬ φ))) ∈ t.val} ⊆ ∅, from 
-            begin
-              simp,
-              rw set.subset_empty_iff,
-              rw set.eq_empty_iff_forall_not_mem,
-              simp,
-              exact himpneg,
-            end,
-
-            have hiffbot : axCL ((¬ (ψ ~> (¬ φ))) ↔ ⊥), from
-              tilde_empty_iff_false hempty,
-
-            simp at *,
-
-            apply @contra_not_imp_false_ax (formCL agents) formulaCL,
-            exact axCL.MP axCL.Prop5 hiffbot,
-          },
-
-          have hGimp: axCL (formulaCL.imp ([∅] ψ) ([∅] (¬ φ))), from derived_monoticity_rule hax,
-
-          simp at *,
-          have hGax: _, from
-            max_ax_contains_by_set_proof s.1 s.2 hf hGimp,
-
-          exact hnin hGax,
-        },
+        exact max_ax_contains_by_set_proof s.2 hin (axCL.MP (axCL.Prop6) hempty),
       },
-      {exact hsuffices h,}
+      {
+        -- [N] φ ∈ s ⇒ M s ⊨ [N] φ
+        intro h,
+        simp[s_entails, hE, ih],
+        intros ψ hsubseteq hf,
+  
+        simp[set.subset_def] at hsubseteq,
+
+        have himp: ∀ (x : (canonical_model_CL ha).f.states), ψ ∈ x.1 → (¬ φ) ∈ x.1, from
+          λ t ht, not_in_from_notin t.2 (hsubseteq t ht),
+      
+        have hin: (¬ [∅] ¬φ) ∈ s.val, 
+          from max_ax_contains_by_set_proof s.2 h (axCL.MP (axCL.Prop5) hempty),
+
+        have hnin: ([∅] ¬φ) ∉ s.val, from 
+          λ hf, contra_containts_pr_false s.2 hf hin, 
+
+        have hax: axCL (ψ ~> (¬φ)), from
+          ax_imp_from_ex himp,
+
+        have hin': ([∅]¬φ) ∈ s.val, from
+          max_ax_contains_by_set_proof s.2 hf (derived_monoticity_rule hax),
+
+        exact hnin hin',
+      },
     },
     {
-      intro hG,
+      -- Case G ⊂ N
+      -- intro hG,
       split,
       -- M, s ⊨ [G]φ ⇒ [G]φ ∈ s, when G ⊂ N
       {
@@ -458,47 +429,14 @@ begin
             apply hψ.left, 
             exact ht,
           end,
-        -- 3.5. ∃ψ˜ ⊆ φ˜ : [G]ψ ∈ s, from hih, by definition ψ˜
+        -- ∃ψ˜ ⊆ φ˜ : [G]ψ ∈ s, from hih, by definition ψ˜
         have hGψ: ([G]ψ) ∈ s.val, from hψ.right,
-        -- 3.6. ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in 3.5 
-        have himp: axCL (ψ ~> φ), from 
-        begin
-          have himp': ∀ (t : (canonical_model_CL ha).f.states), (ψ ~> φ) ∈ t.val, from
-            λ t, max_ax_contains_imp_by_proof t.1 t.2 (hψih t),
-
-          have himpneg: ∀ (t : (canonical_model_CL ha).f.states), (¬(ψ ~> φ)) ∉ t.val, from
-          begin
-            intro t,
-            by_contradiction,
-            simp at *,
-            have hbot: (⊥: formCL agents) ∈ t.1, from
-                max_ax_contains_by_set_proof_2h t.1 t.2 h (himp' t) contra_imp_imp_false,
-              apply bot_not_mem_of_ax_consistent t.1 t.2.left hbot,
-          end,
-
-          simp at *,
-          have hempty: {t : (canonical_model_CL ha).f.states | (¬ (ψ ~> φ)) ∈ t.val} ⊆ ∅, from 
-          begin
-            simp,
-            rw set.subset_empty_iff,
-            rw set.eq_empty_iff_forall_not_mem,
-            simp,
-            exact himpneg,
-          end,
-
-          have hiffbot : axCL ((¬ (ψ ~> φ)) ↔ ⊥), from
-            tilde_empty_iff_false hempty,
-
-          simp at *,
-
-    	    apply @contra_not_imp_false_ax (formCL agents) formulaCL,
-          exact axCL.MP axCL.Prop5 hiffbot,
-         end,
-         
+        -- ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in hψih 
+        have himp: axCL (ψ ~> φ), from ax_imp_from_ex hψih,
         -- ⊢ [G]ψ → [G]φ, from himp, by the derived monoticity rule
         have hGimp: axCL (formulaCL.imp ([G] ψ) ([G] φ)), from derived_monoticity_rule himp,
         -- [G]φ ∈ s, from hGimp and hGψ
-        exact max_ax_contains_by_set_proof s.1 s.2 hGψ hGimp,
+        exact max_ax_contains_by_set_proof s.2 hGψ hGimp,
       },
       -- [G]φ ∈ s ⇒ M, s ⊨ [G]φ, when G ⊂ N
       {
@@ -507,8 +445,7 @@ begin
         -- ˜φ ⊆ {t ∈ S| φ ∈ t} : [G]φ ∈ s, from 4.1
         simp[s_entails],
         -- {t ∈ S| φ ∈ t} ∈ E (s)(G), from 4.2, by definition E(s)(G).
-        have huniv: G ≠ univ, from (set.ssubset_iff_subset_ne.mp hG).right,
-        simp[hE, huniv], clear huniv,
+        simp[hE, (set.ssubset_iff_subset_ne.mp hG).right],
         apply exists.intro φ,
         -- {t ∈ S | M, t ⊨ φ} ∈ E(s)(G), from 4.3, by IH
         split,
@@ -523,8 +460,64 @@ begin
       },
     },
   },
-
 end
+
+
+
+-- lemma comphelper (φ : formCL agents) (ha: nonempty agents): 
+--   ¬ axCL φ → ax_consistent (@formulaCL agents) {¬φ} :=
+-- begin
+--   intro h1, intros L h2,
+--   simp[finite_ax_consistent],
+--   induction L with hd tl ih,
+--   {
+--     simp[finite_conjunction],
+--     by_contradiction h3,
+--     have hbot: axCL (@formCL.bot agents), from
+--       axCL.MP h3 (@prtrue (formCL agents) (formulaCL)),
+--     exact (nprfalseCL ha) hbot,
+--   },
+--   {
+--     -- intro hf,
+--     let L := (hd :: tl),
+--     have h4 : (∀ ψ ∈ L, ψ = (¬φ)) → axCL (¬ (finite_conjunction formulaCL L)) → axCL φ, 
+--     from fin_conj_repeat hax,
+--     simp at *, 
+--     cases h2 with h2 h3,
+--     intro h6, apply h1, apply h4 h2, 
+--     exact h3,
+--     exact h6
+--   }
+-- end 
+
+
+-- theorem completenessCL (φ : formCL agents) (ha: nonempty agents): global_valid φ → axCL φ :=
+-- begin
+--   simp[global_valid],
+--   rw ←not_imp_not,
+--   intro hnax,
+--   -- specialize hvalid (canonical_model_CL ha),
+--   -- simp[valid_m] at hvalid,
+-- --   global_sem_csq AX φ → prfK AX φ :=
+-- -- begin
+-- -- rw ←not_imp_not, intro h1,
+-- -- have h2 := comphelper AX φ hax h1,
+-- -- have h3 := lindenbaum AX {¬φ} h2,
+-- -- simp at *,
+-- -- cases h3 with Γ' h3, cases h3 with h3 h4, 
+-- -- rw global_sem_csq, 
+-- -- push_neg,
+-- -- let f := canonical, use f AX,
+-- -- let v := val_canonical, use v AX,
+-- -- let xΓ' : (f AX).states := ⟨Γ', h3⟩,
+-- -- split, 
+-- -- exact forcesAX AX hax,
+-- -- use xΓ',
+-- -- have h5 := truth AX hax xΓ' ¬φ,
+-- -- cases h5 with h5 h6,
+-- -- have h7 := not_forces_imp (f AX) (v AX) xΓ' φ,
+-- -- cases h7 with h7 h8, apply h8, apply h6, exact h4
+-- end
 
 -- theorem soundnessCL (φ : formCL agents) : axCL φ → global_valid φ :=
 

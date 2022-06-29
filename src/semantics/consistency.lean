@@ -893,10 +893,10 @@ begin
   { exact explosion, },
 end
 
-lemma max_ax_contains_by_set_proof {form: Type} {ft: formula form} {φ ψ: form} (Γ: set form)
-  (h_max: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hproves: ft.ax (ft.imp φ ψ)) : ψ ∈ Γ :=
+lemma max_ax_contains_by_set_proof {form: Type} {ft: formula form} {φ ψ: form} {Γ: set form}
+  (hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hproves: ft.ax (ft.imp φ ψ)) : ψ ∈ Γ :=
 begin
-  rw ←(mem_max_consistent_iff_proves Γ ψ h_max),
+  rw ←(mem_max_consistent_iff_proves Γ ψ hΓ),
   simp[set_proves],
   apply exists.intro (φ :: list.nil),
   split,
@@ -908,10 +908,10 @@ begin
   },
 end 
 
-lemma max_ax_contains_by_set_proof_2h {form: Type} {ft: formula form} {φ ψ χ: form} (Γ: set form)
-  (h_max: max_ax_consistent ft Γ) (hinφ: φ ∈ Γ) (hinψ: ψ ∈ Γ) (hproves: ft.ax (ft.imp φ (ft.imp ψ χ))) : χ ∈ Γ :=
+lemma max_ax_contains_by_set_proof_2h {form: Type} {ft: formula form} {φ ψ χ: form} {Γ: set form}
+  (hΓ: max_ax_consistent ft Γ) (hinφ: φ ∈ Γ) (hinψ: ψ ∈ Γ) (hproves: ft.ax (ft.imp φ (ft.imp ψ χ))) : χ ∈ Γ :=
 begin
-  rw ←(mem_max_consistent_iff_proves Γ χ h_max),
+  rw ←(mem_max_consistent_iff_proves Γ χ hΓ),
   simp[set_proves],
   apply exists.intro (ψ :: φ :: list.nil),
   split,
@@ -926,10 +926,10 @@ begin
   },
 end 
 
-lemma max_ax_contains_by_empty_proof {form: Type} {ft: formula form} {φ: form} (Γ: set form)
-  (h_max: max_ax_consistent ft Γ) (hproves: ft.ax (φ)) : φ ∈ Γ :=
+lemma max_ax_contains_by_empty_proof {form: Type} {ft: formula form} {φ: form} {Γ: set form}
+  (hΓ: max_ax_consistent ft Γ) (hproves: ft.ax (φ)) : φ ∈ Γ :=
 begin
-  rw ←(mem_max_consistent_iff_proves Γ φ h_max),
+  rw ←(mem_max_consistent_iff_proves Γ φ hΓ),
   simp[set_proves],
   apply exists.intro (list.nil),
   split,
@@ -943,16 +943,16 @@ begin
 end 
 
 
-lemma max_ax_contains_imp_by_proof {form: Type} {ft: formula form} {φ ψ: form} (Γ: set form)
-  (h_max: max_ax_consistent ft Γ) (himp: φ ∈ Γ → ψ ∈ Γ) : (ft.imp φ ψ) ∈ Γ :=
+lemma max_ax_contains_imp_by_proof {form: Type} {ft: formula form} {φ ψ: form} {Γ: set form}
+  (hΓ: max_ax_consistent ft Γ) (himp: φ ∈ Γ → ψ ∈ Γ) : (ft.imp φ ψ) ∈ Γ :=
 begin
-  cases (max_ax_contains_phi_or_neg Γ h_max φ),
+  cases (max_ax_contains_phi_or_neg Γ hΓ φ),
   {
-    apply max_ax_contains_by_set_proof Γ h_max (himp h),
+    apply max_ax_contains_by_set_proof hΓ (himp h),
     apply ft.p1,
   },
   {
-    apply max_ax_contains_by_set_proof Γ h_max (h),
+    apply max_ax_contains_by_set_proof hΓ (h),
     rw ←and_right_imp,
     apply cut,
     exact contra_imp_false,
@@ -968,16 +968,23 @@ begin
     { exact h },
 end
 
-lemma ax_neg_containts_pr_false {form: Type} {ft: formula form} {φ: form} (Γ: set form)
+lemma ax_neg_containts_pr_false {form: Type} {ft: formula form} {φ: form} {Γ: set form}
 (hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hax: ft.ax (ft.not φ)): false :=
 begin
   have hbot: (ft.bot) ∈ Γ, from
-    max_ax_contains_by_set_proof Γ hΓ hin (contra_imp_false_ax_not hax),
+    max_ax_contains_by_set_proof hΓ hin (contra_imp_false_ax_not hax),
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
 end
 
+lemma contra_containts_pr_false {form: Type} {ft: formula form} {φ: form} {Γ: set form}
+(hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hnin: (ft.not φ) ∈ Γ): false :=
+begin
+  have hbot: (ft.bot) ∈ Γ, from
+    max_ax_contains_by_set_proof_2h hΓ hnin hin contra_imp_imp_false,
+  apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
+end
 
-lemma ex_empty_proves_false {form: Type} {ft: formula form} {φ ψ χ: form} (Γ: set form)
+lemma ex_empty_proves_false {form: Type} {ft: formula form} {φ ψ χ: form} {Γ: set form}
 (hΓ: max_ax_consistent ft Γ) (hempty: {Γ : {Γ: set form | max_ax_consistent ft Γ }| ψ ∈ Γ.val} ⊆ ∅) (hin: φ ∈ Γ)
 (hiff: ft.ax (ft.iff ψ ft.bot) → ft.ax (ft.iff φ χ)) (hax: ft.ax (ft.not χ)): false :=
 begin
@@ -991,18 +998,25 @@ begin
 
   -- χ ∈ s, from hiff
   have h: χ ∈ Γ, from 
-    max_ax_contains_by_set_proof Γ hΓ hin (ft.mp _ _ (ft.p5 _ _) hiff'),
+    max_ax_contains_by_set_proof hΓ hin (ft.mp _ _ (ft.p5 _ _) hiff'),
 
   -- Contradiction from hax and h
-  exact ax_neg_containts_pr_false Γ hΓ h hax,
+  exact ax_neg_containts_pr_false hΓ h hax,
 end
 
-lemma neg_in_from_not_in {form: Type} {ft: formula form} {φ: form} (Γ: set form) (hΓ: max_ax_consistent ft Γ)
-(h: φ ∉ Γ) : ((ft.not) φ ∈ Γ ) :=
+lemma not_in_from_notin {form: Type} {ft: formula form} {φ: form} {Γ: set form} 
+(hΓ: max_ax_consistent ft Γ) (h: φ ∉ Γ) : ((ft.not) φ ∈ Γ ) :=
 begin
   cases ((max_ax_contains_phi_xor_neg Γ hΓ.1).mp hΓ φ).left,
   by_contradiction hf, exact h h_1,
   exact h_1,
+end
+
+lemma in_from_not_notin {form: Type} {ft: formula form} {φ: form} {Γ: set form} 
+(hΓ: max_ax_consistent ft Γ) (h: φ ∈ Γ) : ((ft.not) φ ∉ Γ ) :=
+begin
+  by_contradiction hf,
+  exact contra_containts_pr_false hΓ h hf,
 end
 
 lemma complement_from_contra {form: Type} {ft: formula form} {φ: form} :
@@ -1020,15 +1034,29 @@ begin
   },
   {
     intro h,
-    apply neg_in_from_not_in Γ.1 Γ.2 h,
+    apply not_in_from_notin Γ.2 h,
   },
 end
 
-lemma contra_containts_pr_false {form: Type} {ft: formula form} {φ: form} {Γ: set form}
-(hΓ: max_ax_consistent ft Γ) (hin: φ ∈ Γ) (hnin: (ft.not φ) ∈ Γ): false :=
+lemma ax_imp_from_ex {form: Type} {ft: formula form} {φ ψ: form}
+(h: ∀ (Γ : {Γ: set form | max_ax_consistent ft Γ }), ψ ∈ Γ.val → φ ∈ Γ.val):
+ft.ax (ft.imp ψ φ) :=
 begin
-  have hbot: (ft.bot) ∈ Γ, from
-    max_ax_contains_by_set_proof_2h Γ hΓ hnin hin contra_imp_imp_false,
-  apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
-end
+  have himp': ∀ (Γ : {Γ: set form | max_ax_consistent ft Γ }), (ft.imp ψ φ) ∈ Γ.val, from
+    λ t, max_ax_contains_imp_by_proof t.2 (h t),
 
+  have himpneg: ∀ (Γ : {Γ: set form | max_ax_consistent ft Γ }), (ft.not (ft.imp ψ φ)) ∉ Γ.val, from
+    λ t, in_from_not_notin t.2 (himp' t),
+
+  have hempty: {Γ : {Γ: set form | max_ax_consistent ft Γ } | (ft.not (ft.imp ψ φ)) ∈ Γ.val} ⊆ ∅, from 
+  begin
+    simp[set.subset_empty_iff, set.eq_empty_iff_forall_not_mem],
+    simp at himpneg, exact himpneg,
+  end,
+
+  have hiffbot : ft.ax (ft.iff (ft.not (ft.imp ψ φ)) ft.bot), from
+    tilde_empty_iff_false hempty,
+  simp[ft.iffdef] at hiffbot,
+
+  exact contra_not_imp_false_ax (ft.mp _ _ (ft.p5 _ _) hiffbot),
+end
