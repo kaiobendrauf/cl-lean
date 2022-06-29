@@ -296,6 +296,8 @@ def canonical_model_CL (ha: nonempty agents) : modelCL agents :=
   v := λ s, {n : ℕ | (formCL.var n) ∈ s.1},
 }
 
+
+
 ----------------------------------------------------------
 -- Truth Lemma
 ----------------------------------------------------------
@@ -464,60 +466,57 @@ end
 
 
 
--- lemma comphelper (φ : formCL agents) (ha: nonempty agents): 
---   ¬ axCL φ → ax_consistent (@formulaCL agents) {¬φ} :=
--- begin
---   intro h1, intros L h2,
---   simp[finite_ax_consistent],
---   induction L with hd tl ih,
---   {
---     simp[finite_conjunction],
---     by_contradiction h3,
---     have hbot: axCL (@formCL.bot agents), from
---       axCL.MP h3 (@prtrue (formCL agents) (formulaCL)),
---     exact (nprfalseCL ha) hbot,
---   },
---   {
---     -- intro hf,
---     let L := (hd :: tl),
---     have h4 : (∀ ψ ∈ L, ψ = (¬φ)) → axCL (¬ (finite_conjunction formulaCL L)) → axCL φ, 
---     from fin_conj_repeat hax,
---     simp at *, 
---     cases h2 with h2 h3,
---     intro h6, apply h1, apply h4 h2, 
---     exact h3,
---     exact h6
---   }
--- end 
 
+----------------------------------------------------------
+-- Completeness
+----------------------------------------------------------
 
--- theorem completenessCL (φ : formCL agents) (ha: nonempty agents): global_valid φ → axCL φ :=
--- begin
---   simp[global_valid],
---   rw ←not_imp_not,
---   intro hnax,
---   -- specialize hvalid (canonical_model_CL ha),
---   -- simp[valid_m] at hvalid,
--- --   global_sem_csq AX φ → prfK AX φ :=
--- -- begin
--- -- rw ←not_imp_not, intro h1,
--- -- have h2 := comphelper AX φ hax h1,
--- -- have h3 := lindenbaum AX {¬φ} h2,
--- -- simp at *,
--- -- cases h3 with Γ' h3, cases h3 with h3 h4, 
--- -- rw global_sem_csq, 
--- -- push_neg,
--- -- let f := canonical, use f AX,
--- -- let v := val_canonical, use v AX,
--- -- let xΓ' : (f AX).states := ⟨Γ', h3⟩,
--- -- split, 
--- -- exact forcesAX AX hax,
--- -- use xΓ',
--- -- have h5 := truth AX hax xΓ' ¬φ,
--- -- cases h5 with h5 h6,
--- -- have h7 := not_forces_imp (f AX) (v AX) xΓ' φ,
--- -- cases h7 with h7 h8, apply h8, apply h6, exact h4
--- end
+-- Completeness helper
+----------------------------------------------------------
+lemma comphelper (φ : formCL agents) (ha: nonempty agents): 
+  ¬ axCL φ → ax_consistent (@formulaCL agents) {¬φ} :=
+begin
+  intro h1, intros L h2,
+  simp[finite_ax_consistent],
+  induction L with hd tl ih,
+  {
+    simp[finite_conjunction],
+    by_contradiction h3,
+    have hbot: axCL (@formCL.bot agents), from
+      axCL.MP h3 (@prtrue (formCL agents) (formulaCL)),
+    exact (nprfalseCL ha) hbot,
+  },
+  {
+    -- intro hf,
+    let L := (hd :: tl),
+    have h4 : (∀ ψ ∈ L, ψ = (¬φ)) → axCL (¬ (finite_conjunction formulaCL L)) → axCL φ,from 
+      @fin_conj_repeat (formCL agents) (formulaCL) _ _ (nprfalseCL ha),
+    simp at *, 
+    cases h2 with h2 h3,
+    intro h6, apply h1, apply h4 h2, 
+    exact h3,
+    exact h6,
+  }
+end 
+
+-- Completeness
+----------------------------------------------------------
+theorem completenessCL (φ : formCL agents) (ha: nonempty agents): global_valid φ → axCL φ :=
+begin
+  rw ←not_imp_not, intro hnax,
+  have hax := comphelper φ ha hnax,
+  have hmax := lindenbaum formulaCL {¬φ} hax,
+  simp at *,
+  cases hmax with Γ' hmax, 
+  cases hmax with hmax hnφ,
+  simp[global_valid],
+  apply exists.intro (canonical_model_CL ha),
+  simp[valid_m],
+  apply exists.intro (subtype.mk Γ' hmax),
+  intro hf,
+  have hφ, from (truth_lemma_CL ha φ (subtype.mk Γ' hmax)).mp hf,
+  apply contra_containts_pr_false hmax hφ hnφ,
+end
 
 -- theorem soundnessCL (φ : formCL agents) : axCL φ → global_valid φ :=
 

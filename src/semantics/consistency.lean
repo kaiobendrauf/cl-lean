@@ -171,32 +171,41 @@ end
 -- end 
 
 
--- lemma fin_conj_repeat_helper {θ : form agents} {L : list (form agents)} 
---   (hax : sem_cons (∅ : ctx agents) equiv_class) :
---   (∀ ψ ∈ L, ψ = θ) → prfS5 ∅ (θ ⊃ fin_conj L) :=
--- begin
--- intros h1, induction L,
--- exact mp pl1 iden,
--- rw fin_conj, simp at *,
--- cases h1 with h1 h2,
--- subst h1,
--- exact cut (mp double_imp pl4) (imp_and_and_imp (mp (mp pl4 iden) (L_ih h2))),
--- end
+lemma fin_conj_repeat_helper {form: Type} {ft : formula form} {φ : form} {fs : list form}:
+  (∀ ψ ∈ fs, ψ = φ) → ft.ax (ft.imp φ  (finite_conjunction ft fs)) :=
+begin
+intros h1, induction fs,
+simp[finite_conjunction],
+exact ft.mp _ _ (ft.p1 _ _) prtrue,
+rw finite_conjunction, simp at *,
+cases h1 with h1 h2,
+subst h1,
+exact cut (ft.mp _ _ double_imp (ft.p4 _ _)) (imp_and_and_imp (ft.mp _ _ (ft.mp _ _ (ft.p4 _ _) iden) (fs_ih h2))),
+end
 
 
--- lemma fin_conj_repeat {φ : form agents} {L : list (form agents)}
---   (hax : sem_cons (∅ : ctx agents) equiv_class) :
---   (∀ ψ ∈ L, ψ = ¬φ) → prfS5 ∅ (¬fin_conj L) → prfS5 ∅ φ :=
--- begin
--- intros h1 h2, induction L,
--- exact absurd (mp dne h2) (nprfalse hax),
--- repeat {rw fin_conj at *}, simp at *,
--- cases h1 with h1 h3, 
--- have h5 := contrapos.mpr (fin_conj_repeat_helper hax h3),
--- subst h1,
--- exact (mp (mp pl3 (contrapos.mpr (cut h5 dne))) 
---   (contrapos.mpr (cut ((demorgans.mp) (mp (mp pl6 (iff_not and_switch)) h2)) dne)))
--- end
+lemma fin_conj_repeat {form: Type} {ft : formula form} {φ : form} {fs : list form}
+(hnpr: ¬ (ft.ax ft.bot)):
+  (∀ ψ ∈ fs, ψ = ft.not φ) → ft.ax (ft.not (finite_conjunction ft fs)) → ft.ax φ :=
+begin
+intros h1 h2, induction fs,
+simp[finite_conjunction] at h2,
+have hbot: ft.ax ft.bot, {
+  apply ft.mp _ _ dne,
+  simp [ft.notdef, ft.topdef] at *,
+  exact h2,
+},
+exact absurd hbot (hnpr),
+repeat {rw fin_conj at *}, simp at *,
+cases h1 with h1 h3, 
+have h5 := contrapos.mpr (fin_conj_repeat_helper h3),
+subst h1,
+apply ft.mp _ _ (ft.mp _ _ (ft.p3 _ _) (contrapos.mpr (cut h5 dne))),
+simp[finite_conjunction] at *,
+have h6 := iff_not and_switch,
+rw ft.iffdef at h6,
+apply contrapos.mpr (cut ((demorgans.mp) (ft.mp _ _ (ft.mp _ _ (ft.p6 _ _) (h6)) h2)) dne),
+end
 
 
 -- lemma fin_conj_box2 {φ ψ : form agents} {a : agents} : 
