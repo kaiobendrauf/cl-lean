@@ -1,5 +1,4 @@
-import syntax.syntaxCL 
-import data.set.basic
+import syntax.syntaxCL syntax.formula
 
 open set
 
@@ -44,68 +43,39 @@ inductive axCL : formCL agents → Prop
 
 
 
-structure formula (form: Type) :=
-(bot : form)
-(and : form → form → form)
-(imp : form → form → form)
-(top : form)
--- (top := imp bot bot)
-(not : form → form)
-(iff : form → form → form)
-(ax  : form → Prop)
-(p1 : ∀ φ ψ : form, ax (imp φ ( imp ψ φ)))
-(p2 : ∀ φ ψ χ : form, ax (imp (imp φ (imp ψ χ)) (imp (imp φ ψ) (imp φ χ))))
-(p3 : ∀ φ ψ : form, ax (imp (imp (not φ) (not ψ)) (imp (imp (not φ) ψ) φ)))
-(p4 : ∀ φ ψ : form, ax (imp φ (imp ψ (and φ ψ))))
-(p5 : ∀ φ ψ : form, ax (imp (and φ ψ) φ))
-(p6 : ∀ φ ψ : form, ax (imp (and φ ψ) ψ))
-(p7 : ∀ φ ψ : form, ax (imp (imp (not φ) (not ψ)) (imp ψ φ)))
-(mp : ∀ φ ψ : form, ax (imp φ ψ) → ax φ → ax ψ)
-(notdef: not = λ f, imp f bot)
-(iffdef: iff = λ f g, and (imp f g) (imp g f))
-(topdef: top = imp bot bot)
-
--- structure formula_prop_ax {form: Type} (ft: formula form) :=
--- (Prop1: form → form → )
--- -- (Prop1: λ φ ψ, ft.ax (ft.imp φ (ft.imp ψ φ)))
-
-
--- structure formula_agents (agents: Type) (form: Type) :=
--- (ft :  formula form)
--- (eff : set agents → form → form)
 
 def formulaCL: formula (formCL agents) :=
 {
-  bot := ⊥,
+  bot := formCL.bot,
   and := λ φ ψ, φ & ψ,
   imp := formCL.imp,
   not := λ φ, ¬ φ,
   iff := λ φ ψ, φ ↔ ψ,
   top := ⊤,
-  ax  := axCL,
-  p1 := assume φ ψ, @axCL.Prop1 agents φ ψ,
-  p2 := assume φ ψ χ, @axCL.Prop2 agents φ ψ χ,
-  p3 := assume φ ψ, @axCL.Prop3 agents φ ψ,
-  p4 := assume φ ψ, @axCL.Prop4 agents φ ψ,
-  p5 := assume φ ψ, @axCL.Prop5 agents φ ψ,
-  p6 := assume φ ψ, @axCL.Prop6 agents φ ψ,
-  p7 := assume φ ψ, @axCL.Prop7 agents φ ψ,
-  mp := assume φ ψ, @axCL.MP agents φ ψ,
   notdef := by simp,
   iffdef := by simp,
   topdef := by simp,
+  ax  := axCL,
+  p1 := @axCL.Prop1 agents,
+  p2 := @axCL.Prop2 agents,
+  p3 := @axCL.Prop3 agents,
+  p4 := @axCL.Prop4 agents,
+  p5 := @axCL.Prop5 agents,
+  p6 := @axCL.Prop6 agents,
+  p7 := @axCL.Prop7 agents,
+  mp := @axCL.MP agents,
 }
 
+def CLformulaCL: CLformula agents (formCL agents) :=
+{
+  propf:= formulaCL,
+  eff:= λ G φ, [G] φ,
+  Bot:= @axCL.Bot agents,
+  Top:= @axCL.Top agents,
+  N  := @axCL.N agents,
+  M  := @axCL.M agents,
+  S  := @axCL.S agents,
+  Eq := @axCL.Eq agents,
+}
 
--- def formulaCL_agents: formula_agents agents (formCL agents) :=
--- {
---    ft := {
---            bot := ⊥,
---            and := λ φ ψ, φ & ψ,
---            imp := formCL.imp,
---            top := ⊤,
---            ax  := axCL
---         },
---    eff := formCL.eff,
--- }
 

@@ -15,7 +15,7 @@ Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
 -- open prfS5
 -- open S5lemma
 
-import syntax.syntaxCL syntax.axiomsCL semantics.semanticsCL syntax.propLemmas
+import syntax.formula syntax.propLemmas
 import data.set.basic data.set.finite order.zorn data.list.basic
 
 open set 

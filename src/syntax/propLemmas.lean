@@ -4,7 +4,7 @@ Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
 
-import syntax.axiomsCL data.set.basic
+import syntax.formula data.set.basic
 local attribute [instance] classical.prop_decidable
 
 -- open ft.ax
@@ -20,6 +20,20 @@ begin
  apply ft.mp,
  exact hImp,
  exact hL,
+end
+
+lemma iff_l {form: Type} {ft: formula form} {φ ψ : form} :
+  ft.ax (ft.iff φ ψ) → ft.ax (ft.imp φ ψ) :=
+begin
+  rw ft.iffdef,
+  exact ft.mp _ _ (ft.p5 _ _),
+end
+
+lemma iff_r {form: Type} {ft: formula form} {φ ψ : form} :
+  ft.ax (ft.iff φ ψ) → ft.ax (ft.imp ψ φ) :=
+begin
+  rw ft.iffdef,
+  exact ft.mp _ _ (ft.p6 _ _),
 end
 
 lemma iden {form: Type} {ft: formula form} {φ : form} :

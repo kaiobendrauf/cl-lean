@@ -1,92 +1,91 @@
 import syntax.propLemmas
-open axCL
+
 open set
 
-def ef_and_switch {agents: Type} {φ ψ: formCL agents} {G: set agents}:
--- ⊢ [G] (φ ∧ ψ) → [G] (ψ ∧ φ)
-   axCL (([G] (φ & ψ)) ~> [G] (ψ & φ)) :=
+def ax {agents: Type} {form: Type} {clf: CLformula agents form}:= clf.propf.ax
+
+def ef_and_switch {agents: Type} {form: Type} {clf: CLformula agents form} {φ ψ: form} {G: set agents}:
+-- ⊢ clf.eff G (φ ∧ ψ) → clf.eff G (ψ ∧ φ)
+   ax (clf.propf.imp (clf.eff G (clf.propf.and φ ψ)) (clf.eff G (clf.propf.and ψ φ))) :=
    begin
-    have hiff: axCL ((φ & ψ) ↔ (ψ & φ)), from @and_switch (formCL agents) formulaCL φ ψ,
-    have hGiff: axCL (([G] φ & ψ) ↔ ([G] ψ & φ)), from Eq hiff,
-    apply MP Prop5,
-    exact hGiff,
+    have hiff: ax (clf.propf.iff (clf.propf.and φ ψ) (clf.propf.and ψ φ)), from and_switch,
+    have hGiff: ax (clf.propf.iff (clf.eff G (clf.propf.and φ ψ)) (clf.eff G (clf.propf.and ψ φ))), from (clf.Eq _ _ _) hiff,
+   exact iff_l hGiff,
    end
 
-def ax_M' (agents: Type) (φ ψ: formCL agents) (G: set agents):
--- ⊢ [G] (φ ∧ ψ) → [G] ψ
-   axCL (([G] (φ & ψ)) ~> [G] ψ) :=
+def ax_M' {agents: Type} {form: Type} {clf: CLformula agents form} (φ ψ: form) (G: set agents):
+-- ⊢ clf.eff G (φ ∧ ψ) → clf.eff G ψ
+   ax (clf.propf.imp (clf.eff G (clf.propf.and φ ψ)) (clf.eff G ψ)) :=
 begin
-   have hab: axCL (([G] φ & ψ) ~> [G] ψ & φ), from ef_and_switch,
-   have hbc: axCL (([G] ψ & φ) ~> [G] ψ), from M,
-   have habc: axCL (([G] φ & ψ) ~> (([G] ψ & φ) ~> [G] ψ)), from @imp_switch (formCL agents) formulaCL _ _ _ (@imp_if_imp_imp (formCL agents) formulaCL _ _ _ (hbc)),
-   exact MP (MP Prop2 habc) hab,
+   have hab: ax (clf.propf.imp (clf.eff G (clf.propf.and φ ψ)) (clf.eff G (clf.propf.and ψ φ))), from ef_and_switch,
+   have hbc: ax (clf.propf.imp (clf.eff G (clf.propf.and ψ φ)) (clf.eff G ψ)), from (clf.M _ _ _),
+   apply cut, exact hab, exact hbc,
 end
 
 
-def derived_monoticity_rule {agents: Type} {φ ψ: formCL agents} {G: set agents}:
--- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
-   axCL (φ ~> ψ) → axCL (([G] φ) ~> ([G] ψ)) :=
+def derived_monoticity_rule {agents: Type} {form: Type} {clf: CLformula agents form} {φ ψ: form} {G: set agents}:
+-- ⊢ φ → ψ ⇒ ⊢ clf.eff Gφ → clf.eff Gψ
+   ax (clf.propf.imp φ ψ) → ax (clf.propf.imp (clf.eff G φ) (clf.eff G ψ)) :=
 begin
    -- Let ⊢ φ → ψ
    intro h,
    -- ⊢ φ → (φ ∧ ψ), from h, by propositional logic
-   have h2: axCL (φ ~> (φ & ψ)), from @imp_and_iden (formCL agents) formulaCL φ ψ h,
+   have h2: ax (clf.propf.imp φ (clf.propf.and φ ψ)), from 
+      imp_and_iden h,
    -- ⊢ ((φ ∧ ψ) → φ), from ⊤ by propositional logic
-   have hp5: axCL ((φ & ψ) ~> φ), from Prop5,
+   have hp5: ax (clf.propf.imp (clf.propf.and φ ψ) φ), from 
+      (clf.propf.p5 _  _),
    -- ⊢ (φ ∧ ψ) ↔ φ, from h2 & hp5, by propositional logic
-   have hiff: axCL ((φ & ψ) ↔ φ), from
-   begin
-        apply @MP' (formCL agents) formulaCL,
-        exact h2,
-        apply MP',
-        exact hp5,
-        exact Prop4,
-   end,
+   have hiff: ax (clf.propf.iff (clf.propf.and φ ψ) φ), from
+      begin
+         rw clf.propf.iffdef,
+         exact MP' h2 (MP' hp5 (clf.propf.p4 _  _)),
+      end,
    -- ⊢ [G](φ ∧ ψ) ↔ [G]φ, from hiff, by axiom (Eq)
-   have heq: axCL (([G](φ & ψ)) ↔ ([G] φ)), from Eq hiff,
+   have heq: ax (clf.propf.iff (clf.eff G(clf.propf.and φ ψ)) (clf.eff G φ)), from (clf.Eq _ _ _) hiff,
    -- ⊢ [G]φ → [G](φ ∧ ψ), from heq, by propositional logic
-   have hif: axCL (([G] φ) ~> [G](φ & ψ)), from MP Prop6 heq,
+   have hif: ax (clf.propf.imp (clf.eff G φ) (clf.eff G (clf.propf.and φ ψ))), from iff_r heq,
    -- ⊢ [G](φ ∧ ψ) → [G](ψ), by axiom (M)
-   have hM:  axCL (([G](φ & ψ)) ~> [G] ψ), from ax_M' agents φ ψ G,
+   have hM:  ax (clf.propf.imp (clf.eff G(clf.propf.and φ ψ)) (clf.eff G ψ)), from ax_M' φ ψ G,
    -- ⊢ [G]φ → [G]ψ, from hif & hM, by propositional logic
-   apply @cut (formCL agents) formulaCL, 
-   exact hif, 
-   exact hM,
+   exact cut hif hM, 
 end
 
 
-def univ_iff_empty {agents: Type} {φ: formCL agents}: 
-   -- ⊢ [N]φ ↔ ⊢ ¬ [∅]¬φ
-   axCL (([univ]φ) ↔ ¬([∅](¬φ))) :=
+def univ_iff_empty {agents: Type} {form: Type} {clf: CLformula agents form} {φ: form}: 
+   -- ⊢ clf.eff Nφ ↔ ⊢ ¬ clf.eff ∅¬φ
+   ax (clf.propf.iff (clf.eff univ φ) (clf.propf.not (clf.eff ∅ (clf.propf.not φ)))) :=
    -- ⇒
-   have hl: axCL (([univ]φ) ~> ¬([∅](¬φ))), from
+   have hl: ax (clf.propf.imp (clf.eff univ φ) (clf.propf.not (clf.eff ∅ (clf.propf.not φ)))), from
       begin
-         simp at *,
-         -- Assume [N]φ
-         -- Assume by contradiction [∅]¬φ
-         apply @by_contra_ax (formCL agents) formulaCL,
+         -- Assume clf.eff Nφ
+         -- Assume by contradiction clf.eff ∅¬φ
+         apply by_contra_ax,
          rw ←and_right_imp,
          apply cut,
-         exact axCL.MP Prop5 (@and_switch' (formCL agents) formulaCL ([univ]φ) ([∅]¬φ)),
+         exact clf.propf.mp _ _  (clf.propf.p5 _  _) (and_switch'),
          apply cut,
-         --  [N](φ ∧ ¬φ), from above by axiom (S): ([N]φ ∧ [∅]¬φ) → [N ∪ ∅](φ ∧ ¬φ)
-         exact axCL.S (by simp),
+         --  clf.eff N(φ ∧ ¬φ), from above by axiom (S): (clf.eff Nφ ∧ clf.eff ∅¬φ) → clf.eff N ∪ ∅(φ ∧ ¬φ)
+         exact (clf.S _ _ _ _) (by simp),
          apply cut,
          simp at *,
-         --  [N](⊥), from above by axiom (Eq)
-         have hGiff: axCL (([univ](φ&(¬φ))) ↔ ([univ]⊥)), 
+         --  clf.eff N(⊥), from above by axiom (Eq)
+         have hGiff: ax (clf.propf.iff (clf.eff univ(clf.propf.and φ (clf.propf.not φ))) (clf.eff univ clf.propf.bot)), 
             {
-               apply Eq,
-               have goal: _, from @contra_equiv_false (formCL agents) formulaCL φ,
-               simpa,
+               apply clf.Eq,
+               exact contra_equiv_false,
             },
-         exact MP Prop5 hGiff,
-         apply MP,
-         --Contradiction from axiom (⊥): ¬[N]⊥ and above.
-         exact @contra_imp_imp_false (formCL agents) formulaCL ([univ]⊥),
-         exact Bot,
+         exact iff_l hGiff,
+         apply clf.propf.mp,
+         --Contradiction from axiom (⊥): ¬clf.eff N⊥ and above.
+         exact contra_imp_imp_false,
+         exact clf.Bot _,
       end,
       -- ⇐ by the N axiom
-   have hr: axCL ((¬([∅](¬φ))) ~> ([univ]φ)), from axCL.N,
-   axCL.MP (axCL.MP axCL.Prop4 hl) hr
+   have hr: ax (clf.propf.imp (clf.propf.not (clf.eff ∅(clf.propf.not φ))) (clf.eff univ φ)), from clf.N _,
+
+   begin
+      rw clf.propf.iffdef,
+      exact MP' hr (MP' hl (clf.propf.p4 _ _)),
+   end
 

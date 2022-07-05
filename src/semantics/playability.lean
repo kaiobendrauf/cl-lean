@@ -1,24 +1,21 @@
-import syntax.syntaxCL data.set.basic
+import data.set.basic
 
 variable {agents : Type}
 variable {N : set agents}
 
-open formCL 
 open set classical
 
 
 def regular (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) :=
-  ∀ s: states, ∀ G: set agents, ∀ X: set states, 
-    (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
+  ∀ s: states, ∀ G: set agents, ∀ X: set states, (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
 
 def N_max (agents: Type) (states: Type) (E : states → ((set agents) → (set (set (states))))) := 
-  ∀ s: states, ∀ X: set states, 
-    (Xᶜ ∉ E (s) (∅)) → (X ∈ E (s) (univ))
+  ∀ s: states, ∀ X: set states, (Xᶜ ∉ E (s) (∅)) → (X ∈ E (s) (univ))
 
 ----------------------------------------------------------
 -- Structures
 ----------------------------------------------------------
-structure playable_effectivity_fun {agents: Type} (states: Type) (ha: nonempty agents) :=
+structure playable_effectivity_struct {agents: Type} (states: Type) (ha: nonempty agents) :=
 (E : states → (set agents) → (set (set (states))))
 (liveness:  ∀ s: states, ∀ G: set agents,
               ∅ ∉ E (s) (G))
@@ -31,7 +28,7 @@ structure playable_effectivity_fun {agents: Type} (states: Type) (ha: nonempty a
               X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                 X ∩ Y ∈ E (s) (G ∪ F))
 
-structure semi_playable_effectivity_fun {agents: Type} (states: Type) (ha: nonempty agents) :=
+structure semi_playable_effectivity_struct {agents: Type} (states: Type) (ha: nonempty agents) :=
 (E : states → ((set agents) → (set (set (states)))))
 (semi_liveness:  ∀ s: states, ∀ G: set agents,
                     G ⊂ univ → ∅ ∉ E (s) (G))
@@ -85,17 +82,20 @@ end
 ----------------------------------------------------------
 -- Playable from Semi
 ----------------------------------------------------------
-def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_fun states ha) 
+def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi_playable_effectivity_struct states ha) 
   (hNmax: N_max agents states semi.E) (hReg: regular agents states semi.E): 
-  playable_effectivity_fun states ha :=
+  playable_effectivity_struct states ha :=
 
 -- E(s) is live: ∅ ∉ E(s)(N)
--- From semi-playable: S ∈ E(s)(∅) and regularity: S ∈ E(s)(∅) ⇒ ∅ ∉ E(s)(N).
   have hLiveness: ∀ s: states, ∀ G: set agents, ∅ ∉ semi.E (s) (G), from
   begin
+    -- asume s and G
     intros s G,
+    -- either G ⊂ N, or G = N
     cases (ssubset_or_eq_of_subset (subset_univ G)),
+    -- if G ⊂ N, liveness follows from semi-playability liveness
     {exact semi.semi_liveness s G h,},
+    -- if G = N, liveness follows from semi-playable: S ∈ E(s)(∅) and regularity: S ∈ E(s)(∅) ⇒ ∅ ∉ E(s)(N).
     {
       rw h,
       have hS: univ ∈ semi.E (s) (∅), from semi.semi_safety s ∅ (empty_subset_univ ha),
@@ -106,12 +106,15 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
   end,
 
   -- E(s) is safe: S ∈ E(s)(N) 
-  -- From semi-playable: ∅ ∉ E(s)(∅) and N-maximality: ∅ ∈/ E(s)(∅) ⇒ S ∈ E(s)(N).
   have hSafety: ∀ s: states, ∀ G: set agents, univ ∈ semi.E (s) (G), from 
-  begin
+  begin 
+    -- asume s and G
     intros s G,
+    -- either G ⊂ N, or G = N
     cases (ssubset_or_eq_of_subset (subset_univ G)),
+    -- if G ⊂ N, safeness follows from semi-playability safeness
     {exact semi.semi_safety s G h,},
+    -- if G = N, safety follows from semi-playable: ∅ ∉ E(s)(∅) and N-maximality: ∅ ∈/ E(s)(∅) ⇒ S ∈ E(s)(N).
     {
       rw h,
       have h0: ∅ ∉ semi.E (s) (∅), from semi.semi_liveness s ∅ (empty_subset_univ ha),
@@ -214,5 +217,5 @@ def playable_from_semi_Nmax_reg (states: Type) (ha: nonempty agents) (semi: semi
     },
   end,
 
-  playable_effectivity_fun.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
+  playable_effectivity_struct.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
 
