@@ -1,4 +1,4 @@
-import syntax.syntaxCL semantics.playability semantics.semantics
+import syntax.syntaxCL semantics.playability semantics.model
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
@@ -47,7 +47,7 @@ def global_valid (φ : formCL agents) :=
 lemma not_s_entails_imp (m : modelCL agents) : ∀ s φ, 
   (¬(s_entails m s φ)) ↔ (s_entails m s (¬ φ)) :=
 begin
-intros s φ, split, 
+intros s φ, split,
 repeat {intros h1 h2, exact h1 h2},
 end
 

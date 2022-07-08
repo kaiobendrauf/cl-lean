@@ -1,8 +1,9 @@
-import data.set.basic
+import data.set.basic semantics.playability semantics.model
 open set
 
 structure formula (form: Type) :=
 (bot: form)
+-- (var: ℕ → form)
 (and: form → form → form)
 (imp: form → form → form)
 (top: form)
@@ -23,6 +24,13 @@ structure formula (form: Type) :=
 (p7 : ∀ φ ψ : form, ax (imp (imp (not φ) (not ψ)) (imp ψ φ)))
 (mp : ∀ φ ψ : form, ax (imp φ ψ) → ax φ → ax ψ)
 
+-- (s_entails: ∀ m: model, m.f.states → form → Prop)
+-- (s_entails_bot: ∀ m s φ, φ = bot → (s_entails m s φ = false))
+-- (s_entails_var: ∀ m s φ n, φ = (var n) → s_entails m s φ = (s ∈ m.v n))
+-- (s_entails_imp: ∀ m s φ ψ χ, φ = (imp ψ χ) → s_entails m s φ = s_entails m s ψ → s_entails m s χ)
+-- (s_entails_and: ∀ m s φ ψ χ, φ = (and ψ χ) → s_entails m s φ = s_entails m s ψ ∧ s_entails m s χ)
+
+
 
 structure CLformula (agents: Type) (form: Type) :=
 (propf: formula form)
@@ -34,4 +42,10 @@ structure CLformula (agents: Type) (form: Type) :=
 (S   : ∀ φ ψ G F, G ∩ F = ∅ → propf.ax (propf.imp (propf.and (eff G φ) (eff F ψ)) (eff (G ∪ F) (propf.and φ ψ))))
 (Eq  : ∀ φ ψ G, propf.ax (propf.iff φ ψ) → propf.ax (propf.iff (eff G φ) (eff G ψ)))
 
+-- (s_entails: ∀ m: modelCL agents, m.f.states → form → Prop)
+-- (s_entails_bot: ∀ m s φ, φ = propf.bot → s_entails m s φ = false)
+-- (s_entails_var: ∀ m s φ n, φ = (propf.var n) → s_entails m s φ = (s ∈ m.v n))
+-- (s_entails_imp: ∀ m s φ ψ χ, φ = (propf.imp ψ χ) → s_entails m s φ = s_entails m s ψ → s_entails m s χ)
+-- (s_entails_and: ∀ m s φ ψ χ, φ = (propf.and ψ χ) → s_entails m s φ = s_entails m s ψ ∧ s_entails m s χ)
+-- (s_entails_eff: ∀ m s φ G ψ, φ = (eff G ψ) → s_entails m s φ = ({t: m.f.states | s_entails m t φ} ∈ (m.f.E.E s G)))
 

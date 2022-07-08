@@ -1,4 +1,4 @@
-import  syntax.consistency semantics.semantics
+import  syntax.consistency semantics.semanticsCL
 import  syntax.CLLemmas syntax.formula
 import tactic.induction
 -- import basicmodal.semantics.consistesncy
@@ -49,15 +49,6 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
     begin
       let states := {Γ : (set (form)) // (max_ax_consistent clf.propf Γ)},
       let bot := clf.propf.bot, let and := clf.propf.and, let imp := clf.propf.imp, let not := clf.propf.not, let iff := clf.propf.iff, let top := clf.propf.top, let eff := clf.eff, let ax := clf.propf.ax,
-  -- p1 := @axCL.Prop1 agents,
-  -- p2 := @axCL.Prop2 agents,
-  -- p3 := @axCL.Prop3 agents,
-  -- p4 := @(clf.propf.p4 _ _) agents,
-  -- p5 := @(clf.propf.p5 _ _) agents,
-  -- p6 := @(clf.propf.p6 _ _) agents,
-  -- p7 := @axCL.Prop7 agents,
-  -- mp := @axCL.MP agents,
-      -- let imp := clf.propf.imp, let bot :=  clf.propf.bot, 
 
       --  Showing that an effectivity function E(s) is semi-playable, regular and N-maximal, suffices to prove that E(s) is playable
       let semi: semi_playable_effectivity_struct states ha :=
@@ -317,35 +308,37 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
 
 -- Completeness helper
 ----------------------------------------------------------
--- lemma comphelper (φ : form) (ha: nonempty agents): 
---   ¬ ax φ → ax_consistent (@clf.propf agents) {¬φ} :=
--- begin
---   intro h1, intros L h2,
---   simp[finite_ax_consistent],
---   induction L with hd tl ih,
---   {
---     simp[finite_conjunction],
---     by_contradiction h3,
---     have hbot: ax (@formCL.bot agents), from
---       axCL.MP h3 (@prtrue (form) (clf.propf)),
---     exact hnpr hbot,
---   },
---   {
---     -- intro hf,
---     let L := (hd :: tl),
---     have h4 : (∀ ψ ∈ L, ψ = (¬φ)) → ax (¬ (finite_conjunction clf.propf L)) → ax φ,from 
---       @fin_conj_repeat (form) (clf.propf) _ _ hnpr,
---     simp at *, 
---     cases h2 with h2 h3,
---     intro h6, apply h1, apply h4 h2, 
---     exact h3,
---     exact h6,
---   }
--- end 
+lemma comphelper {agents: Type} {form: Type} (ft: formula form) (φ : form) (hnpr: ¬ ft.ax ft.bot): 
+  ¬ ft.ax φ → ax_consistent ft {ft.not φ} :=
+begin
+  intro h1, intros L h2,
+  simp[finite_ax_consistent],
+  induction L with hd tl ih,
+  {
+    simp[finite_conjunction],
+    by_contradiction h3,
+    have hbot: ft.ax ft.bot, from
+      ft.mp _ _ h3 prtrue,
+    exact hnpr hbot,
+  },
+  {
+    -- intro hf,
+    let L := (hd :: tl),
+    have h4 : (∀ ψ ∈ L, ψ = (ft.not φ)) → ft.ax (ft.not (finite_conjunction ft L)) → ft.ax φ,from 
+      fin_conj_repeat hnpr,
+    simp at *, 
+    cases h2 with h2 h3,
+    intro h6, apply h1, apply h4 h2, 
+    exact h3,
+    rw ft.notdef,
+    exact h6,
+  }
+end 
 
 -- Completeness
 ----------------------------------------------------------
--- theorem completenessCL (φ : form) (ha: nonempty agents): global_valid φ → ax φ :=
+-- theorem completenessCL (φ : form) (ha: nonempty agents): 
+-- global_valid φ → ax φ :=
 -- begin
 --   rw ←not_imp_not, intro hnax,
 --   have hax := comphelper φ ha hnax,

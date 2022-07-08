@@ -835,8 +835,7 @@ lemma always_true_of_true {form : Type} {ft: formula form} (φ : form) (h : ft.a
 
 lemma always_true_of_true_imp {form : Type} {ft: formula form} (φ : form)
   (Γ : set (form)) :ft.ax φ → @set_proves form ft Γ φ :=
-  assume h,
-  always_true_of_true φ h Γ
+  λ h, always_true_of_true φ h Γ
 
 lemma false_of_always_false {form : Type} {ft: formula form} (φ : form)
   (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent ft Γ), ¬ @set_proves form ft Γ φ) :

@@ -42,11 +42,14 @@ begin
          exact MP' h2 (MP' hp5 (clf.propf.p4 _  _)),
       end,
    -- ⊢ [G](φ ∧ ψ) ↔ [G]φ, from hiff, by axiom (Eq)
-   have heq: ax (clf.propf.iff (clf.eff G(clf.propf.and φ ψ)) (clf.eff G φ)), from (clf.Eq _ _ _) hiff,
+   have heq: ax (clf.propf.iff (clf.eff G(clf.propf.and φ ψ)) (clf.eff G φ)), from 
+      (clf.Eq _ _ _) hiff,
    -- ⊢ [G]φ → [G](φ ∧ ψ), from heq, by propositional logic
-   have hif: ax (clf.propf.imp (clf.eff G φ) (clf.eff G (clf.propf.and φ ψ))), from iff_r heq,
+   have hif: ax (clf.propf.imp (clf.eff G φ) (clf.eff G (clf.propf.and φ ψ))), from 
+      iff_r heq,
    -- ⊢ [G](φ ∧ ψ) → [G](ψ), by axiom (M)
-   have hM:  ax (clf.propf.imp (clf.eff G(clf.propf.and φ ψ)) (clf.eff G ψ)), from ax_M' φ ψ G,
+   have hM:  ax (clf.propf.imp (clf.eff G(clf.propf.and φ ψ)) (clf.eff G ψ)), from 
+      ax_M' φ ψ G,
    -- ⊢ [G]φ → [G]ψ, from hif & hM, by propositional logic
    exact cut hif hM, 
 end
