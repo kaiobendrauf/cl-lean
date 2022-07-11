@@ -58,7 +58,7 @@ induction h,
 },
 {
   intros m s,
-  simp [s_entails],
+  simp [s_entails_CL],
   exact m.f.E.safety s h,
 },
 {
@@ -69,13 +69,13 @@ induction h,
 },
 {
   intros m s,
-  apply m.f.E.monoticity s h_G {t: m.f.states | s_entails m t (h_φ & h_ψ)} {t: m.f.states | s_entails m t h_φ},
+  apply m.f.E.monoticity s h_G {t: m.f.states | s_entails_CL m t (h_φ & h_ψ)} {t: m.f.states | s_entails_CL m t h_φ},
   intros t h1,
   exact h1.left,
   },
   {
     intros m s h1,
-    exact m.f.E.superadd s h_G h_F {t: m.f.states | s_entails m t h_φ} {t: m.f.states | s_entails m t h_ψ} h1.left h1.right h_hInt,
+    exact m.f.E.superadd s h_G h_F {t: m.f.states | s_entails_CL m t h_φ} {t: m.f.states | s_entails_CL m t h_ψ} h1.left h1.right h_hInt,
   },
   {
     intros m s,
@@ -84,7 +84,7 @@ induction h,
   },
   {
     intros m s,
-    have heq: {t: m.f.states | s_entails m t h_φ} = {t: m.f.states | s_entails m t h_ψ}, from
+    have heq: {t: m.f.states | s_entails_CL m t h_φ} = {t: m.f.states | s_entails_CL m t h_ψ}, from
       begin
         apply set.ext,
         intros u,
@@ -102,13 +102,13 @@ induction h,
     apply and.intro,
     {
       intro h1,
-      simp[s_entails] at *,
+      simp[s_entails_CL] at *,
       rw ←heq,
       exact h1,
     },
     {
       intro h1,
-      simp[s_entails] at *,
+      simp[s_entails_CL] at *,
       rw heq,
       exact h1,
     },
@@ -201,7 +201,7 @@ lemma nprfalseCL {agents: Type} (ha: nonempty agents): ¬ @axCL agents (⊥) :=
 begin
 apply (mt (soundnessCL (@formCL.bot agents))),
 intro hf ,
-simp[global_valid, valid_m, s_entails] at hf,
+simp[global_valid, valid_m, s_entails_CL] at hf,
 apply hf (m_ex ha),
 exact single.one,
 end

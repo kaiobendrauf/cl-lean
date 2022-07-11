@@ -1,4 +1,4 @@
-import  syntax.consistency semantics.semanticsCL
+import  syntax.consistency -- semantics.semanticsCL
 import  syntax.CLLemmas syntax.formula
 import tactic.induction
 -- import basicmodal.semantics.consistesncy

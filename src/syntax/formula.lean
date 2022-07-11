@@ -25,10 +25,10 @@ structure formula (form: Type) :=
 (mp : ∀ φ ψ : form, ax (imp φ ψ) → ax φ → ax ψ)
 
 -- (s_entails: ∀ m: model, m.f.states → form → Prop)
--- (s_entails_bot: ∀ m s φ, φ = bot → (s_entails m s φ = false))
--- (s_entails_var: ∀ m s φ n, φ = (var n) → s_entails m s φ = (s ∈ m.v n))
--- (s_entails_imp: ∀ m s φ ψ χ, φ = (imp ψ χ) → s_entails m s φ = s_entails m s ψ → s_entails m s χ)
--- (s_entails_and: ∀ m s φ ψ χ, φ = (and ψ χ) → s_entails m s φ = s_entails m s ψ ∧ s_entails m s χ)
+-- (s_entails_bot: ∀ m s, false = (s_entails m s bot))
+-- (s_entails_var: ∀ m: model, ∀ s n, (s ∈ m.v n) ↔ (s_entails m s (var n)))
+-- (s_entails_imp: ∀ m s φ ψ, (s_entails m s φ → s_entails m s ψ) ↔ (s_entails m s (imp φ ψ)))
+-- (s_entails_and: ∀ m s φ ψ, (s_entails m s φ ∧ s_entails m s ψ) ↔ s_entails m s (and φ ψ))
 
 
 
@@ -43,9 +43,9 @@ structure CLformula (agents: Type) (form: Type) :=
 (Eq  : ∀ φ ψ G, propf.ax (propf.iff φ ψ) → propf.ax (propf.iff (eff G φ) (eff G ψ)))
 
 -- (s_entails: ∀ m: modelCL agents, m.f.states → form → Prop)
--- (s_entails_bot: ∀ m s φ, φ = propf.bot → s_entails m s φ = false)
--- (s_entails_var: ∀ m s φ n, φ = (propf.var n) → s_entails m s φ = (s ∈ m.v n))
--- (s_entails_imp: ∀ m s φ ψ χ, φ = (propf.imp ψ χ) → s_entails m s φ = s_entails m s ψ → s_entails m s χ)
--- (s_entails_and: ∀ m s φ ψ χ, φ = (propf.and ψ χ) → s_entails m s φ = s_entails m s ψ ∧ s_entails m s χ)
--- (s_entails_eff: ∀ m s φ G ψ, φ = (eff G ψ) → s_entails m s φ = ({t: m.f.states | s_entails m t φ} ∈ (m.f.E.E s G)))
+-- (s_entails_bot: ∀ m s, (s_entails m s propf.bot) = false)
+-- (s_entails_var: ∀ m: modelCL agents, ∀ s n, (s ∈ m.v n) ↔ (s_entails m s (propf.var n)))
+-- (s_entails_imp: ∀ m s φ ψ, (s_entails m s φ → s_entails m s ψ) ↔ (s_entails m s (propf.imp φ ψ)))
+-- (s_entails_and: ∀ m s φ ψ, (s_entails m s φ ∧ s_entails m s ψ) ↔ s_entails m s (propf.and φ ψ))
+-- (s_entails_eff: ∀ m: modelCL agents, ∀ s φ G, ({t: m.f.states | s_entails m t φ} ∈ (m.f.E.E s G)) ↔ s_entails m s (eff G φ))
 
