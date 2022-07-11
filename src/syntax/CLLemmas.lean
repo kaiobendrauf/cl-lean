@@ -74,10 +74,9 @@ def univ_iff_empty {agents: Type} {form: Type} {clf: CLformula agents form} {φ:
          simp at *,
          --  clf.eff N(⊥), from above by axiom (Eq)
          have hGiff: ax (clf.propf.iff (clf.eff univ(clf.propf.and φ (clf.propf.not φ))) (clf.eff univ clf.propf.bot)), 
-            {
-               apply clf.Eq,
-               exact contra_equiv_false,
-            },
+
+             { apply clf.Eq,
+               exact contra_equiv_false, },
          exact iff_l hGiff,
          apply clf.propf.mp,
          --Contradiction from axiom (⊥): ¬clf.eff N⊥ and above.

@@ -1,10 +1,11 @@
 /-
 Adapted from: 
 Copyright (c) 2021 Paula Neeley. All rights reserved.
-Author: Paula Neeley
+Authors: Paula Neeley
 -/
 
-import syntax.formula data.set.basic
+import syntax.formula 
+import data.set.basic
 local attribute [instance] classical.prop_decidable
 
 -- open ft.ax
@@ -465,20 +466,18 @@ lemma demorgans {form: Type} {ft: formula form} {φ ψ : form} :
 ft.ax (ft.not (ft.and φ ψ)) ↔ ft.ax (ft.imp φ (ft.not ψ)) :=
 begin
 split,
-{
-  intro h1,
+
+{ intro h1,
   simp[ft.notdef] at *,
   apply and_right_imp.mp,
   apply cut,
   { exact ft.mp _ _ (ft.p5 _ _) and_switch', },
-  { exact h1, },
-},
-{
-  intro h1,
+  { exact h1, }, },
+
+{ intro h1,
   apply (ft.mp _ _ (contrapos.mpr (ft.mp _ _ (ft.p5 _ _) and_switch'))),
   simp[ft.notdef] at *,
-  exact(and_right_imp.mpr h1),
-},
+  exact(and_right_imp.mpr h1), },
 end
 
 
@@ -611,18 +610,16 @@ lemma iff_and_top {form: Type} {ft: formula form} {φ ψ: form}:
   ft.ax (ft.imp (ft.and φ ft.top) ψ) ↔ ft.ax (ft.imp φ ψ):=
 begin
 split,
-{
-  intro h,
+
+{ intro h,
   apply cut,
   { exact ft.mp _ _ (ft.p6 _ _ ) phi_and_true', },
-  { rw topnotbot at h, exact h,},
-},
-{
-  intro h,
+  { rw topnotbot at h, exact h,}, },
+
+{ intro h,
   apply cut,
   apply ft.p5,
-  exact h,
-}
+  exact h, }
 end
 
 lemma remove_and_imp {form: Type} {ft: formula form} {φ ψ χ: form}:

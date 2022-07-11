@@ -1,4 +1,6 @@
-import semantics.model syntax.syntaxCLK semantics.playability 
+import semantics.model 
+import syntax.syntaxCLK 
+import semantics.playability 
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable

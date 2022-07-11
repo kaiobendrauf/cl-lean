@@ -1,4 +1,6 @@
-import syntax.syntaxCLC semantics.playability semantics.semantics
+import syntax.syntaxCLC 
+import semantics.playability 
+import semantics.semantics
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
@@ -42,11 +44,12 @@ def s_entails : ∀ m : modelCLC agents,
   | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
   | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
   | m s (K' i φ)      := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails m t φ
-  | m s (C' G φ)      := ∀ i ∈ G, ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t) → s_entails m t φ
+  | m s (C' G φ)      := ∀ i ∈ G, ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t) 
+                          → s_entails m t φ
   
 
-def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
-{t: m.f.states | s_entails m t φ}
+-- def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
+-- {t: m.f.states | s_entails m t φ}
 
 -- φ is valid in a model M = (f,v)
 def valid_m (m: modelCLC agents) (φ : formCLC agents) := 

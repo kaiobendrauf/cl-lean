@@ -1,4 +1,6 @@
-import data.set.basic semantics.playability semantics.model
+import data.set.basic 
+import semantics.playability 
+import semantics.model
 open set
 
 structure formula (form: Type) :=

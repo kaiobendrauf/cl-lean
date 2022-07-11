@@ -1,5 +1,6 @@
 import  syntax.consistency -- semantics.semanticsCL
-import  syntax.CLLemmas syntax.formula
+import  syntax.CLLemmas 
+import syntax.formula
 import tactic.induction
 -- import basicmodal.semantics.consistesncy
 
@@ -29,12 +30,13 @@ namespace canonical
 
 def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form) 
   (ha: nonempty agents) (hnpr: ¬ clf.propf.ax  clf.propf.bot): frameCL agents := 
-{ 
-  -- S is the set of all maximal CL-consistent set of formulas
+
+{ -- S is the set of all maximal CL-consistent set of formulas
   states := {Γ : (set (form)) // (max_ax_consistent clf.propf Γ)},
 
   -- S is not empty  
-  -- Any consistent set Σ (eg{⊤}) can be extended to the maximally CL-consistent set of formulas Σ′ ⊇ Σ,by Lindenbaum’s lemma
+  -- Any consistent set Σ (eg{⊤}) can be extended to the maximally CL-consistent 
+  -- set of formulas Σ′ ⊇ Σ,by Lindenbaum’s lemma
   hs := 
     begin
       rw nonempty_subtype,
@@ -48,12 +50,20 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
   E :=
     begin
       let states := {Γ : (set (form)) // (max_ax_consistent clf.propf Γ)},
-      let bot := clf.propf.bot, let and := clf.propf.and, let imp := clf.propf.imp, let not := clf.propf.not, let iff := clf.propf.iff, let top := clf.propf.top, let eff := clf.eff, let ax := clf.propf.ax,
+      let bot := clf.propf.bot, 
+      let and := clf.propf.and, 
+      let imp := clf.propf.imp, 
+      let not := clf.propf.not, 
+      let iff := clf.propf.iff, 
+      let top := clf.propf.top, 
+      let eff := clf.eff, 
+      let ax := clf.propf.ax,
 
-      --  Showing that an effectivity function E(s) is semi-playable, regular and N-maximal, suffices to prove that E(s) is playable
+      --  Showing that an effectivity function E(s) is semi-playable, 
+      -- regular and N-maximal, suffices to prove that E(s) is playable
       let semi: semi_playable_effectivity_struct states ha :=
-      {
-        -- Define E
+
+      { -- Define E
         ----------------------------------------------------------
         E := λ s G, {X | ite (G = univ) 
           -- condition G = N
@@ -73,7 +83,8 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
             --  ∃φ˜ ⊆ ∅ : [G]φ ∈ s, from hf, by definition EC
             simp [ne_of_ssubset hG] at *,
 
-            -- ⊢ φ ↔ ⊥, because {φ} cannot be extended into a maximally consistent set (by hf), so {φ} must be inconsistent.
+            -- ⊢ φ ↔ ⊥, because {φ} cannot be extended into a maximally 
+            -- consistent set (by hf), so {φ} must be inconsistent.
             cases hf with φ hφ,
             have hiffbot : ax (iff φ bot), from
               tilde_empty_iff_false hφ.left,
@@ -135,7 +146,8 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
         ----------------------------------------------------------
         semi_superadd   :=
           begin
-          -- Let G, F ⊆ N (where G ∩ F = ∅ and G ∪ F ⊂ N) and X, Y ⊆ S, where X ∈ E(s)(G) and Y ∈ E(s)(F)
+          -- Let G, F ⊆ N (where G ∩ F = ∅ and G ∪ F ⊂ N) and X, Y ⊆ S, 
+          -- where X ∈ E(s)(G) and Y ∈ E(s)(F)
             intros s G F X Y hunion hX hY hintGF,
             -- ∃φ˜ ⊆ X and ∃ψ˜ ⊆ Y , such that [G]φ ∈ s and [F]ψ ∈ s, from 2.4.1, by definition EC
             have hunion': G ∪ F ≠ univ, from ne_of_ssubset hunion,
@@ -144,7 +156,8 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
             cases hX with φ, cases hY with ψ,
             apply exists.intro (and φ ψ),
 
-            -- [G∪F](φ ∧ ψ) ∈ s, from hX_h.right and hY_h.right, by axiom (S): ([G]φ∧[F]ψ) → [G ∪ F](φ ∧ ψ)
+            -- [G∪F](φ ∧ ψ) ∈ s, from hX_h.right and hY_h.right, 
+            -- by axiom (S): ([G]φ∧[F]ψ) → [G ∪ F](φ ∧ ψ)
             have hand: (and (eff G φ) (eff F ψ)) ∈ s.1, from 
                 max_ax_contains_by_set_proof_2h s.2 hX_h.right hY_h.right (clf.propf.p4 _ _),
             have hunionand: ((eff (G ∪ F)(and φ ψ)) ∈ s.1), from
@@ -152,32 +165,27 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
 
             -- (φ ∧ ψ)˜ ⊆ X ∩ Y : [G ∪ F](φ ∧ ψ) ∈ s, from hX_h.left and hY_h.left and hunionand
             split,
-            {
-              split,
-              {
-                have hsubset: {t : states | and φ ψ ∈ t.val} ⊆ {t : states | φ ∈ t.val}, from
+
+            { split,
+
+              { have hsubset: {t : states | and φ ψ ∈ t.val} ⊆ {t : states | φ ∈ t.val}, from
                 begin
                   rw set.subset_def,
                   intros t ht, simp at *,
                   exact max_ax_contains_by_set_proof t.2 ht (clf.propf.p5 _ _),
                 end,
-                exact subset.trans hsubset hX_h.left,
-              },
-              {
-                have hsubset: {t : states | and φ ψ ∈ t.val} ⊆ {t : states | ψ ∈ t.val}, from
+                exact subset.trans hsubset hX_h.left, },
+
+              { have hsubset: {t : states | and φ ψ ∈ t.val} ⊆ {t : states | ψ ∈ t.val}, from
                 begin
                   rw set.subset_def,
                   intros t ht, simp at *,
                   exact max_ax_contains_by_set_proof t.2 ht (clf.propf.p6 _ _),
                 end,
-                exact subset.trans hsubset hY_h.left,
-              },
-            },
-            {
-              exact hunionand,
-            },
-          end,
-      },
+                exact subset.trans hsubset hY_h.left, }, },
+
+            { exact hunionand, },
+          end, },
 
       have hE : semi.E = λ s G, {X | ite (G = univ) 
           -- condition G = N
@@ -192,22 +200,20 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
         begin
           intros s G F h,
           cases eq_or_ssubset_of_subset (subset_univ G),
-          {
-            -- case: G = N
+
+          { -- case: G = N
             -- by definition E and first order logic
             simp [hE, h_1, (ne_of_ssubset (empty_subset_univ ha))] at *,
-            exact h,
-          },
-          {
-            cases em (G = ∅),
-            {
-              -- case: G = ∅
+            exact h, },
+
+          { cases em (G = ∅),
+
+            { -- case: G = ∅
               -- by definition E and first order logic
               simp [hE, (ne_of_ssubset h_1), h_2, (ne_of_ssubset (empty_subset_univ ha))] at *,
-              exact h,
-            },
-            {
-              -- case: G ̸= N and G ̸= N:
+              exact h, },
+
+            { -- case: G ̸= N and G ̸= N:
               -- Let X ⊆ S, where X ∈ E(s)(G). ∃φ˜ ⊆ X : [G]φ ∈ s, by definition EC
               simp [hE, (ne_of_ssubset h_1), h_2] at *,
               cases h with φ h, cases h,
@@ -216,15 +222,15 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
               -- Assume by contradiction that Xᶜ ∈ E(s)(Gᶜ)
               by_contradiction hf,
 
-              --  [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s, from h_right and hf, by axiom S [G]φ ∧ [Gᶜ]ψ → [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s
+              -- [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s, from h_right and hf, 
+              -- by axiom S [G]φ ∧ [Gᶜ]ψ → [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s
               have hS: (eff (G ∪ Gᶜ) (and φ ψ)) ∈ s.val,
-              {
-                have hand: (and (eff G φ) (eff Gᶜ ψ)) ∈ s.1, from 
+
+              { have hand: (and (eff G φ) (eff Gᶜ ψ)) ∈ s.1, from 
                   max_ax_contains_by_set_proof_2h s.2 h_right hf (clf.propf.p4 _ _),
                 apply max_ax_contains_by_set_proof s.2 hand,
                 apply (clf.S _ _ _ _),
-                simp,
-              },
+                simp, },
               simp at hS,
 
               -- (φ ∧ ψ)˜ = ∅, because X and Xᶜ are disjoint, meaning φ˜ and ψ˜ are disjoint
@@ -234,34 +240,33 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
                   intros t hf,
                   rw set.subset_def at *,
                   cases em (t ∈ F),
-                  {
-                    simp at hψ,
+
+                  { simp at hψ,
                     apply hψ t.1 t.2 hf.right,
-                    simp, exact h,
-                  },
-                  {
-                    apply h, 
-                    apply h_left t hf.left,
-                  },
+                    simp, exact h, },
+
+                  { apply h, 
+                    apply h_left t hf.left, },
                 end,
               have hempty: {t : states | (and φ ψ ∈ t.val)} ⊆ ∅,
-              {
-                intros t hf',
+
+              { intros t hf',
                 simp[set.subset_empty_iff, set.eq_empty_iff_forall_not_mem] at hf',
                 have hφ: φ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' (clf.propf.p5 _ _),
                 have hψ: ψ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' (clf.propf.p6 _ _),
                 rw set.eq_empty_iff_forall_not_mem at hemptyint,
                 apply hemptyint t,
                 simp,
-                split, exact hφ, exact hψ,
-              },
+                split, exact hφ, exact hψ, },
               
-              -- ⊢ (φ ∧ ψ) ↔ ⊥, because {(φ ∧ ψ)} cannot be extended into a maximally consistent set (by 3.3.6), so {(φ ∧ ψ)} must be inconsistent.
+              -- ⊢ (φ ∧ ψ) ↔ ⊥, because {(φ ∧ ψ)} cannot be extended into 
+              -- a maximally consistent set (by 3.3.6), so {(φ ∧ ψ)} must be inconsistent.
               have hiffbot : ax (iff (and φ ψ) bot), from
                 tilde_empty_iff_false hempty,
 
               -- ⊢ [N](φ ∧ ψ) ↔ [N]⊥, from 3.3.7, by axiom (Eq)
-              have hiffNbot: ax (iff (eff univ (and φ ψ)) (eff univ bot)), from (clf.Eq _ _ _) hiffbot,
+              have hiffNbot: ax (iff (eff univ (and φ ψ)) (eff univ bot)), from 
+                (clf.Eq _ _ _) hiffbot,
               simp at *,
 
               -- [N]⊥ ∈ s, from 3.3.7 and 3.3.5.
@@ -269,9 +274,7 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
                 max_ax_contains_by_set_proof s.2 hS (iff_l hiffNbot),
 
               -- Contradiction from axiom (⊥): ¬[N]⊥ and 3.3.8
-              exact ax_neg_containts_pr_false s.2 h (clf.Bot _),
-              },
-          },
+              exact ax_neg_containts_pr_false s.2 h (clf.Bot _), }, },
 
         end,
 
@@ -287,12 +290,10 @@ def canonicalCL {agents: Type} {form: Type} (clf: CLformula agents form)
         end,
 
       exact playable_from_semi_Nmax_reg states ha semi hNmax' hreg',
-    end,
-}
+    end, }
 
 -- def canonical_model_CL (ha: nonempty agents) : modelCL agents :=
--- {
---   f := canonicalCL ha,
+-- --   f := canonicalCL ha,
 --   -- V is as usual, such that s ∈ V (p) iff p ∈ s
 --   v := λ s, {n : ℕ | (formCL.var n) ∈ s.1},
 -- }
@@ -314,15 +315,14 @@ begin
   intro h1, intros L h2,
   simp[finite_ax_consistent],
   induction L with hd tl ih,
-  {
-    simp[finite_conjunction],
+
+  { simp[finite_conjunction],
     by_contradiction h3,
     have hbot: ft.ax ft.bot, from
       ft.mp _ _ h3 prtrue,
-    exact hnpr hbot,
-  },
-  {
-    -- intro hf,
+    exact hnpr hbot, },
+
+  { -- intro hf,
     let L := (hd :: tl),
     have h4 : (∀ ψ ∈ L, ψ = (ft.not φ)) → ft.ax (ft.not (finite_conjunction ft L)) → ft.ax φ,from 
       fin_conj_repeat hnpr,
@@ -331,8 +331,7 @@ begin
     intro h6, apply h1, apply h4 h2, 
     exact h3,
     rw ft.notdef,
-    exact h6,
-  }
+    exact h6, }
 end 
 
 -- Completeness

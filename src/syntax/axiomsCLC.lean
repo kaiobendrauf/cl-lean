@@ -1,4 +1,5 @@
-import syntax.syntaxCLC syntax.formula
+import syntax.syntaxCLC 
+import syntax.formula
 open set
 
 variables {agents : Type}
@@ -55,8 +56,8 @@ inductive axCLC : formCLC agents → Prop
 
 
 def formulaCLC: formula (formCLC agents) :=
-{
-  bot := formCLC.bot,
+
+{ bot := formCLC.bot,
   and := formCLC.and,
   imp := formCLC.imp,
   not := λ φ, ¬' φ,
@@ -73,19 +74,17 @@ def formulaCLC: formula (formCLC agents) :=
   p5 := @axCLC.Prop5 agents,
   p6 := @axCLC.Prop6 agents,
   p7 := @axCLC.Prop7 agents,
-  mp := @axCLC.MP agents,
-}
+  mp := @axCLC.MP agents, }
 
 def CLformulaCLC: CLformula agents (formCLC agents) :=
-{
-  propf:= formulaCLC,
+
+{ propf:= formulaCLC,
   eff:= λ G φ, [G] φ,
   Bot:= @axCLC.Bot agents,
   Top:= @axCLC.Top agents,
   N  := @axCLC.N agents,
   M  := @axCLC.M agents,
   S  := @axCLC.S agents,
-  Eq := @axCLC.Eq agents,
-}
+  Eq := @axCLC.Eq agents, }
 
 
