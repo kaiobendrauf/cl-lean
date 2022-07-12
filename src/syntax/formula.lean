@@ -33,8 +33,7 @@ class formula (form: Type) :=
 -- (s_entails_and: ∀ m s φ ψ, (s_entails m s φ ∧ s_entails m s ψ) ↔ s_entails m s (and φ ψ))
 
 
-
-class CLformula (agents: Type) (form: Type) [formula form] :=
+class CLformula (agents: out_param Type) (form: Type) [formula form] :=
 (eff : set agents → form → form)
 (Bot : ∀ G, formula.ax (formula.not (eff G formula.bot)))
 (Top : ∀ G, formula.ax (eff G formula.top))

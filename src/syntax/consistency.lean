@@ -676,3 +676,32 @@ begin
 
   exact contra_not_imp_false_ax (mp _ _ (p5 _ _) hiffbot),
 end
+
+
+-- Completeness helper
+----------------------------------------------------------
+lemma comphelper {agents: Type} {form: Type} [ft: formula form] 
+(φ : form) (hnpr: ¬ ax ft.bot): 
+  ¬ ax φ → ax_consistent ({¬' φ}: set form) :=
+begin
+  intro h1, intros L h2,
+  simp[finite_ax_consistent],
+  induction L with hd tl ih,
+
+  { simp[finite_conjunction],
+    by_contradiction h3,
+    have hbot: ax ft.bot, from
+      mp _ _ h3 prtrue,
+    exact hnpr hbot, },
+
+  { let L := (hd :: tl),
+    have h4 : (∀ ψ ∈ L, ψ = (¬' φ)) → ax (¬' (finite_conjunction L)) → ax φ,from 
+      fin_conj_repeat hnpr,
+    simp at *, 
+    cases h2 with h2 h3,
+    intro h6, apply h1, apply h4 h2, 
+    exact h3,
+    rw ft.notdef,
+    exact h6, }
+end 
+

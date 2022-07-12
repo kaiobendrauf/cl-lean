@@ -55,36 +55,36 @@ inductive axCLC : formCLC agents → Prop
 -- (propf : formula form := {bot:=bot, and:=and, imp:=imp, top:=top, not:=not, iff:=iff, notdef:=notdef, iffdef:=iffdef, topdef:=topdef, ax:=ax, p1:=p1, p2:=p2, p3:=p3, p4:=p4, p5:=p5, p6:=p6, p7:=p7, mp:=mp})
 
 
-def formulaCLC: formula (formCLC agents) :=
+-- def formulaCLC: formula (formCLC agents) :=
 
-{ bot := formCLC.bot,
-  and := formCLC.and,
-  imp := formCLC.imp,
-  not := λ φ, ¬' φ,
-  iff := λ φ ψ, φ ↔ ψ,
-  top := ⊤',
-  notdef := by simp,
-  iffdef := by simp,
-  topdef := by simp,
-  ax := axCLC,
-  p1 := @axCLC.Prop1 agents,
-  p2 := @axCLC.Prop2 agents,
-  p3 := @axCLC.Prop3 agents,
-  p4 := @axCLC.Prop4 agents,
-  p5 := @axCLC.Prop5 agents,
-  p6 := @axCLC.Prop6 agents,
-  p7 := @axCLC.Prop7 agents,
-  mp := @axCLC.MP agents, }
+-- { bot := formCLC.bot,
+--   and := formCLC.and,
+--   imp := formCLC.imp,
+--   not := λ φ, ¬' φ,
+--   iff := λ φ ψ, φ ↔ ψ,
+--   top := ⊤',
+--   notdef := by simp,
+--   iffdef := by simp,
+--   topdef := by simp,
+--   ax := axCLC,
+--   p1 := @axCLC.Prop1 agents,
+--   p2 := @axCLC.Prop2 agents,
+--   p3 := @axCLC.Prop3 agents,
+--   p4 := @axCLC.Prop4 agents,
+--   p5 := @axCLC.Prop5 agents,
+--   p6 := @axCLC.Prop6 agents,
+--   p7 := @axCLC.Prop7 agents,
+--   mp := @axCLC.MP agents, }
 
-def CLformulaCLC: CLformula agents (formCLC agents) :=
+-- def CLformulaCLC: CLformula agents (formCLC agents) :=
 
-{ propf:= formulaCLC,
-  eff:= λ G φ, [G] φ,
-  Bot:= @axCLC.Bot agents,
-  Top:= @axCLC.Top agents,
-  N  := @axCLC.N agents,
-  M  := @axCLC.M agents,
-  S  := @axCLC.S agents,
-  Eq := @axCLC.Eq agents, }
+-- { propf:= formulaCLC,
+--   eff:= λ G φ, [G] φ,
+--   Bot:= @axCLC.Bot agents,
+--   Top:= @axCLC.Top agents,
+--   N  := @axCLC.N agents,
+--   M  := @axCLC.M agents,
+--   S  := @axCLC.S agents,
+--   Eq := @axCLC.Eq agents, }
 
 

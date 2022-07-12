@@ -1,5 +1,6 @@
 import soundness.soundnessCL
 import completeness.canonicalCL
+import syntax.axiomsCL
 import tactic.induction
 
 local attribute [instance] classical.prop_decidable
@@ -11,13 +12,9 @@ variable {agents : Type}
 namespace canonical
 
 def canonical_model_CL (ha: nonempty agents) : modelCL agents :=
-
-{ f := canonicalCL CLformulaCL ha (nprfalseCL ha),
+{ f := canonicalCL agents (formCL agents) ha (nprfalseCL ha),
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
   v := λ  n, {s | (formCL.var n) ∈ s.1} }
-lemma idenCL {agent: Type} {φ : formCL agents} :
---  ⊢ φ → φ s
- axCL (φ ~> φ) := @iden (formCL agents) (formulaCL) φ
 
 ----------------------------------------------------------
 -- Truth Lemma
@@ -58,12 +55,12 @@ begin
       exact max_ax_contains_by_set_proof_2h s.2 hφ h likemp, }, },
 
   { -- case E
-
-    have hE : (canonical_model_CL ha).f.E.E = λ s G, {X | ite (G = univ) 
+    let states := {Γ : (set (formCL agents)) // (max_ax_consistent Γ)},
+    have hE : (canonical_model_CL ha).f.E.E = λ s, λ G: set agents, {X | ite (G = univ) 
       -- condition G = N
-      (∀ φ, ({t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ Xᶜ) → ([∅] φ) ∉ s.val)
+      (∀ φ, ({t : (canonical_model_CL ha).f.states | φ ∈ (t.val)} ⊆ Xᶜ) → ([(∅)] φ) ∉ s.val)      
       -- condition G ≠ N
-      (∃ φ, {t: (canonical_model_CL ha).f.states| φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
+      (∃ φ, {t : (canonical_model_CL ha).f.states | φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
       from rfl,
 
     specialize ih ha,
@@ -74,7 +71,7 @@ begin
 
     { -- ⊢ [N]φ ↔ ¬[∅]¬φ
       have hempty: axCL (([univ]φ) ↔ ¬([∅](¬φ))), from 
-        @univ_iff_empty agents (formCL agents) CLformulaCL _,
+        @univ_iff_empty agents (formCL agents) _ _ _,
       simp [hG] at *, clear hG,
 
       split,
@@ -82,7 +79,6 @@ begin
       { -- M s ⊨ [N] φ ⇒ [N] φ ∈ s
         intro h,
         simp[s_entails_CL, hE] at h,
-
         have hnin: ([∅] (¬φ)) ∉ s.val, from
         begin
           apply h (¬ φ),
@@ -113,11 +109,14 @@ begin
         have hnin: ([∅] ¬φ) ∉ s.val, from 
           λ hf, contra_containts_pr_false s.2 hf hin, 
 
-        have hax: axCL (ψ ~> (¬φ)), from
+        have hax: axCL (ψ ~> (¬ φ)), from
           ax_imp_from_ex himp,
 
-        have hin': ([∅]¬φ) ∈ s.val, from
-          max_ax_contains_by_set_proof s.2 hf (derived_monoticity_rule hax),
+        have hin': ([∅] ¬ φ) ∈ s.val, {
+          apply max_ax_contains_by_set_proof s.2 hf,
+          apply @derived_monoticity_rule agents (formCL agents),
+          exact hax,
+        },
 
         exact hnin hin', }, },
 
@@ -146,8 +145,8 @@ begin
         -- ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in hψih 
         have himp: axCL (ψ ~> φ), from ax_imp_from_ex hψih,
         -- ⊢ [G]ψ → [G]φ, from himp, by the derived monoticity rule
-        have hGimp: axCL (formulaCL.imp ([G] ψ) ([G] φ)), from 
-          @derived_monoticity_rule agents (formCL agents) CLformulaCL _ _ _ himp,
+        have hGimp: axCL (([G] ψ) ~> ([G] φ)), from 
+          @derived_monoticity_rule agents (formCL agents) formulaCL CLformulaCL _ _ _ himp,
         -- [G]φ ∈ s, from hGimp and hGψ
         exact max_ax_contains_by_set_proof s.2 hGψ hGimp, },
       -- [G]φ ∈ s ⇒ M, s ⊨ [G]φ, when G ⊂ N
@@ -176,34 +175,6 @@ end
 -- Completeness
 ----------------------------------------------------------
 
--- Completeness helper
--- ----------------------------------------------------------
--- lemma comphelper (φ : formCL agents) (ha: nonempty agents): 
---   ¬ axCL φ → ax_consistent (@formulaCL agents) {¬φ} :=
--- begin
---   intro h1, intros L h2,
---   simp[finite_ax_consistent],
---   induction L with hd tl ih,
---
---     simp[finite_conjunction],
---     by_contradiction h3,
---     have hbot: axCL (@formCL.bot agents), from
---       axCL.MP h3 (@prtrue (formCL agents) (formulaCL)),
---     exact (nprfalseCL ha) hbot,
---   },
---
---     -- intro hf,
---     let L := (hd :: tl),
---     have h4 : (∀ ψ ∈ L, ψ = (¬φ)) → axCL (¬ (finite_conjunction formulaCL L)) → axCL φ,from 
---       @fin_conj_repeat (formCL agents) (formulaCL) _ _ (nprfalseCL ha),
---     simp at *, 
---     cases h2 with h2 h3,
---     intro h6, apply h1, apply h4 h2, 
---     exact h3,
---     exact h6,
---   }
--- end 
-
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCL (φ : formCL agents) (ha: nonempty agents): 
@@ -216,7 +187,7 @@ begin
   -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
   have hax := @comphelper agents (formCL agents) formulaCL φ (nprfalseCL ha) hnax,
   -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
-  have hmax := lindenbaum formulaCL {¬φ} hax,
+  have hmax := lindenbaum {¬φ} hax,
   simp at *, 
   cases hmax with Γ' hmax, 
   cases hmax with hmax hnφ,
