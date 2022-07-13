@@ -69,8 +69,8 @@ instance formulaCL: formula (formCL agents) :=
 
 
 instance CLformulaCL: CLformula agents (formCL agents) :=
-{ 
-  eff:= λ G φ, [G] φ,
+
+{ eff:= λ G φ, [G] φ,
   Bot:= @axCL.Bot agents,
   Top:= @axCL.Top agents,
   N  := @axCL.N agents,

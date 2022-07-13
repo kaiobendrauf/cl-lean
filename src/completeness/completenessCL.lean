@@ -82,7 +82,7 @@ begin
         have hnin: ([∅] (¬φ)) ∉ s.val, from
         begin
           apply h (¬ φ),
-          apply @eq.subset (canonical_model_CL ha).f.states {t : (canonical_model_CL ha).f.states | (¬ φ) ∈ ↑t} {t : (canonical_model_CL ha).f.states | s_entails_CL (canonical_model_CL ha) t φ}ᶜ,
+          apply @eq.subset _ _ {t | s_entails_CL (canonical_model_CL ha) t φ}ᶜ,
           simp[ih],
           exact complement_from_contra,
         end,
@@ -112,11 +112,10 @@ begin
         have hax: axCL (ψ ~> (¬ φ)), from
           ax_imp_from_ex himp,
 
-        have hin': ([∅] ¬ φ) ∈ s.val, {
-          apply max_ax_contains_by_set_proof s.2 hf,
+        have hin': ([∅] ¬ φ) ∈ s.val,
+        { apply max_ax_contains_by_set_proof s.2 hf,
           apply @derived_monoticity_rule agents (formCL agents),
-          exact hax,
-        },
+          exact hax, },
 
         exact hnin hin', }, },
 

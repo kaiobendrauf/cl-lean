@@ -72,39 +72,6 @@ begin
   simp[formula.notdef, ft.topdef],
 end
 
--- lemma weak {Γ : ctx} {φ ψ : form} :
---  prfK Γ φ → prfK (Γ ∪ ψ) φ :=
-
--- lemma weak {Γ : ctx} {φ ψ : form} :
---  ax φ → ax (Γ ∪ ψ) φ :=
--- begin
--- intro h,
--- induction h,
--- {apply ax, exact (set.mem_insert_of_mem _ h_h)},
--- {exact p1},
--- {exact p2},
--- {exact p3},
--- {exact p4},
--- {exact p5},
--- {exact p6},
--- {exact p7 _ _},
--- {exact kdist},
--- {apply mp,
---  {exact h_ih_hpq},
---  {exact h_ih_hp}},
--- {exact nec h_ih }
--- end
-
-
--- lemma pr {φ : form} :
---  ax (∪ φ) φ :=
--- begin
--- apply ax;
--- apply or.intro_left;
--- simp
--- end
-
-
 lemma cut {form: Type} [ft: formula form] {φ ψ χ : form} :
 --  ⊢ (φ → ψ) ⇒  ⊢ (ψ → χ) ⇒  ⊢ (φ → χ)
  ax (φ →' ψ) → ax (ψ →' χ) → ax (φ →' χ) :=
@@ -118,15 +85,6 @@ exact p1 _ _,
 exact h2,
 exact h1,
 end 
-
-
--- lemma conv_deduction {φ ψ : form} :
---  ax (φ →' ψ) → ax (∪ φ) ψ :=
--- begin
--- intro h, 
--- exact mp (weak h) pr 
--- end
-
 
 lemma hs1 {form: Type} [ft: formula form] {φ ψ χ : form} :
 -- ⊢ (ψ → χ) → ((φ → ψ) → (φ → χ))
@@ -269,11 +227,14 @@ lemma not_and_subst {form: Type} [ft: formula form] {φ ψ χ : form} :
 begin
 intro h1, rw formula.iffdef at *, split, 
 {intro h2,
-exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) (cut dne (mp _ _ double_imp (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h1)) 
- (cut (p5 _ _) (p4 _ _)))))},
+exact mp _ _ 
+  (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) 
+  (cut dne (mp _ _ double_imp (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h1)) 
+      (cut (p5 _ _) (p4 _ _)))))},
 {intro h2,
-exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) (cut dne (mp _ _ double_imp (cut2 (cut (p6 _ _) (mp _ _ (p5 _ _) h1)) 
- (cut (p5 _ _) (p4 _ _)))))},
+exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) 
+  (cut dne (mp _ _ double_imp (cut2 (cut (p6 _ _) (mp _ _ (p5 _ _) h1)) 
+  (cut (p5 _ _) (p4 _ _)))))},
 end
 
 
@@ -306,7 +267,8 @@ lemma imp_and_and_imp {form: Type} [ft: formula form] {φ ψ χ θ : form} :
  ax (((φ →' ψ) ∧' (χ →' θ))) → ax (((φ ∧' χ) →' (ψ ∧' θ))) :=
 begin
 intro h,
-exact (mp _ _ double_imp (cut (cut (p5 _ _) (mp _ _ (p5 _ _) h)) (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h)) (p4 _ _))))
+exact (mp _ _ double_imp (cut (cut (p5 _ _) (mp _ _ (p5 _ _) h)) 
+  (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h)) (p4 _ _))))
 end
 
 
@@ -350,7 +312,8 @@ lemma contra_equiv_false {form: Type} [ft: formula form] {φ : form} :
 begin
 have h1 := iff_not not_contra_equiv_true,
 rw formula.iffdef at *,
-exact (mp _ _ (mp _ _ (p4 _ _) (cut dni (cut (mp _ _ (p6 _ _) h1) dne))) (cut dni (cut (mp _ _ (p5 _ _) h1) dne)))
+exact (mp _ _ (mp _ _ (p4 _ _) (cut dni (cut (mp _ _ (p6 _ _) h1) dne))) 
+  (cut dni (cut (mp _ _ (p5 _ _) h1) dne)))
 end
 
 lemma contra_equiv_false' {form: Type} [ft: formula form] {φ : form} : 
@@ -392,7 +355,8 @@ lemma contra_imp_false_not_ax {form: Type} [ft: formula form] {φ : form} :
  ax (φ →' ft.bot) → ax (formula.not (φ)) :=
 begin
   intro h,
-  have hnnn: ax (formula.not (formula.not (formula.not φ))) = ax ((formula.not (formula.not φ)) →' ft.bot), from
+  have hnnn: ax (formula.not (formula.not (formula.not φ))) = 
+    ax ((formula.not (formula.not φ)) →' ft.bot), from
     by simp[formula.notdef],
   apply contra_not_imp_false_ax,
   rw ← hnnn,
@@ -407,16 +371,18 @@ lemma and_switch {form: Type} [ft: formula form] {φ ψ : form} :
   ax ((φ ∧' ψ) ↔' (ψ ∧' φ)) :=
 begin
 rw formula.iffdef at *,
-exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
-(mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
+exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) 
+  (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
+  (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
 end
 
 lemma and_switch' {form: Type} [ft: formula form] {φ ψ : form} : 
 ax (((ψ ∧' φ) →' (φ ∧' ψ)) ∧' ((φ ∧' ψ) →' (ψ ∧' φ))) :=
 begin
 have h: _, from @and_switch form ft φ ψ,
-exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
-(mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
+exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) 
+  (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
+  (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
 end
 
 lemma and_switch_ax {form: Type} [ft: formula form] {φ ψ : form} : 
@@ -433,7 +399,8 @@ ax (((φ ∧' ψ) ∧' χ) ↔' (φ ∧' (ψ ∧' χ))) :=
 begin
 rw formula.iffdef at *,
 exact mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (imp_imp_iff_imp.mp 
- (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
+ (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) 
+  (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
  (mp _ _ double_imp (imp_imp_iff_imp.mp (cut (cut (p6 _ _) (p5 _ _)) 
  (imp_switch (cut (p5 _ _) (cut1 (p4 _ _) (cut2 (cut (p6 _ _) (p6 _ _)) (p4 _ _))))))))
 end
@@ -442,7 +409,8 @@ lemma and_commute' {form: Type} [ft: formula form] {φ ψ χ : form} :
 ax ((((φ ∧' ψ) ∧' χ) →' (φ ∧' (ψ ∧' χ))) ∧' ((φ ∧' (ψ ∧' χ)) →' ((φ ∧' ψ) ∧' χ))) :=
 begin
 exact mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (imp_imp_iff_imp.mp 
- (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
+ (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) 
+  (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
  (mp _ _ double_imp (imp_imp_iff_imp.mp (cut (cut (p6 _ _) (p5 _ _)) 
  (imp_switch (cut (p5 _ _) (cut1 (p4 _ _) (cut2 (cut (p6 _ _) (p6 _ _)) (p4 _ _))))))))
 end
@@ -482,8 +450,6 @@ split,
   exact(and_right_imp.mpr h1), },
 end
 
-
-
 lemma explosion {form: Type} [ft: formula form] {φ : form} : 
 -- ⊢ ⊥ → φ 
 ax (ft.bot →' φ) :=
@@ -491,41 +457,6 @@ begin
 apply contrapos.mp, exact (mp _ _ (p1 _ _) not_bot)
 end
 
-
--- lemma exfalso {φ ψ : form} : ax ((φ ∧' ¬φ) →' ψ) :=
--- begin
--- exact cut not_contra explosion
--- end
-
-
--- lemma box_dn {φ : form} : ax ((¬□φ) ↔' ¬(□(¬¬φ))) :=
--- begin
--- exact mp _ _ (mp (p4 _ _) (contrapos.mpr (mp kdist (nec dne)))) (contrapos.mpr (mp kdist (nec dni)))
--- end
-
-
--- lemma dual_equiv1 {φ : form} : ax ((□φ) ↔' (¬(◇(¬φ)))) :=
--- begin
--- exact mp (mp (p4 _ _) (cut (contrapos.mp (mp p6 box_dn)) dni)) 
---  (cut dne (contrapos.mp (mp (p5 _ _) box_dn)))
--- end
-
-
--- lemma dual_equiv2 {φ : form} : ax ((¬(□¬φ)) ↔' (◇φ)) :=
--- begin
--- exact mp (mp (p4 _ _) iden) iden,
--- end
-
--- New
--- double_imp
--- ax ((φ →' (φ →' ψ)) →' (φ →' ψ)) :=
-
-
--- lemma imp_imp_iff_imp {form: Type} [ft: formula form] {θ φ ψ : form} : 
---  ax (θ →' (φ →' (φ →' ψ))) ↔' ax (θ →' (φ →' ψ)) :=
-
--- lemma imp_and_imp {φ ψ χ : form} : 
---  ax (φ →' ψ) → ax ((χ ∧' φ) →' (χ ∧' ψ)) :=
 
 lemma and_iden {form: Type} [ft: formula form] {φ: form}:
 -- ⊢ φ → (φ ∧ φ) 

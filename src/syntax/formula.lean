@@ -39,7 +39,8 @@ class CLformula (agents: out_param Type) (form: Type) [formula form] :=
 (Top : ∀ G, formula.ax (eff G formula.top))
 (N   : ∀ φ: form, formula.ax (formula.imp (formula.not (eff ∅ (formula.not φ))) (eff univ φ)))
 (M   : ∀ φ ψ G, formula.ax (formula.imp (eff G (formula.and φ ψ)) (eff G φ)))
-(S   : ∀ φ ψ G F, G ∩ F = ∅ → formula.ax (formula.imp (formula.and (eff G φ) (eff F ψ)) (eff (G ∪ F) (formula.and φ ψ))))
+(S   : ∀ φ ψ G F, G ∩ F = ∅ → 
+      formula.ax (formula.imp (formula.and (eff G φ) (eff F ψ)) (eff (G ∪ F) (formula.and φ ψ))))
 (Eq  : ∀ φ ψ G, formula.ax (formula.iff φ ψ) → formula.ax (formula.iff (eff G φ) (eff G ψ)))
 
 -- (s_entails: ∀ m: modelCL agents, m.f.states → form → Prop)

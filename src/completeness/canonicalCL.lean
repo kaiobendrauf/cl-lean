@@ -176,8 +176,7 @@ def canonicalCL (agents: Type) (form: Type) [ft: formula form] [clf: CLformula a
                 exact subset.trans hsubset hY_h.left, }, },
 
             { exact hunionand, },
-          end, 
-          },
+          end, },
 
       have hE : semi.E = λ s G, {X | ite (G = univ) 
           -- condition G = N

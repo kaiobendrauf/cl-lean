@@ -60,19 +60,19 @@ induction h,
   exact h1 h, },
 
 { intros m s,
-  apply m.f.E.monoticity s h_G {t: m.f.states | s_entails_CL m t (h_φ & h_ψ)} {t: m.f.states | s_entails_CL m t h_φ},
+  apply m.f.E.monoticity s h_G _ {t | s_entails_CL m t h_φ},
   intros t h1,
   exact h1.left, },
 
   { intros m s h1,
-    exact m.f.E.superadd s h_G h_F {t: m.f.states | s_entails_CL m t h_φ} {t: m.f.states | s_entails_CL m t h_ψ} h1.left h1.right h_hInt, },
+    exact m.f.E.superadd s h_G h_F _ _ h1.left h1.right h_hInt, },
 
   { intros m s,
     apply h_ih_hImp,
     exact h_ih_hL m s, },
 
   { intros m s,
-    have heq: {t: m.f.states | s_entails_CL m t h_φ} = {t: m.f.states | s_entails_CL m t h_ψ}, from
+    have heq: {t | s_entails_CL m t h_φ} = {t | s_entails_CL m t h_ψ}, from
       begin
         apply set.ext,
         intros u,

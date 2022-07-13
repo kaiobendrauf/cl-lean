@@ -16,10 +16,10 @@ inductive formCLC (agents  : Type) : Type
 notation `⊥`:80         := formCLC.bot
 infix `&`:80            := formCLC.and
 infix `~>`:25           := formCLC.imp
-notation `¬'`:80 φ      :=  φ ~> ⊥
+notation `¬`:80 φ       :=  φ ~> formCLC.bot
 notation `[` G `]`:90 φ := formCLC.eff G φ
-notation `⊤'`:80        := ¬' (formCLC.bot)
-notation φ `∨` ψ        := ¬' (( ¬' φ) & (¬' ψ))
+notation `⊤`:80        := ¬ (formCLC.bot)
+notation φ `∨` ψ        := ¬ (( ¬ φ) & (¬ ψ))
 notation φ `↔` ψ        := (φ ~> ψ) & (ψ ~> φ)
 notation `K'`           := formCLC.K
 notation `C'`           := formCLC.C 
@@ -27,7 +27,7 @@ notation `C'`           := formCLC.C
 
 def everyone_knows_l {agents: Type}: 
 list agents → formCLC agents → formCLC agents
-| list.nil  _ := (⊤')
+| list.nil  _ := (⊤)
 | (i :: is) φ := (K' i φ) & everyone_knows_l is φ
 
 
