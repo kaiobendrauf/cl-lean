@@ -1,25 +1,17 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
+and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+-/
+
 import semantics.playability 
 local attribute [instance] classical.prop_decidable
 
-variable {agents : Type}
-
-open set
-
-----------------------------------------------------------
--- Frames & Models
-----------------------------------------------------------
-
-structure frame :=
-(states: Type)
-(hs : nonempty states)
-
-structure frameCL (agents : Type) extends frame :=
-(ha : nonempty agents)
-(E: playable_effectivity_struct states ha)
-
-structure model :=
-(f : frame)
-(v : ℕ → set f.states)
+structure frameCL (agents : Type) :=
+(states : Type)
+(hs     : nonempty states)
+(ha     : nonempty agents)
+(E      : playable_effectivity_struct states ha)
 
 structure modelCL (agents : Type) :=
 (f : frameCL agents)
