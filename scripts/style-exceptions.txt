@@ -1,0 +1,44 @@
+src/semantics/validity.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/validity.lean : line 3 : ERR_MOD : Module docstring missing, or too late
+src/semantics/semanticsCLC.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/semanticsCLC.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/semantics/playability.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/playability.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/semantics/model.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/model.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/semantics/semanticsCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/semanticsCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/semantics/semanticsCLK.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/semantics/semanticsCLK.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/completeness/canonicalCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/completeness/canonicalCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/completeness/completenessCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/completeness/completenessCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/completeness/completenessCLK.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/completeness/completenessCLK.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/soundness/soundnessCLK.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/soundness/soundnessCLK.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/soundness/soundness.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/soundness/soundness.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/soundness/soundnessCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/soundness/soundnessCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/syntaxCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/syntaxCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/axiomsCLK.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/axiomsCLK.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/syntaxCLK.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/syntaxCLK.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/propLemmas.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/propLemmas.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/axiomsCL.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/axiomsCL.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/consistency.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/consistency.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/formula.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/formula.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/axiomsCLC.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/axiomsCLC.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/syntaxCLC.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/syntaxCLC.lean : line 1 : ERR_MOD : Module docstring missing, or too late
+src/syntax/CLLemmas.lean : line 1 : ERR_COP : Malformed or missing copyright header
+src/syntax/CLLemmas.lean : line 1 : ERR_MOD : Module docstring missing, or too late

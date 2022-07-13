@@ -1,4 +1,6 @@
-import semantics.model syntax.syntaxCLK semantics.playability 
+import semantics.model 
+import syntax.syntaxCLK 
+import semantics.playability 
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
@@ -45,7 +47,7 @@ def global_valid (φ : formCLK agents) :=
   ∀ m, valid_m m φ
 
 lemma not_s_entails_imp (m : modelCLK agents) : ∀ s φ, 
-  (¬(s_entails m s φ)) ↔ (s_entails m s (¬' φ)) :=
+  (¬(s_entails m s φ)) ↔ (s_entails m s (¬ φ)) :=
 begin
 intros s φ, split, 
 repeat {intros h1 h2, exact h1 h2},

@@ -1,4 +1,5 @@
-import syntax.syntaxCLK syntax.formula
+import syntax.syntaxCLK 
+import syntax.formula
 open set
 
 variables {agents : Type}
@@ -10,7 +11,7 @@ variables {agents : Type}
 /-
 Prop1-Prop7 taken from :
 Copyright (c) 2021 Paula Neeley. All rights reserved.
-Author: Paula Neeley
+Authors: Paula Neeley
 -/
 inductive axCLK : formCLK agents → Prop 
 -- (Prop) Propositional tautologiess
@@ -49,8 +50,8 @@ inductive axCLK : formCLK agents → Prop
 
 
 def formulaCLK: formula (formCLK agents) :=
-{
-  bot := formCLK.bot,
+
+{ bot := formCLK.bot,
   and := formCLK.and,
   imp := formCLK.imp,
   not := λ φ, ¬' φ,
@@ -67,19 +68,17 @@ def formulaCLK: formula (formCLK agents) :=
   p5 := @axCLK.Prop5 agents,
   p6 := @axCLK.Prop6 agents,
   p7 := @axCLK.Prop7 agents,
-  mp := @axCLK.MP agents,
-}
+  mp := @axCLK.MP agents, }
 
 def CLformulaCLK: CLformula agents (formCLK agents) :=
-{
-  propf:= formulaCLK,
+
+{ propf:= formulaCLK,
   eff:= λ G φ, [G] φ,
   Bot:= @axCLK.Bot agents,
   Top:= @axCLK.Top agents,
   N  := @axCLK.N agents,
   M  := @axCLK.M agents,
   S  := @axCLK.S agents,
-  Eq := @axCLK.Eq agents,
-}
+  Eq := @axCLK.Eq agents, }
 
 
