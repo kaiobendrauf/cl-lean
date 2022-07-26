@@ -1,11 +1,12 @@
-import soundness.soundnessCLK
+import soundness.soundnessCLC
 import completeness.canonicalCL
-import syntax.axiomsCLK
+import syntax.axiomsCLC
 import tactic.induction
+import data.fintype.basic
 
 local attribute [instance] classical.prop_decidable
 
-open set list formCLK
+open set list formCLC
 
 variable {agents : Type}
 
@@ -14,62 +15,74 @@ namespace canonical
 
 
 
-def canonical_model_CLK (ha : nonempty agents) : modelCLK agents :=
+def canonical_model_CLC (ha : nonempty agents) : modelCLK agents :=
 { f := 
     { rel := λ i s, {t | {φ | K (i) (φ) ∈ s.1} = {φ | K (i) (φ) ∈ t.1}},
       rfl := by simp,
       sym := λ i s t ht, eq.symm ht,
       trans := λ i s t u hst htu, (rfl.congr htu).mp hst,
-      .. canonicalCL agents (formCLK agents) ha (nprfalseCLK ha) },
+      .. canonicalCL agents (formCLC agents) ha (nprfalseCLC ha) },
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
-  v := λ  n, {s | (formCLK.var n) ∈ s.1} }
+  v := λ  n, {s | (formCLC.var n) ∈ s.1} }
 
 ----------------------------------------------------------
 -- Filtration
 ----------------------------------------------------------
 
-def cl : formCLK agents → set (formCLK agents)
-  |  bot          := {bot, ¬ bot}
-  | (var n)       := {var n, ¬ var n}
-  | (imp φ ψ)     := cl φ ∪ cl ψ ∪ 
-                     match ψ with
-                     | bot := {(imp φ ψ)}
-                     | _   := {(imp φ ψ), ¬ (imp φ ψ)} 
-                     end
-  | (and φ ψ)     := cl φ ∪ cl ψ ∪ {(and φ ψ), ¬ (and φ ψ)}
-  | ([G] φ)       := cl φ ∪ {([G] φ), ¬ [G] φ}
-  | _ := sorry
+-- Let cl(φ) be the smallest set such that:
+-- cl(φ) contains all subformulas of φ.
+-- For every φ in cl(φ), if φ is not of the form ¬ψ, then ¬φ ∈ cl(φ). In other words cl(φ) is closed under single negations. 
+-- C G (φ) ∈ cl (φ) ⇒ K i (C G (φ)) ∈ cl(φ), ∀ i ∈ G . 
+-- [G] φ ∈ cl (φ), G ≠ ∅ ⇒ C G [G] φ ∈ cl (φ).
+def cl_C : list (agents) → formCLC agents → set (formCLC agents)
+| nil φ       := {}
+| (i :: is) φ := {K' i (C' (i :: is) φ), ¬ K' i (C' (i :: is) φ)} ∪ cl_C is φ
+
+def cl [fintype agents]: formCLC agents → set (formCLC agents)
+|  bot          := {bot, ¬ bot}
+| (var n)       := {var n, ¬ var n}
+| (imp φ ψ)     := cl φ ∪ cl ψ ∪ 
+                    match ψ with
+                    | bot := {(imp φ ψ)}
+                    | _   := {(imp φ ψ), ¬ (imp φ ψ)} 
+                    end
+| (and φ ψ)     := cl φ ∪ cl ψ ∪ {(and φ ψ), ¬ (and φ ψ)}
+| ([G] φ)       := cl φ ∪ {([G] φ), ¬ [G] φ} ∪ 
+                    ite (G = ∅) {(C' (to_list G) ([G] φ))} {}
+| (K' i φ)      := cl φ ∪ {(K' i φ), ¬ K' i φ}
+| (C' G φ)      := cl φ ∪ {(C' G φ), ¬ C' G φ} ∪ cl_C G φ
+
 
 ----------------------------------------------------------
 -- Truth Lemma
 ----------------------------------------------------------
-lemma truth_lemma_CL {agents : Type} (ha : nonempty agents) (φ : formCLK agents) 
-(s : (canonical_model_CLK ha).f.states) : (s_entails_CLK (canonical_model_CLK ha) s φ) ↔ (φ ∈ s.1) :=
+lemma truth_lemma_CL {agents : Type} (ha : nonempty agents) (φ : formCLC agents) 
+(s : (canonical_model_CLC ha).f.states) : (s_entails_CLC (canonical_model_CLC ha) s φ) ↔ (φ ∈ s.1) :=
 begin
   -- This proof is by induction on φ.
   induction' φ with n φ ψ _ _ φ ψ _ _,
 
   { -- case bot
-    simp [s_entails_CLK],
-    exact @bot_not_mem_of_ax_consistent (formCLK agents) formulaCLK s.1 s.2.1, },
+    simp [s_entails_CLC],
+    exact @bot_not_mem_of_ax_consistent (formCLC agents) formulaCLC s.1 s.2.1, },
 
   { -- case var
     simpa, },
 
   { -- case and
-    simp [s_entails_CLK, ih_φ, ih_ψ],
+    simp [s_entails_CLC, ih_φ, ih_ψ],
     split,
 
     { intro h,
-      exact max_ax_contains_by_set_proof_2h s.2 h.left h.right axCLK.Prop4, },
+      exact max_ax_contains_by_set_proof_2h s.2 h.left h.right axCLC.Prop4, },
 
     { intro h,
       split,
-      exact max_ax_contains_by_set_proof s.2 h axCLK.Prop5,
-      exact max_ax_contains_by_set_proof s.2 h axCLK.Prop6, }, },
+      exact max_ax_contains_by_set_proof s.2 h axCLC.Prop5,
+      exact max_ax_contains_by_set_proof s.2 h axCLC.Prop6, }, },
 
   { -- case imp
-    simp [s_entails_CLK, ih_φ, ih_ψ],
+    simp [s_entails_CLC, ih_φ, ih_ψ],
     split,
 
     { intro h,
@@ -79,12 +92,12 @@ begin
       exact max_ax_contains_by_set_proof_2h s.2 hφ h likemp, }, },
 
   { -- case E
-    let states := {Γ : (set (formCLK agents)) // (max_ax_consistent Γ)},
-    have hE : (canonical_model_CLK ha).f.E.E = λ s, λ G : set agents, {X | ite (G = univ) 
+    let states := {Γ : (set (formCLC agents)) // (max_ax_consistent Γ)},
+    have hE : (canonical_model_CLC ha).f.E.E = λ s, λ G : set agents, {X | ite (G = univ) 
       -- condition G = N
-      (∀ φ, ({t : (canonical_model_CLK ha).f.states | φ ∈ (t.val)} ⊆ Xᶜ) → ([(∅)] φ) ∉ s.val)      
+      (∀ φ, ({t : (canonical_model_CLC ha).f.states | φ ∈ (t.val)} ⊆ Xᶜ) → ([(∅)] φ) ∉ s.val)      
       -- condition G ≠ N
-      (∃ φ, {t : (canonical_model_CLK ha).f.states | φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
+      (∃ φ, {t : (canonical_model_CLC ha).f.states | φ ∈ (t.val)} ⊆ X ∧ ( [G] φ) ∈ s.val)},
       from rfl,
 
     specialize ih ha,
@@ -94,19 +107,19 @@ begin
     -- Case G = N 
 
     { -- ⊢ [N]φ ↔ ¬[∅]¬φ
-      have hempty : axCLK (([univ]φ) ↔ ¬([∅](¬φ))), from 
-        @univ_iff_empty agents (formCLK agents) _ _ _,
+      have hempty : axCLC (([univ]φ) ↔ ¬([∅](¬φ))), from 
+        @univ_iff_empty agents (formCLC agents) _ _ _,
       simp [hG] at *, clear hG,
 
       split,
 
       { -- M s ⊨ [N] φ ⇒ [N] φ ∈ s
         intro h,
-        simp[s_entails_CLK, hE] at h,
+        simp[s_entails_CLC, hE] at h,
         have hnin : ([∅] (¬φ)) ∉ s.val, from
         begin
           apply h (¬ φ),
-          apply @eq.subset _ _ {t | s_entails_CLK (canonical_model_CLK ha) t φ}ᶜ,
+          apply @eq.subset _ _ {t | s_entails_CLC (canonical_model_CLC ha) t φ}ᶜ,
           simp[ih],
           exact complement_from_contra,
         end,
@@ -115,30 +128,30 @@ begin
         have hin :  (¬[∅]¬φ) ∈ s.val, from not_in_from_notin s.2 hnin,
         simp at hin,
 
-        exact max_ax_contains_by_set_proof s.2 hin (axCLK.MP (axCLK.Prop6) hempty), },
+        exact max_ax_contains_by_set_proof s.2 hin (axCLC.MP (axCLC.Prop6) hempty), },
 
       { -- [N] φ ∈ s ⇒ M s ⊨ [N] φ
         intro h,
-        simp[s_entails_CLK, hE, ih],
+        simp[s_entails_CLC, hE, ih],
         intros ψ hsubseteq hf,
   
         simp[set.subset_def] at hsubseteq,
 
-        have himp : ∀ (x : (canonical_model_CLK ha).f.states), ψ ∈ x.1 → (¬ φ) ∈ x.1, from
+        have himp : ∀ (x : (canonical_model_CLC ha).f.states), ψ ∈ x.1 → (¬ φ) ∈ x.1, from
           λ t ht, not_in_from_notin t.2 (hsubseteq t ht),
       
         have hin : (¬ [∅] ¬φ) ∈ s.val, 
-          from max_ax_contains_by_set_proof s.2 h (axCLK.MP (axCLK.Prop5) hempty),
+          from max_ax_contains_by_set_proof s.2 h (axCLC.MP (axCLC.Prop5) hempty),
 
         have hnin : ([∅] ¬φ) ∉ s.val, from 
           λ hf, contra_containts_pr_false s.2 hf hin, 
 
-        have hax : axCLK (ψ ~> (¬ φ)), from
+        have hax : axCLC (ψ ~> (¬ φ)), from
           ax_imp_from_ex himp,
 
         have hin' : ([∅] ¬ φ) ∈ s.val,
         { apply max_ax_contains_by_set_proof s.2 hf,
-          apply @derived_monoticity_rule agents (formCLK agents),
+          apply @derived_monoticity_rule agents (formCLC agents),
           exact hax, },
 
         exact hnin hin', }, },
@@ -150,13 +163,13 @@ begin
       { -- Assume M, s ⊨ [G]φ
         intro h,
         -- {s ∈ S| M, s ⊨ φ} ∈ E(s)(G), from h, by definition ⊨
-        simp[s_entails_CLK] at h,
+        simp[s_entails_CLC] at h,
         -- ∃ψ˜ ⊆ {t ∈ S| M, t ⊨ φ} : [G]ψ ∈ s, from above, by definition E
         have huniv : G ≠ univ, from (set.ssubset_iff_subset_ne.mp hG).right,
         simp[hE, huniv] at h, clear huniv,
         -- ∃ψ˜ ⊆ {t ∈ S| M, φ ∈ t} : [G]ψ ∈ s, from above, by IH
         cases h with ψ hψ, 
-        have hψih : ∀ (a : (canonical_model_CLK ha).f.states), ψ ∈ ↑a → φ ∈ a.val, from
+        have hψih : ∀ (a : (canonical_model_CLC ha).f.states), ψ ∈ ↑a → φ ∈ a.val, from
           begin
             intros t ht, 
             apply (ih t).mp, 
@@ -166,10 +179,10 @@ begin
         -- ∃ψ˜ ⊆ φ˜ : [G]ψ ∈ s, from hih, by definition ψ˜
         have hGψ : ([G]ψ) ∈ s.val, from hψ.right,
         -- ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in hψih 
-        have himp : axCLK (ψ ~> φ), from ax_imp_from_ex hψih,
+        have himp : axCLC (ψ ~> φ), from ax_imp_from_ex hψih,
         -- ⊢ [G]ψ → [G]φ, from himp, by the derived monoticity rule
-        have hGimp : axCLK (([G] ψ) ~> ([G] φ)), from 
-          @derived_monoticity_rule agents (formCLK agents) formulaCLK CLformulaCLK _ _ _ himp,
+        have hGimp : axCLC (([G] ψ) ~> ([G] φ)), from 
+          @derived_monoticity_rule agents (formCLC agents) formulaCLC CLformulaCLC _ _ _ himp,
         -- [G]φ ∈ s, from hGimp and hGψ
         exact max_ax_contains_by_set_proof s.2 hGψ hGimp, },
       -- [G]φ ∈ s ⇒ M, s ⊨ [G]φ, when G ⊂ N
@@ -177,7 +190,7 @@ begin
       { -- Assume [G]φ ∈ s
         intro h,
         -- ˜φ ⊆ {t ∈ S| φ ∈ t} : [G]φ ∈ s, from 4.1
-        simp[s_entails_CLK],
+        simp[s_entails_CLC],
         -- {t ∈ S| φ ∈ t} ∈ E (s)(G), from 4.2, by definition E(s)(G).
         simp[hE, (set.ssubset_iff_subset_ne.mp hG).right],
         apply exists.intro φ,
@@ -190,20 +203,20 @@ begin
 
         { exact h, }, }, }, },
   -- case K
-  { have hK : (canonical_model_CLK ha).f.rel = λ i s, {t | {φ | (K' i φ) ∈ s.1} = {φ | (K' i φ) ∈ t.1}},
+  { have hK : (canonical_model_CLC ha).f.rel = λ i s, {t | {φ | (K' i φ) ∈ s.1} = {φ | (K' i φ) ∈ t.1}},
       from rfl,
     split,
     -- ⇒
     { intro h,
       simp at *, 
-      simp [s_entails_CLK] at h,
+      simp [s_entails_CLC] at h,
       simp [hK] at *,
       have hφ : φ ∈ s.1, 
       { simp [←(ih a s)],
         apply h,
         simp, },
-      have hkj : ∀ t : (canonical_model_CLK ha).f.to_frameCL.states, 
-        {φ : formCLK agents | K' a φ ∈ ↑s} = {φ : formCLK agents | K' a φ ∈ ↑t} → φ ∈ t.1,
+      have hkj : ∀ t : (canonical_model_CLC ha).f.to_frameCL.states, 
+        {φ : formCLC agents | K' a φ ∈ ↑s} = {φ : formCLC agents | K' a φ ∈ ↑t} → φ ∈ t.1,
       {
         intros t ht,
         simp [←(ih a t)],
@@ -219,7 +232,7 @@ begin
 
     },
     { intro h,
-      simp[s_entails_CLK, ih, hK],
+      simp[s_entails_CLC, ih, hK],
       intros t ht,
       have hKt: K' a φ ∈ t.val, from
       begin 
@@ -228,7 +241,7 @@ begin
         simp[←ht],
         exact h,
       end,
-      exact max_ax_contains_by_set_proof t.2 hKt axCLK.T, }, },
+      exact max_ax_contains_by_set_proof t.2 hKt axCLC.T, }, },
 
 
 end
@@ -242,15 +255,15 @@ end
 
 -- Completeness
 ----------------------------------------------------------
-theorem completenessCLK (φ : formCLK agents) (ha : nonempty agents) : 
-  global_valid φ → axCLK φ :=
+theorem completenessCLC (φ : formCLC agents) (ha : nonempty agents) : 
+  global_valid φ → axCLC φ :=
 begin
   -- rw from contrapositive
   rw ←not_imp_not, 
   -- assume ¬ ⊢ φ
   intro hnax,
   -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
-  have hax := @comphelper agents (formCLK agents) formulaCLK φ (nprfalseCLK ha) hnax,
+  have hax := @comphelper agents (formCLC agents) formulaCLC φ (nprfalseCLC ha) hnax,
   -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
   have hmax := lindenbaum {¬φ} hax,
   simp at *, 
@@ -260,7 +273,7 @@ begin
   -- by showing that there exists some model where φ is not valid.
   simp[global_valid],
   -- let that model be the canonical model
-  apply exists.intro (canonical_model_CLK ha),
+  apply exists.intro (canonical_model_CLC ha),
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m],
   -- let that state (s) be the maximally consistent set extended from {¬ φ}

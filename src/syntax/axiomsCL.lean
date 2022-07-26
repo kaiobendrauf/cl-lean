@@ -1,3 +1,9 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
+and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+-/
+
 import syntax.syntaxCL 
 import syntax.formula 
 import semantics.semanticsCL
@@ -8,13 +14,7 @@ variables {agents : Type}
 
 ---------------------- Proof System ----------------------
 
-
 -- Proof system for coalition logic
-/-
-Prop1-Prop7 taken from :
-Copyright (c) 2021 Paula Neeley. All rights reserved.
-Author: Paula Neeley
--/
 inductive axCL : formCL agents → Prop 
 -- (Prop) Propositional tautologies
 | Prop1 {φ ψ}                 : axCL (φ ~> (ψ ~> φ))
@@ -34,16 +34,14 @@ inductive axCL : formCL agents → Prop
 | M     {φ ψ} {G}             : axCL (([G] (φ & ψ)) ~> [G] φ)
 -- (S) ([G]φ ∧ [F]ψ) → [G ∪ F](φ ∧ ψ), when G ∩ F = ∅
 | S     {φ ψ} {G F} 
-        (hInt: G ∩ F = ∅)     : axCL ((([G]φ) & ([F]ψ)) ~> [G ∪ F] (φ & ψ))
+        (hInt : G ∩ F = ∅)    : axCL ((([G]φ) & ([F]ψ)) ~> [G ∪ F] (φ & ψ))
 -- (MP) ⊢ φ, φ → ψ ⇒⊢ ψ
 | MP    {φ ψ} 
-        (hImp: axCL (φ ~> ψ))
-        (hL: axCL φ)          : axCL (ψ)
+        (hImp : axCL (φ ~> ψ))
+        (hL : axCL φ)         : axCL (ψ)
 -- (Eq) ⊢ φ ↔ ψ ⇒⊢ [G]φ ↔ [G]ψ
 | Eq    {φ ψ} {G}
-        (h: axCL (φ ↔ ψ))     : axCL (([G] φ) ↔ ([G] ψ))
-
-
+        (h : axCL (φ ↔ ψ))    : axCL (([G] φ) ↔ ([G] ψ))
 
 
 instance formulaCL: formula (formCL agents) :=
@@ -57,7 +55,7 @@ instance formulaCL: formula (formCL agents) :=
   iffdef := by simp,
   topdef := by simp,
 
-  ax  := axCL,
+  ax := axCL,
   p1 := @axCL.Prop1 agents,
   p2 := @axCL.Prop2 agents,
   p3 := @axCL.Prop3 agents,
@@ -70,11 +68,10 @@ instance formulaCL: formula (formCL agents) :=
 
 instance CLformulaCL: CLformula agents (formCL agents) :=
 
-{ eff:= λ G φ, [G] φ,
-  Bot:= @axCL.Bot agents,
-  Top:= @axCL.Top agents,
-  N  := @axCL.N agents,
-  M  := @axCL.M agents,
-  S  := @axCL.S agents,
-  Eq := @axCL.Eq agents, }
-
+{ eff := λ G φ, [G] φ,
+  Bot := @axCL.Bot agents,
+  Top := @axCL.Top agents,
+  N   := @axCL.N agents,
+  M   := @axCL.M agents,
+  S   := @axCL.S agents,
+  Eq  := @axCL.Eq agents, }

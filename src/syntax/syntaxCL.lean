@@ -4,6 +4,9 @@ Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 -/
 
+import data.finset.basic
+import data.fintype.basic
+
 inductive formCL (agents : Type) : Type
 -- φ := ⊥ | p | φ → φ| φ ∧ φ | [G]φ
   | bot                      : formCL

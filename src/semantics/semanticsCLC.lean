@@ -1,11 +1,13 @@
 import syntax.syntaxCLC 
 import semantics.playability 
-import semantics.semantics
+import semantics.model
+import data.fintype.basic
 -- cl.syntax.syntaxCL data.set.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
 
 variable {agents : Type}
+variable [fintype agents]
 
 open formCLC set
 
@@ -18,42 +20,43 @@ open formCLC set
 -- (E  : playable_effectivity_struct states ha)
 
 
-structure frameCLC (agents : Type) extends frameCL agents :=
-(rel   : agents → states → set states)
-(rfl   : ∀ i s, s ∈ (rel i s))
-(sym   : ∀ i s t, t ∈ (rel i s) → s ∈ (rel i t))
-(trans : ∀ i s t u, t ∈ (rel i s) → u ∈ (rel i t) → u ∈ (rel i s))
+-- structure frameCLC (agents : Type) extends frameCL agents :=
+-- (rel   : agents → states → set states)
+-- (rfl   : ∀ i s, s ∈ (rel i s))
+-- (sym   : ∀ i s t, t ∈ (rel i s) → s ∈ (rel i t))
+-- (trans : ∀ i s t u, t ∈ (rel i s) → u ∈ (rel i t) → u ∈ (rel i s))
 
 
-structure modelCLC (agents : Type) :=
-(f : frameCLC agents)
-(v : ℕ → set f.states)
+-- structure modelCLC (agents : Type) :=
+-- (f : frameCLC agents)
+-- (v : ℕ → set f.states)
 
-def C_path {agents : Type} {m : modelCLC agents}: 
+def C_path {agents : Type} {m : modelCLK agents}: 
   list agents → list m.f.states →  m.f.states →  m.f.states → Prop
-  | list.nil  _        s t := s = t
   | _         list.nil s t := s = t
+  | list.nil  _        s t := s = t
   | (i :: is)(u :: us) s t := (s = t) ∨ (u ∈ (m.f.rel i s) ∧ (C_path is us u t))
 
 -- Definition of semantic entailmentf
-def s_entails : ∀ m : modelCLC agents,
+def s_entails_CLC : ∀ m : modelCLK agents,
   m.f.states → formCLC agents → Prop
   | m s bot           := false
   | m s (var n)       := s ∈ m.v n
-  | m s (imp φ ψ)     := (s_entails m s φ) → (s_entails m s ψ)
-  | m s (and φ ψ)     := (s_entails m s φ) ∧ (s_entails m s ψ)
-  | m s ([G] φ)       := {t: m.f.states | s_entails m t φ} ∈ m.f.E.E (s) (G)
-  | m s (K' i φ)      := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails m t φ
-  | m s (C' G φ)      := ∀ i ∈ G, ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t) 
-                          → s_entails m t φ
+  | m s (imp φ ψ)     := (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
+  | m s (and φ ψ)     := (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
+  | m s ([G] φ)       := {t: m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
+  | m s (K' i φ)      := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
+  | m s (E' G φ)      := ∀ i ∈ G, s_entails_CLK m s (K' i φ)
+  | m s (C' G φ)      := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t)
+                          → s_entails_CLC m t φ
   
 
 -- def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
 -- {t: m.f.states | s_entails m t φ}
 
 -- φ is valid in a model M = (f,v)
-def valid_m (m: modelCLC agents) (φ : formCLC agents) := 
-  ∀ s, s_entails m s φ
+def valid_m (m: modelCLK agents) (φ : formCLC agents) := 
+  ∀ s, s_entails_CLC m s φ
 
 def global_valid (φ : formCLC agents) :=
   ∀ m, valid_m m φ
@@ -83,8 +86,8 @@ def global_valid (φ : formCLC agents) :=
 --   ∀ m s, s_entails m s φ
 
 
-lemma not_s_entails_imp (m : modelCLC agents) : ∀ s φ, 
-  (¬(s_entails m s φ)) ↔ (s_entails m s (¬' φ)) :=
+lemma not_s_entails_imp (m : modelCLK agents) : ∀ s φ, 
+  (¬ (s_entails_CLC m s φ)) ↔ (s_entails_CLC m s (¬ φ)) :=
 begin
 intros s φ, split, 
 repeat {intros h1 h2, exact h1 h2},

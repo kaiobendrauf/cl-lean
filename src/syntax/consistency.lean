@@ -361,7 +361,6 @@ end
 
 
 -- -- Corollary 8 from class notes
-
 lemma max_ax_exists {form : Type} [ft : formula form] (hnprfalseCL : ¬  ax ft.bot) : 
   ∃ Γ : set form, max_ax_consistent Γ :=
 begin
@@ -466,27 +465,26 @@ begin
     rw mem_max_consistent_iff_proves Γ' φ hΓ' at this,
     have := sub (set.mem_singleton φ),
     contradiction },
-  simp [ax_consistent, finite_ax_consistent] at hφ,
-  rcases hφ with ⟨(list.nil | ⟨x, xs⟩), sub, pf⟩,
-  { simp [finite_conjunction] at pf,
-    -- we have ⊥, so (φ → ⊥) should also follow
-    simp [formula.notdef],
-    exact ax_bot_imp pf, },
-  { -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
-    induction xs, 
-
-    { simp [finite_conjunction] at *,
-      simp [sub] at *,
+  { simp [ax_consistent, finite_ax_consistent] at hφ,
+    rcases hφ with ⟨(list.nil | ⟨x, xs⟩), sub, pf⟩,
+    { simp [finite_conjunction] at pf,
+      -- we have ⊥, so (φ → ⊥) should also follow
       simp [formula.notdef],
-      exact iff_and_top.mp pf, },
+      exact ax_bot_imp pf, },
+    { -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
+      induction xs, 
 
-    { simp [finite_conjunction] at *,
-      apply xs_ih,
-      { exact sub.left, },
-      { exact sub.right.right, },
+      { simp [finite_conjunction] at *,
+        simp [sub, formula.notdef] at *,
+        exact iff_and_top.mp pf, },
 
-      { simp [sub.right.left, sub.left] at *,
-        apply remove_and_imp pf, } }, },
+      { simp [finite_conjunction] at *,
+        apply xs_ih,
+        { exact sub.left, },
+        { exact sub.right.right, },
+
+        { simp [sub.right.left, sub.left] at *,
+          apply remove_and_imp pf, } }, }, },
 end
 
 lemma false_of_always_false' {form : Type} [ft : formula form] (φ : form)
@@ -494,18 +492,16 @@ lemma false_of_always_false' {form : Type} [ft : formula form] (φ : form)
    ax (φ ↔' ft.bot) :=
 begin
   rw ft.iffdef,
-  have hfoaf : _, from (false_of_always_false φ) ,
+  have hfoaf : _, from (false_of_always_false φ),
   simp,
   apply mp,
   apply mp,
   apply p4,
-
   { rw formula.notdef at hfoaf,
     apply hfoaf,
     intros Γ hΓ hf,
     apply h,
     { exact hΓ, },
-
     { apply iff.elim_left (mem_max_consistent_iff_proves Γ φ hΓ),
       exact hf, }, },
   { exact explosion, },
@@ -573,7 +569,7 @@ begin
     exact explosion, },
 end 
 
-lemma tilde_empty_iff_false {form : Type} [ft : formula form] {φ : form} 
+lemma set_empty_iff_false {form : Type} [ft : formula form] {φ : form} 
   (hempty : {Γ : {Γ : set form | max_ax_consistent Γ }| φ ∈ Γ.val} ⊆ ∅) :  ax (φ ↔' ft.bot) :=
 begin
   refine false_of_always_false' φ (λ Γ hΓ h, hempty _),
@@ -604,7 +600,7 @@ begin
   -- ⊢ ψ ↔ ⊥, because {ψ} cannot be extended into a maximally consistent set (by hempty), 
   -- so {ψ} must be inconsistent.
   have hiffbot :  ax (ψ ↔' ft.bot), from
-    tilde_empty_iff_false hempty,
+    set_empty_iff_false hempty,
 
   -- ⊢ φ ↔ χ, from hiff
   have hiff' : ax (φ ↔' χ), from hiff hiffbot,
@@ -668,7 +664,7 @@ begin
   end,
 
   have hiffbot :  ax ((¬' (ψ →' φ)) ↔' ft.bot), from
-    tilde_empty_iff_false hempty,
+    set_empty_iff_false hempty,
   simp[ft.iffdef] at hiffbot,
 
   exact contra_not_imp_false_ax (mp _ _ (p5 _ _) hiffbot),

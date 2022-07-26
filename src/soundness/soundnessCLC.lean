@@ -1,19 +1,20 @@
 
-import syntax.syntaxCLK 
-import syntax.axiomsCLK 
-import semantics.semanticsCLK
+import syntax.syntaxCLC 
+import syntax.axiomsCLC 
+import semantics.semanticsCLC
+import tactic.induction
 local attribute [instance] classical.prop_decidable
 
-open set
+open set list
 
 variable {agents : Type}
 
 ---------------------- Soundness ----------------------
 
-theorem soundnessCLK (φ : formCLK agents) : axCLK φ → global_valid φ :=
+theorem soundnessCLC (φ : formCLC agents) : axCLC φ → global_valid φ :=
 begin
 intro h,
-induction h,
+induction' h,
 
 { intros m s h1 h2, 
   exact h1, },
@@ -43,11 +44,11 @@ induction h,
   exact h1 hf h2, },
 
 { intros m s h1, 
-  exact m.f.E.liveness s h h1, },
+  exact m.f.E.liveness s G h1, },
 
 { intros m s,
-  simp [s_entails_CLK],
-  exact m.f.E.safety s h, },
+  simp [s_entails_CLC],
+  exact m.f.E.safety s G, },
 
 { intros m s h1,
   apply m.f.E.N_max,
@@ -55,23 +56,23 @@ induction h,
   exact h1 h, },
 
 { intros m s,
-  apply m.f.E.monoticity s h_G {t: m.f.states | s_entails_CLK m t (h_φ & h_ψ)} {t: m.f.states | s_entails_CLK m t h_φ},
+  apply m.f.E.monoticity s G {t: m.f.states | s_entails_CLC m t (φ & φ_1)} {t: m.f.states | s_entails_CLC m t φ},
   intros t h1,
   exact h1.left, },
 
   { intros m s h1,
-    exact m.f.E.superadd s h_G h_F {t: m.f.states | s_entails_CLK m t h_φ} {t: m.f.states | s_entails_CLK m t h_ψ} h1.left h1.right h_hInt, },
+    exact m.f.E.superadd s G F {t: m.f.states | s_entails_CLC m t φ} {t: m.f.states | s_entails_CLC m t φ_1} h1.left h1.right hInt, },
 
   { intros m s,
-    apply h_ih_hImp,
-    exact h_ih_hL m s, },
+    apply ih_h,
+    exact ih_h_1 m s, },
 
   { intros m s,
-    have heq: {t: m.f.states | s_entails_CLK m t h_φ} = {t: m.f.states | s_entails_CLK m t h_ψ}, from
+    have heq: {t: m.f.states | s_entails_CLC m t φ} = {t: m.f.states | s_entails_CLC m t φ_1}, from
       begin
         apply set.ext,
         intros u,
-        cases (h_ih m u),
+        cases (ih m u),
         apply iff.intro,
 
         { intro hu,
@@ -83,26 +84,98 @@ induction h,
     apply and.intro,
 
     { intro h1,
-      simp[s_entails_CLK, ←heq] at *,
+      simp[s_entails_CLC, ←heq] at *,
       exact h1, },
 
     { intro h1,
-      simp[s_entails_CLK, heq] at *,
+      simp[s_entails_CLC, heq] at *,
       exact h1, }, },
 
   { intros m s h1 h2 t ht,
     exact h1 t ht (h2 t ht), },
 
   { intros m s h,
-    exact h s (m.f.rfl h_i s), },
+    exact h s (m.f.rfl i s), },
 
   { intros m s h t ht u hu,
-    exact h u (m.f.trans h_i s t u ht hu), },
+    exact h u (m.f.trans i s t u ht hu), },
 
   { intros m s h1 h2,
-    exact h1 (h2 s (m.f.rfl h_i s)), },
+    exact h1 (h2 s (m.f.rfl i s)), },
+  
+  { intros m s h,
+    induction' G,
+    {
+      simp [everyone_knows, s_entails_CLC],
+    },
+    {
+      -- simp [s_entails_CLC] at h,
+      -- cases h with hl hr,
+      split,
+      { intros t ht,
+        split,
+        {
+          simp [s_entails_CLC] at h,
+          apply h.left t (hd :: G),
+          simp,
+          -- list agents → list m.f.states →  m.f.states →  m.f.states → Prop
+          have hpath: (C_path (hd :: G) (t :: list.nil) s t),
+          { simp [C_path],
+            apply or.inr,
+            split,
+            exact ht,
+            cases G,
+            repeat { simp [C_path], },
+          },
+          exact hpath,
+        },
+        {
+          simp [s_entails_CLC] at *,
+          split,
+           { intros u F hF ss hC,
+            apply h.left u (hd :: F) 
+              begin
+                intros i hi,
+                cases hi, 
+                exact or.inl hi,
+                apply hF,
+                simpa,
+              end
+              (t :: ss),
+              simp [C_path],
+              apply or.intro_right,
+              split,
+              { exact ht, },
+              { exact hC, },
+          },
+          { intros i hi u F hF ss hC,
+            apply h.left u (hd :: F)
+            begin
+                intros i hi,
+                cases hi,
+                exact or.inl hi_1,
+                apply hF,
+                simpa,
+              end
+              (t :: ss),
+              simp [C_path],
+              apply or.intro_right,
+              split,
+              { exact ht, },
+              { exact hC, },
+          },
+        },
+      },
+      {
+        simp [everyone_knows],
+      }
+    },
+    simp [s_entails_CLC] at h,
+    
 
-  { intros m s t h2,
+  },
+
+  { intros m s t h,
     apply h_ih, },
 end
 
@@ -126,7 +199,7 @@ begin
   exact trivial,
 end
 
-def m_ex (ha: nonempty agents) : modelCLK agents  :=
+def m_ex (ha: nonempty agents) : modelCLC agents  :=
 
 { f := 
   { states := single,
@@ -196,11 +269,11 @@ def m_ex (ha: nonempty agents) : modelCLK agents  :=
     end, },
   v := λ _, {}, }
 
-lemma nprfalseCLK {agents: Type} (ha: nonempty agents): ¬ @axCLK agents (⊥) :=
+lemma nprfalseCLC {agents: Type} (ha: nonempty agents): ¬ @axCLC agents (⊥) :=
 begin
-apply (mt (soundnessCLK (@formCLK.bot agents))),
+apply (mt (soundnessCLC (@formCLC.bot agents))),
 intro hf ,
-simp[global_valid, valid_m, s_entails_CLK] at hf,
+simp[global_valid, valid_m, s_entails_CLC] at hf,
 apply hf (m_ex ha),
 exact single.one,
 end

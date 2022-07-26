@@ -1,8 +1,7 @@
 import syntax.syntaxCLC 
 import syntax.formula
+import data.fintype.basic
 open set
-
-variables {agents : Type}
 
 ---------------------- Proof System ----------------------
 
@@ -13,7 +12,7 @@ Prop1-Prop7 taken from :
 Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
-inductive axCLC : formCLC agents → Prop 
+inductive axCLC {agents  : Type} [fintype agents] : formCLC agents → Prop 
 -- (Prop) Propositional tautologiess
 | Prop1 {φ ψ}                 : axCLC (φ ~> (ψ ~> φ))
 | Prop2 {φ ψ χ}               : axCLC ((φ ~> (ψ ~> χ)) ~> ((φ ~> ψ) ~> (φ ~> χ)))
@@ -53,7 +52,7 @@ inductive axCLC : formCLC agents → Prop
                                 : axCLC (ψ ~> (C' G φ))
 
 
-instance formulaCLC: formula (formCLC agents) :=
+instance formulaCLC {agents : Type} [fintype agents] : formula (formCLC agents) :=
 { bot := ⊥,
   and := formCLC.and,
   imp := formCLC.imp,
@@ -75,8 +74,7 @@ instance formulaCLC: formula (formCLC agents) :=
   mp := @axCLC.MP agents, }
 
 
-instance CLformulaCL: CLformula agents (formCLC agents) :=
-
+instance CLformulaCLC {agents : Type} [fintype agents] : CLformula agents (formCLC agents) :=
 { eff:= λ G φ, [G] φ,
   Bot:= @axCLC.Bot agents,
   Top:= @axCLC.Top agents,

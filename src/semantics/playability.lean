@@ -44,6 +44,14 @@ structure semi_playable_effectivity_struct {agents : Type} (states : Type)
                       G ∪ F ⊂ univ → X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                       X ∩ Y ∈ E (s) (G ∪ F))
 
+def nonmonotonic_core {agents : Type} {states : Type}
+  (E: states → (set agents) → (set (set (states)))) (s : states) (G: set agents) :=
+{ X ∈ E (s) (G) | ¬ ∃ Y, (Y ∈ E (s) (G) ∧ Y ⊂ X) }
+
+structure truly_playable_effectivity_func {agents : Type} {states : Type}
+  (s : states) (ha : nonempty agents) extends playable_effectivity_struct states ha :=
+(complete_nmc: ∀ s G, ∀ X ∈ E (s) (G), ∃ Y, (Y ∈ (nonmonotonic_core E s G) ∧ Y ⊆ X))
+
 ----------------------------------------------------------
 -- Set Helper Functions
 ----------------------------------------------------------
@@ -224,3 +232,13 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
 
   playable_effectivity_struct.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
 
+-- def truly_from_playable_finite {agents : Type} {states : Type}
+--   (s : states) (ha : nonempty agents)
+--   (playable : playable_effectivity_func s ha) [hfin : fintype states]: 
+--   truly_playable_effectivity_func s ha := 
+-- { non_monotonic_core :=
+--   begin
+--     intros G X hX,
+--     sorry,
+--   end,
+--   .. playable }

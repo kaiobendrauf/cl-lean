@@ -17,17 +17,17 @@ inductive axCLK : formCLK agents → Prop
 -- (Prop) Propositional tautologiess
 | Prop1 {φ ψ}                 : axCLK (φ ~> (ψ ~> φ))
 | Prop2 {φ ψ χ}               : axCLK ((φ ~> (ψ ~> χ)) ~> ((φ ~> ψ) ~> (φ ~> χ)))
-| Prop3 {φ ψ}                 : axCLK (((¬'φ) ~> (¬'ψ)) ~> (((¬'φ) ~> ψ) ~> φ))
+| Prop3 {φ ψ}                 : axCLK (((¬φ) ~> (¬ψ)) ~> (((¬φ) ~> ψ) ~> φ))
 | Prop4 {φ ψ}                 : axCLK (φ ~> (ψ ~> (φ & ψ)))
 | Prop5 {φ ψ}                 : axCLK ((φ & ψ) ~> φ)
 | Prop6 {φ ψ}                 : axCLK ((φ & ψ) ~> ψ)
-| Prop7 {φ ψ}                 : axCLK (((¬' φ) ~> (¬'ψ)) ~> (ψ ~> φ))
--- (⊥) ¬'[G]⊥
-| Bot   {G}                   : axCLK (¬' ([G] ⊥))
+| Prop7 {φ ψ}                 : axCLK (((¬ φ) ~> (¬ψ)) ~> (ψ ~> φ))
+-- (⊥) ¬[G]⊥
+| Bot   {G}                   : axCLK (¬ ([G] ⊥))
 -- (⊤) [G]⊤
-| Top   {G}                   : axCLK ([G] ⊤')
--- (N) (¬'[∅]¬'φ → [N]φ)
-| N     {φ}                   : axCLK ((¬' ([∅] (¬' φ))) ~> [univ] φ)
+| Top   {G}                   : axCLK ([G] ⊤)
+-- (N) (¬[∅]¬φ → [N]φ)
+| N     {φ}                   : axCLK ((¬ ([∅] (¬ φ))) ~> [univ] φ)
 -- (M) [G](φ ∧ ψ) → [G]φ
 | M     {φ ψ} {G}             : axCLK (([G] (φ & ψ)) ~> [G] φ)
 -- (S) ([G]φ ∧ [F]ψ) → [G ∪ F](φ ∧ ψ), when G ∩ F = ∅
@@ -44,19 +44,18 @@ inductive axCLK : formCLK agents → Prop
 | K     {φ ψ} {i}              : axCLK ((K' i (φ ~> ψ)) ~> ((K' i φ) ~> (K' i ψ)))
 | T     {φ} {i}                : axCLK ((K' i φ) ~> φ)
 | Four  {φ} {i}                : axCLK ((K' i φ) ~> (K' i (K' i φ)))
-| Five  {φ} {i}                : axCLK ((¬' (K' i (φ))) ~> (¬'(K' i (K' i φ))))
+| Five  {φ} {i}                : axCLK ((¬ (K' i (φ))) ~> (¬(K' i (K' i φ))))
 | RN    {φ} {i}
         (h: axCLK φ)           : axCLK (K' i φ)
 
 
-def formulaCLK: formula (formCLK agents) :=
-
+instance formulaCLK: formula (formCLK agents) :=
 { bot := formCLK.bot,
   and := formCLK.and,
   imp := formCLK.imp,
-  not := λ φ, ¬' φ,
+  not := λ φ, ¬ φ,
   iff := λ φ ψ, φ ↔ ψ,
-  top := ⊤',
+  top := ⊤,
   notdef := by simp,
   iffdef := by simp,
   topdef := by simp,
@@ -70,10 +69,8 @@ def formulaCLK: formula (formCLK agents) :=
   p7 := @axCLK.Prop7 agents,
   mp := @axCLK.MP agents, }
 
-def CLformulaCLK: CLformula agents (formCLK agents) :=
-
-{ propf:= formulaCLK,
-  eff:= λ G φ, [G] φ,
+instance CLformulaCLK: CLformula agents (formCLK agents) :=
+{ eff:= λ G φ, [G] φ,
   Bot:= @axCLK.Bot agents,
   Top:= @axCLK.Top agents,
   N  := @axCLK.N agents,
