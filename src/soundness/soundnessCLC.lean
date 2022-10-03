@@ -7,11 +7,10 @@ local attribute [instance] classical.prop_decidable
 
 open set list
 
-variable {agents : Type}
-
 ---------------------- Soundness ----------------------
 
-theorem soundnessCLC (φ : formCLC agents) : axCLC φ → global_valid φ :=
+noncomputable theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
+  axCLC φ → global_valid φ :=
 begin
 intro h,
 induction' h,
@@ -177,6 +176,8 @@ induction' h,
 
   { intros m s t h,
     apply h_ih, },
+
+  repeat { sorry, }
 end
 
 inductive single : Type
@@ -199,8 +200,7 @@ begin
   exact trivial,
 end
 
-def m_ex (ha: nonempty agents) : modelCLC agents  :=
-
+def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK agents  :=
 { f := 
   { states := single,
     hs := single_nonempty,
@@ -269,7 +269,8 @@ def m_ex (ha: nonempty agents) : modelCLC agents  :=
     end, },
   v := λ _, {}, }
 
-lemma nprfalseCLC {agents: Type} (ha: nonempty agents): ¬ @axCLC agents (⊥) :=
+lemma nprfalseCLC {agents : Type} [hN : fintype agents] (ha : nonempty agents):
+  ¬ (@axCLC agents hN (formCLC.bot)) :=
 begin
 apply (mt (soundnessCLC (@formCLC.bot agents))),
 intro hf ,

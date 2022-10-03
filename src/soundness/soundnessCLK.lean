@@ -2,15 +2,14 @@
 import syntax.syntaxCLK 
 import syntax.axiomsCLK 
 import semantics.semanticsCLK
+
 local attribute [instance] classical.prop_decidable
 
 open set
 
-variable {agents : Type}
-
 ---------------------- Soundness ----------------------
 
-theorem soundnessCLK (φ : formCLK agents) : axCLK φ → global_valid φ :=
+noncomputable theorem soundnessCLK {agents : Type} [hN: fintype agents] (φ : formCLK agents) : axCLK φ → global_valid φ :=
 begin
 intro h,
 induction h,

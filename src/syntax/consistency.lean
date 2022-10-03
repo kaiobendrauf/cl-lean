@@ -553,7 +553,6 @@ begin
     exact hproves, },
 end 
 
-
 lemma max_ax_contains_imp_by_proof {form : Type} [ft : formula form] {φ ψ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (himp : φ ∈ Γ → ψ ∈ Γ) : (φ →' ψ) ∈ Γ :=
 begin

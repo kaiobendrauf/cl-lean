@@ -1,6 +1,6 @@
 import syntax.syntaxCLC 
 import syntax.formula
-import data.fintype.basic
+-- import data.fintype.basic
 open set
 
 ---------------------- Proof System ----------------------
@@ -12,7 +12,7 @@ Prop1-Prop7 taken from :
 Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
-inductive axCLC {agents  : Type} [fintype agents] : formCLC agents → Prop 
+inductive axCLC {agents  : Type} [hN : fintype agents] : formCLC agents → Prop 
 -- (Prop) Propositional tautologiess
 | Prop1 {φ ψ}                 : axCLC (φ ~> (ψ ~> φ))
 | Prop2 {φ ψ χ}               : axCLC ((φ ~> (ψ ~> χ)) ~> ((φ ~> ψ) ~> (φ ~> χ)))
@@ -40,19 +40,19 @@ inductive axCLC {agents  : Type} [fintype agents] : formCLC agents → Prop
 | Eq    {φ ψ} {G}
         (h: axCLC (φ ↔ ψ))     : axCLC (([G] φ) ↔ ([G] ψ))
 
-| K     {φ ψ} {i}              : axCLC ((K' i (φ ~> ψ)) ~> ((K' i φ) ~> (K' i ψ)))
-| T     {φ} {i}                : axCLC ((K' i φ) ~> φ)
-| Four  {φ} {i}                : axCLC ((K' i φ) ~> (K' i (K' i φ)))
-| Five  {φ} {i}                : axCLC ((¬(K' i (φ))) ~> (¬(K' i (K' i φ))))
-| C     {φ} {G}                : axCLC ((C' G φ) ~> (E' G (φ & C' G  φ)))
+| K     {φ ψ} {i}              : axCLC ((k i (φ ~> ψ)) ~> ((k i φ) ~> (k i ψ)))
+| T     {φ} {i}                : axCLC ((k i φ) ~> φ)
+| Four  {φ} {i}                : axCLC ((k i φ) ~> (k i (k i φ)))
+| Five  {φ} {i}                : axCLC ((¬(k i (φ))) ~> (¬(k i (k i φ))))
+| C     {φ} {G}                : axCLC ((c G φ) ~> (e G (φ & c G  φ)))
 | RN    {φ} {i}
-        (h: axCLC φ)           : axCLC (K' i φ)
+        (h: axCLC φ)           : axCLC (k i φ)
 | RC    {φ ψ} {G} 
-        (h: axCLC (ψ ~> (E' G (φ & ψ))))             
-                                : axCLC (ψ ~> (C' G φ))
+        (h: axCLC (ψ ~> (e G (φ & ψ))))             
+                                : axCLC (ψ ~> (c G φ))
 
 
-instance formulaCLC {agents : Type} [fintype agents] : formula (formCLC agents) :=
+instance formulaCLC {agents : Type} [hN : fintype agents] : formula (formCLC agents) :=
 { bot := ⊥,
   and := formCLC.and,
   imp := formCLC.imp,
@@ -64,23 +64,34 @@ instance formulaCLC {agents : Type} [fintype agents] : formula (formCLC agents) 
   topdef := by simp,
 
   ax  := axCLC,
-  p1 := @axCLC.Prop1 agents,
-  p2 := @axCLC.Prop2 agents,
-  p3 := @axCLC.Prop3 agents,
-  p4 := @axCLC.Prop4 agents,
-  p5 := @axCLC.Prop5 agents,
-  p6 := @axCLC.Prop6 agents,
-  p7 := @axCLC.Prop7 agents,
-  mp := @axCLC.MP agents, }
+  p1 := @axCLC.Prop1 agents hN,
+  p2 := @axCLC.Prop2 agents hN,
+  p3 := @axCLC.Prop3 agents hN,
+  p4 := @axCLC.Prop4 agents hN,
+  p5 := @axCLC.Prop5 agents hN,
+  p6 := @axCLC.Prop6 agents hN,
+  p7 := @axCLC.Prop7 agents hN,
+  mp := @axCLC.MP    agents hN, }
 
+instance CLformulaCLC {agents : Type} [hN : fintype agents] : CLformula agents (formCLC agents) :=
+{ eff := λ G φ, [G] φ,
+  Bot := @axCLC.Bot agents hN,
+  Top := @axCLC.Top agents hN,
+  N   := @axCLC.N   agents hN,
+  M   := @axCLC.M   agents hN,
+  S   := @axCLC.S   agents hN,
+  Eq  := @axCLC.Eq agents hN, }
 
-instance CLformulaCLC {agents : Type} [fintype agents] : CLformula agents (formCLC agents) :=
-{ eff:= λ G φ, [G] φ,
-  Bot:= @axCLC.Bot agents,
-  Top:= @axCLC.Top agents,
-  N  := @axCLC.N agents,
-  M  := @axCLC.M agents,
-  S  := @axCLC.S agents,
-  Eq := @axCLC.Eq agents, }
+instance KformulaCLC {agents : Type} [hN : fintype agents] : Kformula agents (formCLC agents) :=
+{ knows := formCLC.K,
+  everyone_knows := formCLC.E,
+  K := @axCLC.K agents hN,
+  T := @axCLC.T agents hN,
+  Four := @axCLC.Four agents hN,
+  Five := @axCLC.Five agents hN,
+  RN := @axCLC.RN agents hN, }
 
-
+instance CformulaCLC {agents : Type} [hN : fintype agents] : Cformula agents (formCLC agents) :=
+{ common_know := formCLC.C,
+  C := @axCLC.C agents hN,
+  RC := @axCLC.RC agents hN, }

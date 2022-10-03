@@ -288,6 +288,14 @@ def canonicalCL (agents : Type) (form : Type) [ft : formula form] [clf : CLformu
 
 -- }
 
-  
+def canonical_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (form : Type) [ft : formula form] [clf : CLformula agents form] [kf: Kformula agents form]
+  (hnpr : ¬ ax  ft.bot) : frameCLK agents :=
+{ rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1} = {φ | K' (i) (φ) ∈ t.1}},
+  rfl := by simp,
+  sym := λ i s t ht, eq.symm ht,
+  trans := λ i s t u hst htu, (rfl.congr htu).mp hst,
+  .. canonicalCL agents form ha hnpr }
+
 
 end canonical

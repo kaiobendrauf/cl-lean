@@ -2,25 +2,20 @@ import soundness.soundnessCLK
 import completeness.canonicalCL
 import syntax.axiomsCLK
 import tactic.induction
+-- import data.finset.basic
 
 local attribute [instance] classical.prop_decidable
 
 open set list formCLK
-
-variable {agents : Type}
 
 namespace canonical
 
 
 
 
-def canonical_model_CLK (ha : nonempty agents) : modelCLK agents :=
-{ f := 
-    { rel := λ i s, {t | {φ | K (i) (φ) ∈ s.1} = {φ | K (i) (φ) ∈ t.1}},
-      rfl := by simp,
-      sym := λ i s t ht, eq.symm ht,
-      trans := λ i s t u hst htu, (rfl.congr htu).mp hst,
-      .. canonicalCL agents (formCLK agents) ha (nprfalseCLK ha) },
+def canonical_model_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) : 
+  modelCLK agents :=
+{ f := canonical_CLK ha (formCLK agents) (nprfalseCLK ha),
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
   v := λ  n, {s | (formCLK.var n) ∈ s.1} }
 
@@ -28,7 +23,8 @@ def canonical_model_CLK (ha : nonempty agents) : modelCLK agents :=
 -- Filtration
 ----------------------------------------------------------
 
-def cl : formCLK agents → set (formCLK agents)
+def cl {agents : Type} [hN : fintype agents] (ha : nonempty agents) : 
+  formCLK agents → set (formCLK agents)
   |  bot          := {bot, ¬ bot}
   | (var n)       := {var n, ¬ var n}
   | (imp φ ψ)     := cl φ ∪ cl ψ ∪ 
@@ -43,7 +39,7 @@ def cl : formCLK agents → set (formCLK agents)
 ----------------------------------------------------------
 -- Truth Lemma
 ----------------------------------------------------------
-lemma truth_lemma_CL {agents : Type} (ha : nonempty agents) (φ : formCLK agents) 
+lemma truth_lemma_CL {agents : Type} (ha : nonempty agents) [hN : fintype agents] (φ : formCLK agents) 
 (s : (canonical_model_CLK ha).f.states) : (s_entails_CLK (canonical_model_CLK ha) s φ) ↔ (φ ∈ s.1) :=
 begin
   -- This proof is by induction on φ.
@@ -229,8 +225,6 @@ begin
         exact h,
       end,
       exact max_ax_contains_by_set_proof t.2 hKt axCLK.T, }, },
-
-
 end
 
 
@@ -242,36 +236,36 @@ end
 
 -- Completeness
 ----------------------------------------------------------
-theorem completenessCLK (φ : formCLK agents) (ha : nonempty agents) : 
-  global_valid φ → axCLK φ :=
-begin
-  -- rw from contrapositive
-  rw ←not_imp_not, 
-  -- assume ¬ ⊢ φ
-  intro hnax,
-  -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
-  have hax := @comphelper agents (formCLK agents) formulaCLK φ (nprfalseCLK ha) hnax,
-  -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
-  have hmax := lindenbaum {¬φ} hax,
-  simp at *, 
-  cases hmax with s hmax, 
-  cases hmax with hmax hnφ,
-  -- show that φ is not globally valid, 
-  -- by showing that there exists some model where φ is not valid.
-  simp[global_valid],
-  -- let that model be the canonical model
-  apply exists.intro (canonical_model_CLK ha),
-  -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
-  simp[valid_m],
-  -- let that state (s) be the maximally consistent set extended from {¬ φ}
-  apply exists.intro (subtype.mk s hmax),
-  -- assume by contradiction that M s ⊨ φ
-  intro hf,
-  -- by the truth lemma φ ∈ s
-  have hφ, from (truth_lemma_CL ha φ (subtype.mk s hmax)).mp hf,
-  -- in that state (s), φ ∈ s, so we do not have ¬ φ ∈ s (by consistency)
-  -- contradiction with hnφ
-  apply contra_containts_pr_false hmax hφ hnφ,
-end
+-- theorem completenessCLK (φ : formCLK agents) [hN : fintype agents] (ha : nonempty agents) : 
+--   global_valid φ → axCLK φ :=
+-- begin
+--   -- rw from contrapositive
+--   rw ←not_imp_not, 
+--   -- assume ¬ ⊢ φ
+--   intro hnax,
+--   -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
+--   have hax := @comphelper agents (formCLK agents) formulaCLK φ (nprfalseCLK ha) hnax,
+--   -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
+--   have hmax := lindenbaum {¬φ} hax,
+--   simp at *, 
+--   cases hmax with s hmax, 
+--   cases hmax with hmax hnφ,
+--   -- show that φ is not globally valid, 
+--   -- by showing that there exists some model where φ is not valid.
+--   simp[global_valid],
+--   -- let that model be the canonical model
+--   apply exists.intro (canonical_model_CLK ha),
+--   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
+--   simp[valid_m],
+--   -- let that state (s) be the maximally consistent set extended from {¬ φ}
+--   apply exists.intro (subtype.mk s hmax),
+--   -- assume by contradiction that M s ⊨ φ
+--   intro hf,
+--   -- by the truth lemma φ ∈ s
+--   have hφ, from (truth_lemma_CL ha φ (subtype.mk s hmax)).mp hf,
+--   -- in that state (s), φ ∈ s, so we do not have ¬ φ ∈ s (by consistency)
+--   -- contradiction with hnφ
+--   apply contra_containts_pr_false hmax hφ hnφ,
+-- end
 
 end canonical

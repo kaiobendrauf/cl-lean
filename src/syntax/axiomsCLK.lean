@@ -78,4 +78,11 @@ instance CLformulaCLK: CLformula agents (formCLK agents) :=
   S  := @axCLK.S agents,
   Eq := @axCLK.Eq agents, }
 
-
+instance KformulaCLK {agents : Type} [hN : fintype agents] : Kformula agents (formCLK agents) :=
+{ knows := formCLK.K,
+  everyone_knows := formCLK.E,
+  K := @axCLK.K agents hN,
+  T := @axCLK.T agents hN,
+  Four := @axCLK.Four agents hN,
+  Five := @axCLK.Five agents hN,
+  RN := @axCLK.RN agents hN, }

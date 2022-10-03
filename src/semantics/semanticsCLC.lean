@@ -6,9 +6,6 @@ import data.fintype.basic
 -- import del.semantics.translationfunction
 local attribute [instance] classical.prop_decidable
 
-variable {agents : Type}
-variable [fintype agents]
-
 open formCLC set
 
 ---------------------- Semantics ----------------------
@@ -31,26 +28,25 @@ open formCLC set
 -- (f : frameCLC agents)
 -- (v : ℕ → set f.states)
 
-def C_path {agents : Type} {m : modelCLK agents}: 
+def C_path {agents : Type} [hN : fintype agents] {m : modelCLK agents}: 
   list agents → list m.f.states →  m.f.states →  m.f.states → Prop
   | _         list.nil s t := s = t
   | list.nil  _        s t := s = t
   | (i :: is)(u :: us) s t := (s = t) ∨ (u ∈ (m.f.rel i s) ∧ (C_path is us u t))
 
 -- Definition of semantic entailmentf
-def s_entails_CLC : ∀ m : modelCLK agents,
-  m.f.states → formCLC agents → Prop
-  | m s bot           := false
-  | m s (var n)       := s ∈ m.v n
-  | m s (imp φ ψ)     := (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
-  | m s (and φ ψ)     := (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
-  | m s ([G] φ)       := {t: m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
-  | m s (K' i φ)      := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
-  | m s (E' G φ)      := ∀ i ∈ G, s_entails_CLK m s (K' i φ)
-  | m s (C' G φ)      := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t)
-                          → s_entails_CLC m t φ
+def s_entails_CLC {agents : Type} [hN : fintype agents] (m : modelCLK agents) (s : m.f.states) :
+  formCLC agents → Prop
+  | bot       := false
+  | (var n)   := s ∈ m.v n
+  | (imp φ ψ) := (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
+  | (and φ ψ) := (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
+  | ([G] φ)   := {t: m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
+  | (k i φ)  := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
+  | (e G φ)  := ∀ i ∈ G, s_entails_CLK m s (k i φ)
+  | (c G φ)  := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t)
+                  s_entails_CLC m t φ
   
-
 -- def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
 -- {t: m.f.states | s_entails m t φ}
 

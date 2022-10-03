@@ -22,9 +22,9 @@ notation `[` G `]`:90 φ := formCLC.eff G φ
 notation `⊤`:80         := ¬ (formCLC.bot)
 notation φ `∨` ψ        := ¬ (( ¬ φ) & (¬ ψ))
 notation φ `↔` ψ        := (φ ~> ψ) & (ψ ~> φ)
-notation `K'`           := formCLC.K
-notation `E'`           := formCLC.E
-notation `C'`           := formCLC.C 
+notation `k`           := formCLC.K
+notation `e`           := formCLC.E
+notation `c`           := formCLC.C 
 
 
 -- def everyone_knows {agents: Type}: 
