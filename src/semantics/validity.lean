@@ -1,4 +1,5 @@
 import semantics.playability 
+import semantics.model
 import syntax.formula
 local attribute [instance] classical.prop_decidable
 

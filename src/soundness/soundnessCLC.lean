@@ -12,97 +12,120 @@ open set list
 noncomputable theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
   axCLC φ → global_valid φ :=
 begin
-intro h,
-induction' h,
+  intro h,
+  unfold global_valid valid_m s_entails_CLC,
 
-{ intros m s h1 h2, 
+  induction' h,
+
+{ unfold s_entails_CLC.aux,
+  intros m s h1 h2, 
   exact h1, },
 
-{ intros m s h1 h2 h3, 
+{ unfold s_entails_CLC.aux,
+  intros m s h1 h2 h3, 
   apply h1, 
     { exact h3,},
 
     { apply h2, 
       exact h3 }, },
 
-{ intros m s h1 h2,
+{ unfold s_entails_CLC.aux,
+  intros m s h1 h2,
   by_contradiction hf,
   exact (h1 hf) (h2 hf), },
 
-{ intros m s h1 h2, 
+{ unfold s_entails_CLC.aux,
+  intros m s h1 h2, 
   exact and.intro h1 h2, },
 
-{ intros m s h1, 
+{ unfold s_entails_CLC.aux,
+  intros m s h1, 
   exact h1.left, },
 
-{ intros m s h1, 
+{ unfold s_entails_CLC.aux,
+  intros m s h1, 
   exact h1.right, },
 
-{ intros m s h1 h2,
+{ unfold s_entails_CLC.aux,
+  intros m s h1 h2,
   by_contradiction hf,
   exact h1 hf h2, },
 
-{ intros m s h1, 
+{ unfold s_entails_CLC.aux,
+  intros m s h1, 
   exact m.f.E.liveness s G h1, },
 
-{ intros m s,
+{ unfold s_entails_CLC.aux,
+  intros m s,
   simp [s_entails_CLC],
   exact m.f.E.safety s G, },
 
-{ intros m s h1,
+{ unfold s_entails_CLC.aux,
+  intros m s h1,
   apply m.f.E.N_max,
   by_contradiction,
   exact h1 h, },
 
 { intros m s,
+  rw [s_entails_CLC.aux, s_entails_CLC.aux, s_entails_CLC.aux], -- Don't unfold too much, otherwise the following line won't apply.
   apply m.f.E.monoticity s G {t: m.f.states | s_entails_CLC m t (φ & φ_1)} {t: m.f.states | s_entails_CLC m t φ},
   intros t h1,
+  unfold s_entails_CLC s_entails_CLC.aux at h1,
   exact h1.left, },
 
-  { intros m s h1,
+  {  unfold s_entails_CLC.aux,
+    intros m s h1,
     exact m.f.E.superadd s G F {t: m.f.states | s_entails_CLC m t φ} {t: m.f.states | s_entails_CLC m t φ_1} h1.left h1.right hInt, },
 
   { intros m s,
+    unfold s_entails_CLC.aux at ih_h,
     apply ih_h,
     exact ih_h_1 m s, },
 
   { intros m s,
-    have heq: {t: m.f.states | s_entails_CLC m t φ} = {t: m.f.states | s_entails_CLC m t φ_1}, from
-      begin
-        apply set.ext,
-        intros u,
-        cases (ih m u),
-        apply iff.intro,
+    have heq: {t: m.f.states | s_entails_CLC m t φ} = {t: m.f.states | s_entails_CLC m t φ_1},
+    { apply set.ext,
+      intros u,
+      unfold s_entails_CLC.aux at ih,
+      cases (ih m u),
+      apply iff.intro,
 
-        { intro hu,
-          exact left hu, },
+      { intro hu,
+        exact left hu, },
 
-        { intro hu,
-          exact right hu, }
-      end,
+      { intro hu,
+        exact right hu } },
+    unfold s_entails_CLC.aux,
     apply and.intro,
 
     { intro h1,
-      simp[s_entails_CLC, ←heq] at *,
+      simp [s_entails_CLC, s_entails_CLC.aux] at *,
+      rw [← heq],
       exact h1, },
 
     { intro h1,
-      simp[s_entails_CLC, heq] at *,
+      simp [s_entails_CLC, s_entails_CLC.aux] at *,
+      rw [heq],
       exact h1, }, },
 
-  { intros m s h1 h2 t ht,
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2 t ht,
     exact h1 t ht (h2 t ht), },
 
-  { intros m s h,
+  { unfold s_entails_CLC.aux,
+    intros m s h,
     exact h s (m.f.rfl i s), },
 
-  { intros m s h t ht u hu,
+  { unfold s_entails_CLC.aux,
+    intros m s h t ht u hu,
     exact h u (m.f.trans i s t u ht hu), },
 
-  { intros m s h1 h2,
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2,
     exact h1 (h2 s (m.f.rfl i s)), },
-  
-  { intros m s h,
+
+  { unfold s_entails_CLC.aux,
+    intros m s h,
     induction' G,
     {
       simp [everyone_knows, s_entails_CLC],
@@ -272,9 +295,9 @@ def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK
 lemma nprfalseCLC {agents : Type} [hN : fintype agents] (ha : nonempty agents):
   ¬ (@axCLC agents hN (formCLC.bot)) :=
 begin
-apply (mt (soundnessCLC (@formCLC.bot agents))),
-intro hf ,
-simp[global_valid, valid_m, s_entails_CLC] at hf,
-apply hf (m_ex ha),
-exact single.one,
+  apply (mt (soundnessCLC (@formCLC.bot agents))),
+  intro hf ,
+  simp[global_valid, valid_m, s_entails_CLC, s_entails_CLC.aux] at hf,
+  apply hf (m_ex ha),
+  exact single.one,
 end

@@ -28,27 +28,46 @@ open formCLC set
 -- (f : frameCLC agents)
 -- (v : ℕ → set f.states)
 
-def C_path {agents : Type} [hN : fintype agents] {m : modelCLK agents}: 
+def C_path {agents : Type}  {m : modelCLK agents}: 
   list agents → list m.f.states →  m.f.states →  m.f.states → Prop
   | _         list.nil s t := s = t
   | list.nil  _        s t := s = t
   | (i :: is)(u :: us) s t := (s = t) ∨ (u ∈ (m.f.rel i s) ∧ (C_path is us u t))
 
--- Definition of semantic entailmentf
-def s_entails_CLC {agents : Type} [hN : fintype agents] (m : modelCLK agents) (s : m.f.states) :
-  formCLC agents → Prop
-  | bot       := false
-  | (var n)   := s ∈ m.v n
-  | (imp φ ψ) := (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
-  | (and φ ψ) := (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
-  | ([G] φ)   := {t: m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
-  | (k i φ)  := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
-  | (e G φ)  := ∀ i ∈ G, s_entails_CLK m s (k i φ)
-  | (c G φ)  := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t)
-                  s_entails_CLC m t φ
-  
+@[simp]
+protected def formCLC.sizeof' (agents : Type) [agents_inst : has_sizeof agents] : formCLC agents → ℕ
+| bot := 1
+| (var n) := 1 + sizeof n
+| (imp φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
+| (and φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
+| ([G] φ) := 1 + sizeof G + formCLC.sizeof' φ
+| (k i φ) := 1 + sizeof i + formCLC.sizeof' φ
+| (e i φ) := 1 + sizeof i + formCLC.sizeof' φ + 1 -- Make recursion from E' to K' possible
+| (c i φ) := 1 + sizeof i + formCLC.sizeof' φ
+
+def formCLC.has_sizeof' {agents} : has_sizeof (formCLC agents) := ⟨formCLC.sizeof' _⟩
+local attribute [instance] formCLC.has_sizeof'
+
+-- Definition of semantic entailment
+-- Order of arguments is swapped to help the equation compiler find the recursive parameter
+def s_entails_CLC.aux {agents : Type}  : Π (m : modelCLK agents), formCLC agents → m.f.states → Prop
+  | m bot s       := false
+  | m (var n) s   := s ∈ m.v n
+  | m (imp φ ψ) s := (s_entails_CLC.aux m φ s) → (s_entails_CLC.aux m ψ s)
+  | m (and φ ψ) s := (s_entails_CLC.aux m φ s) ∧ (s_entails_CLC.aux m ψ s)
+  | m ([G] φ) s  := {t: m.f.states | s_entails_CLC.aux m φ t} ∈ m.f.E.E (s) (G)
+  | m (k i φ) s := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC.aux m φ t
+  | m (e G φ) s := ∀ i ∈ G, s_entails_CLC.aux m (k i φ) s
+  | m (c G φ) s := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t ∧ s_entails_CLC.aux m φ t)
+
+-- Definition of semantic entailment
+def s_entails_CLC {agents : Type} (m : modelCLK agents) (s : m.f.states) (φ : formCLC agents) : Prop :=
+s_entails_CLC.aux m φ s
+
 -- def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
 -- {t: m.f.states | s_entails m t φ}
+
+variables {agents : Type}
 
 -- φ is valid in a model M = (f,v)
 def valid_m (m: modelCLK agents) (φ : formCLC agents) := 
@@ -85,8 +104,9 @@ def global_valid (φ : formCLC agents) :=
 lemma not_s_entails_imp (m : modelCLK agents) : ∀ s φ, 
   (¬ (s_entails_CLC m s φ)) ↔ (s_entails_CLC m s (¬ φ)) :=
 begin
-intros s φ, split, 
-repeat {intros h1 h2, exact h1 h2},
+  intros s φ,
+  unfold s_entails_CLC s_entails_CLC.aux,
+  refl
 end
 
 

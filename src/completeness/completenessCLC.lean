@@ -45,7 +45,7 @@ E_list_to_form φ (finset.to_list (to_finset G))
 -- have Gs : finset (list (agents)), from {is : list (agents) | ∀ i ∈ is, i ∈ G},
 -- ((λ is, E_list_to_form φ is) '' Gs) ∪ ((λ is, ¬ (E_list_to_form φ is)) '' Gs)
 
-def cl {agents : Type} [hN : fintype agents] : 
+noncomputable def cl {agents : Type} [hN : fintype agents] :
   formCLC agents → finset (formCLC agents)
 |  bot          := {bot, ¬ bot}
 | (var n)       := {var n, ¬ var n}

@@ -1,6 +1,7 @@
 import data.finset.basic
+import data.fintype.basic
 
-inductive formCLK (agents  : Type) [fintype agents] : Type
+inductive formCLK (agents  : Type) /- [fintype agents] -/ : Type
 -- φ := ⊥ | p | φ → φ| φ ∧ φ | [G]φ
   | bot                                   : formCLK
   | var  (n : nat)                        : formCLK

@@ -1,7 +1,7 @@
 import data.fintype.basic
 import data.finset.basic
 
-inductive formCLC (agents  : Type) [fintype agents] : Type
+inductive formCLC (agents  : Type) /- [fintype agents] -/ : Type
 -- φ := ⊥ | p | φ → φ| φ ∧ φ | [G]φ
   | bot                                 : formCLC
   | var  (n : nat)                      : formCLC
