@@ -2,7 +2,8 @@ import soundness.soundnessCLC
 import completeness.canonicalCL
 import syntax.axiomsCLC
 import tactic.induction
--- import data.finset.basic
+import data.finset.powerset
+
 
 local attribute [instance] classical.prop_decidable
 
@@ -40,12 +41,7 @@ noncomputable def cl_E {agents : Type} [hN : fintype agents] (G : set (agents)) 
   formCLC agents := 
 E_list_to_form φ (finset.to_list (to_finset G))
 
--- def cl_E2 {agents : Type} [hN : fintype agents] (G : set (agents)) (φ : formCLC agents) : 
---   finset (formCLC agents) :=
--- have Gs : finset (list (agents)), from {is : list (agents) | ∀ i ∈ is, i ∈ G},
--- ((λ is, E_list_to_form φ is) '' Gs) ∪ ((λ is, ¬ (E_list_to_form φ is)) '' Gs)
-
-noncomputable def cl {agents : Type} [hN : fintype agents] :
+noncomputable def cl {agents : Type} [hN : fintype agents] : 
   formCLC agents → finset (formCLC agents)
 |  bot          := {bot, ¬ bot}
 | (var n)       := {var n, ¬ var n}
@@ -62,41 +58,66 @@ noncomputable def cl {agents : Type} [hN : fintype agents] :
 | (e G φ)       := cl φ ∪ {(e G φ), ¬ (e G φ), cl_E G φ }
 | (c G φ)       := cl φ ∪ {(c G φ), ¬ (c G φ)} ∪ cl_C G φ
 
+noncomputable def s_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (s : set (formCLC agents)) : 
+  finset (formCLC agents) :=
+finset.filter (λ ψ, ψ ∈ s) (cl(φ))
 
-def s_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents)
-  (s : (canonical_model_CLK ha).f.states) :=
-s.1 ∩ cl(φ)
-
-def phi_s_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents)
-  (X : set {sf : (set (formCLC agents)) // (∃ s : (canonical_model_CLK ha).f.states, sf = s.1 ∩ cl(φ))}) :
+noncomputable def phi_s_f {agents : Type} [hN : fintype agents] (ha : nonempty agents)
+  (φ : formCLC agents) (s : set (formCLC agents)) :
   formCLC agents :=
-sorry
+finite_conjunction (finset.to_list (s_f ha φ s))
 
-def phi_X {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents)
-  (X : set {sf : (set (formCLC agents)) // (∃ s : (canonical_model_CLK ha).f.states, sf = s.1 ∩ cl(φ))}) :
+-- noncomputable def S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+--   (φ : formCLC agents) : finset (finset (formCLC agents)) :=
+-- finset.filter (λ sf, ax_consistent ({x | x ∈ sf})) (finset.powerset (cl(φ)))
+
+def S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) : Type :=
+finset.attach (finset.filter (λ sf, ax_consistent ({x | x ∈ sf})) (finset.powerset (cl(φ))))
+
+noncomputable def phi_X_list {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) :
+  list (S_f ha φ) → list (formCLC agents)
+| list.nil  := list.nil
+| (s :: ss) := ((phi_s_f ha φ ({x | x ∈ s.1.1})) :: phi_X_list ss)
+
+noncomputable def phi_X {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X : finset (S_f ha φ)) :
   formCLC agents :=
-sorry
+finite_conjunction (phi_X_list ha φ (finset.to_list X))
 
--- where φX = 􏰂sf ∈X (􏰁ψ∈sf ψ). For readability we sometimes write (􏰁ψ∈sf ψ) as φsf
+noncomputable def phi_X_set {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X : set (S_f ha φ)) :
+  formCLC agents :=
+begin
+  simp[S_f, finset.attach] at X,
+  have hX : finite X, from finite.of_fintype X,
+  have X : finset (S_f ha φ), from finite.to_finset hX,
+  exact finite_conjunction (phi_X_list ha φ (finset.to_list X)),
+end
 
-
-def filtered_model_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+def filtered_model_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) :
   modelCLK agents :=
 { f := 
   -- { states := {sf : (set (formCLC agents)) // (∃ s : set (formCLC agents), max_ax_consistent s ∧ (sf = s ∩ cl(φ)))},
-  { states := {sf : (set (formCLC agents)) // (∃ s : (canonical_model_CLK ha).f.states, sf = s.1 ∩ cl(φ))},
+  { states := S_f ha φ,
     hs := sorry, 
-    ha := sorry,
+    ha := ha,
     E := 
     { E := λ sf G, {X | ite (G = univ) 
           -- condition G = N
-          (∃ t : (canonical_model_CLK ha).f.states, (t.1 ∩ cl(φ)) = sf ∧ 
-            {u : (canonical_model_CLK ha).f.states | (phi_X ha φ X) ∈ u.1} ∈ (canonical_model_CLK ha).f.E.E (t) (G))
+          (∃ t : (canonical_model_CLK ha).f.states, (t.1 ∩ cl(φ)) = sf.1 ∧ 
+            {u : (canonical_model_CLK ha).f.states | 
+              (phi_X_set ha φ X) ∈ u.1} ∈ (canonical_model_CLK ha).f.E.E (t) (G))
           -- condition G ≠ N
-          (∀ t : (canonical_model_CLK ha).f.states, (t.1 ∩ cl(φ)) = sf → 
-            {u : (canonical_model_CLK ha).f.states | (phi_X ha φ X) ∈ u.1} ∈ (canonical_model_CLK ha).f.E.E (t) (G))},
+          (∀ t : (canonical_model_CLK ha).f.states, (t.1 ∩ cl(φ)) = sf.1 → 
+            {u : (canonical_model_CLK ha).f.states | 
+              (phi_X_set ha φ X) ∈ u.1} ∈ (canonical_model_CLK ha).f.E.E (t) (G))},
       liveness :=
       begin
+        
         sorry,
       end,
       safety :=
@@ -116,11 +137,11 @@ def filtered_model_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agen
         sorry,
       end,
     },
-    rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1} = {φ | K' (i) (φ) ∈ t.1}},
+    rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1.1} = {φ | K' (i) (φ) ∈ t.1.1}},
     rfl := by simp,
     sym := λ i s t ht, eq.symm ht,
     trans := λ i s t u hst htu, (rfl.congr htu).mp hst, },
-  v := λ  n, {s | (formCLC.var n) ∈ s.1}, }
+  v := λ  n, {s | (formCLC.var n) ∈ s.1.1}, }
 
 ----------------------------------------------------------
 -- Truth Lemma
@@ -356,4 +377,4 @@ def filtered_model_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agen
 --   apply contra_containts_pr_false hmax hφ hnφ,
 -- end
 
--- end canonical
+end canonical

@@ -43,6 +43,7 @@ infix    `↔'` : 80         := formula.iff
 notation `¬'` : 80         := formula.not
 notation `⊤'` : 80         := formula.top
 notation `⊥'` : 80         := ¬' ⊤'
+infix    `∨'` : 80         := λ φ ψ, (¬' φ) →' ψ
 
 
 class CLformula (agents : out_param Type) (form : Type) [formula form] :=

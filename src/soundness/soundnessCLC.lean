@@ -1,8 +1,9 @@
-
 import syntax.syntaxCLC 
 import syntax.axiomsCLC 
 import semantics.semanticsCLC
 import tactic.induction
+import data.set.finite
+import data.fintype.basic
 local attribute [instance] classical.prop_decidable
 
 open set list
@@ -17,71 +18,85 @@ begin
 
   induction' h,
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1 h2, 
-  exact h1, },
+  -- Prop 1
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2, 
+    exact h1, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1 h2 h3, 
-  apply h1, 
-    { exact h3,},
+  -- Prop 2
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2 h3, 
+    apply h1, 
+      { exact h3,},
 
-    { apply h2, 
-      exact h3 }, },
+      { apply h2, 
+        exact h3 }, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1 h2,
-  by_contradiction hf,
-  exact (h1 hf) (h2 hf), },
+  -- Prop 3
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2,
+    by_contradiction hf,
+    exact (h1 hf) (h2 hf), },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1 h2, 
-  exact and.intro h1 h2, },
+  -- Prop 4
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2, 
+    exact and.intro h1 h2, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1, 
-  exact h1.left, },
+  -- Prop 5
+  { unfold s_entails_CLC.aux,
+    intros m s h1, 
+    exact h1.left, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1, 
-  exact h1.right, },
+  -- Prop 6
+  { unfold s_entails_CLC.aux,
+    intros m s h1, 
+    exact h1.right, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1 h2,
-  by_contradiction hf,
-  exact h1 hf h2, },
+  -- Prop 7
+  { unfold s_entails_CLC.aux,
+    intros m s h1 h2,
+    by_contradiction hf,
+    exact h1 hf h2, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1, 
-  exact m.f.E.liveness s G h1, },
+  -- Bot
+  { unfold s_entails_CLC.aux,
+    intros m s h1, 
+    exact m.f.E.liveness s G h1, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s,
-  simp [s_entails_CLC],
-  exact m.f.E.safety s G, },
+  -- Top
+  { unfold s_entails_CLC.aux,
+    intros m s,
+    simp [s_entails_CLC],
+    exact m.f.E.safety s G, },
 
-{ unfold s_entails_CLC.aux,
-  intros m s h1,
-  apply m.f.E.N_max,
-  by_contradiction,
-  exact h1 h, },
+  -- N
+  { unfold s_entails_CLC.aux,
+    intros m s h1,
+    apply m.f.E.N_max,
+    by_contradiction,
+    exact h1 h, },
 
-{ intros m s,
-  rw [s_entails_CLC.aux, s_entails_CLC.aux, s_entails_CLC.aux], -- Don't unfold too much, otherwise the following line won't apply.
-  apply m.f.E.monoticity s G {t: m.f.states | s_entails_CLC m t (φ & φ_1)} {t: m.f.states | s_entails_CLC m t φ},
-  intros t h1,
-  unfold s_entails_CLC s_entails_CLC.aux at h1,
-  exact h1.left, },
+  -- M
+  { intros m s,
+    rw [s_entails_CLC.aux, s_entails_CLC.aux, s_entails_CLC.aux], -- Don't unfold too much, otherwise the following line won't apply.
+    apply m.f.E.monoticity s G {t: m.f.states | s_entails_CLC m t (φ & φ_1)} {t: m.f.states | s_entails_CLC m t φ},
+    intros t h1,
+    unfold s_entails_CLC s_entails_CLC.aux at h1,
+    exact h1.left, },
 
+  -- S
   {  unfold s_entails_CLC.aux,
     intros m s h1,
     exact m.f.E.superadd s G F {t: m.f.states | s_entails_CLC m t φ} {t: m.f.states | s_entails_CLC m t φ_1} h1.left h1.right hInt, },
 
+  -- MP
   { intros m s,
     unfold s_entails_CLC.aux at ih_h,
     apply ih_h,
     exact ih_h_1 m s, },
 
+  -- Eq
   { intros m s,
     have heq: {t: m.f.states | s_entails_CLC m t φ} = {t: m.f.states | s_entails_CLC m t φ_1},
     { apply set.ext,
@@ -108,99 +123,144 @@ begin
       rw [heq],
       exact h1, }, },
 
+  -- K
   { unfold s_entails_CLC.aux,
     intros m s h1 h2 t ht,
     exact h1 t ht (h2 t ht), },
 
+  -- T
   { unfold s_entails_CLC.aux,
     intros m s h,
     exact h s (m.f.rfl i s), },
 
+  -- Four
   { unfold s_entails_CLC.aux,
     intros m s h t ht u hu,
     exact h u (m.f.trans i s t u ht hu), },
 
+  -- Five
   { unfold s_entails_CLC.aux,
     intros m s h1 h2,
     exact h1 (h2 s (m.f.rfl i s)), },
-
+  
+  -- C
   { unfold s_entails_CLC.aux,
-    intros m s h,
-    induction' G,
-    {
-      simp [everyone_knows, s_entails_CLC],
-    },
-    {
-      -- simp [s_entails_CLC] at h,
-      -- cases h with hl hr,
-      split,
-      { intros t ht,
+    intros m s hC i hi t hts,
+    split,
+    { apply hC t,
+      apply exists.intro (i :: list.nil),
+      split, 
+      { simp, exact hi, },
+      { apply exists.intro (t :: list.nil),
+        simp [C_path],
+        apply or.intro_right,
+        exact hts, }, },
+    { intros u hu,
+      apply hC u,
+      cases hu with is hu,
+      cases hu with his hu,
+      cases hu with ss hu,
+      cases is with hd is,
+      { apply exists.intro (i :: list.nil),
         split,
-        {
-          simp [s_entails_CLC] at h,
-          apply h.left t (hd :: G),
-          simp,
-          -- list agents → list m.f.states →  m.f.states →  m.f.states → Prop
-          have hpath: (C_path (hd :: G) (t :: list.nil) s t),
-          { simp [C_path],
-            apply or.inr,
-            split,
-            exact ht,
-            cases G,
-            repeat { simp [C_path], },
-          },
-          exact hpath,
-        },
-        {
-          simp [s_entails_CLC] at *,
+        { simp, exact hi, },
+        { apply exists.intro (t :: list.nil),
+          simp [C_path] at *,
+          apply or.intro_right,
           split,
-           { intros u F hF ss hC,
-            apply h.left u (hd :: F) 
-              begin
-                intros i hi,
-                cases hi, 
-                exact or.inl hi,
-                apply hF,
-                simpa,
-              end
-              (t :: ss),
-              simp [C_path],
-              apply or.intro_right,
-              split,
-              { exact ht, },
-              { exact hC, },
-          },
-          { intros i hi u F hF ss hC,
-            apply h.left u (hd :: F)
-            begin
-                intros i hi,
-                cases hi,
-                exact or.inl hi_1,
-                apply hF,
-                simpa,
-              end
-              (t :: ss),
-              simp [C_path],
-              apply or.intro_right,
-              split,
-              { exact ht, },
-              { exact hC, },
-          },
-        },
-      },
-      {
-        simp [everyone_knows],
-      }
-    },
-    simp [s_entails_CLC] at h,
+          exact hts,
+          exact C_path_nil_left hu, }, },
+      { apply exists.intro (i :: hd :: is),
+        split,
+        { simp at *, split, exact hi, exact his, },
+        { apply exists.intro (t :: ss),
+          simp [C_path] at *,
+          apply or.intro_right,
+          split, exact hts, exact hu, }, }, }, },
+
+  -- RN
+  { sorry, },
+
+  -- RC
+  { sorry, },
+  -- { unfold s_entails_CLC.aux,
+  --   intros m s h,
+  --   induction' G,
+  --   {
+  --     simp [everyone_knows, s_entails_CLC],
+  --   },
+  --   {
+  --     -- simp [s_entails_CLC] at h,
+  --     -- cases h with hl hr,
+  --     split,
+  --     { intros t ht,
+  --       split,
+  --       {
+  --         simp [s_entails_CLC] at h,
+  --         apply h.left t (hd :: G),
+  --         simp,
+  --         -- list agents → list m.f.states →  m.f.states →  m.f.states → Prop
+  --         have hpath: (C_path (hd :: G) (t :: list.nil) s t),
+  --         { simp [C_path],
+  --           apply or.inr,
+  --           split,
+  --           exact ht,
+  --           cases G,
+  --           repeat { simp [C_path], },
+  --         },
+  --         exact hpath,
+  --       },
+  --       {
+  --         simp [s_entails_CLC] at *,
+  --         split,
+  --          { intros u F hF ss hC,
+  --           apply h.left u (hd :: F) 
+  --             begin
+  --               intros i hi,
+  --               cases hi, 
+  --               exact or.inl hi,
+  --               apply hF,
+  --               simpa,
+  --             end
+  --             (t :: ss),
+  --             simp [C_path],
+  --             apply or.intro_right,
+  --             split,
+  --             { exact ht, },
+  --             { exact hC, },
+  --         },
+  --         { intros i hi u F hF ss hC,
+  --           apply h.left u (hd :: F)
+  --           begin
+  --               intros i hi,
+  --               cases hi,
+  --               exact or.inl hi_1,
+  --               apply hF,
+  --               simpa,
+  --             end
+  --             (t :: ss),
+  --             simp [C_path],
+  --             apply or.intro_right,
+  --             split,
+  --             { exact ht, },
+  --             { exact hC, },
+  --         },
+  --       },
+  --     },
+  --     {
+  --       simp [everyone_knows],
+  --     }
+  --   },
+  --   simp [s_entails_CLC] at h,
     
 
-  },
+  -- },
 
-  { intros m s t h,
-    apply h_ih, },
+  -- -- 
+  -- { intros m s t h,
+  --   apply h_ih, },
 
-  repeat { sorry, }
+  -- repeat { sorry, }
 end
 
 inductive single : Type

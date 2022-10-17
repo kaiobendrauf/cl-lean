@@ -28,11 +28,32 @@ open formCLC set
 -- (f : frameCLC agents)
 -- (v : ℕ → set f.states)
 
-def C_path {agents : Type}  {m : modelCLK agents}: 
+def C_path {agents : Type}  {m : modelCLK agents} : 
   list agents → list m.f.states →  m.f.states →  m.f.states → Prop
-  | _         list.nil s t := s = t
-  | list.nil  _        s t := s = t
+  | list.nil  list.nil s t := s = t
+  | (i :: is) list.nil s t := s = t
+  | list.nil (u :: us) s t := s = t
   | (i :: is)(u :: us) s t := (s = t) ∨ (u ∈ (m.f.rel i s) ∧ (C_path is us u t))
+
+def C_path_nil_left {agents : Type} {m : modelCLK agents} {ss : list m.f.states} {s t : m.f.states} : 
+  C_path list.nil ss s t → s = t :=
+begin
+  intro hC,
+  induction ss,
+  repeat 
+  { simp[C_path] at hC,
+    exact hC, },
+end
+
+def C_path_nil_right {agents : Type} {m : modelCLK agents} {is : list agents} {s t : m.f.states} : 
+  C_path is list.nil s t → s = t :=
+begin
+  intro hC,
+  induction is,
+  repeat 
+  { simp[C_path] at hC,
+    exact hC, },
+end
 
 @[simp]
 protected def formCLC.sizeof' (agents : Type) [agents_inst : has_sizeof agents] : formCLC agents → ℕ
@@ -58,7 +79,7 @@ def s_entails_CLC.aux {agents : Type}  : Π (m : modelCLK agents), formCLC agent
   | m ([G] φ) s  := {t: m.f.states | s_entails_CLC.aux m φ t} ∈ m.f.E.E (s) (G)
   | m (k i φ) s := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC.aux m φ t
   | m (e G φ) s := ∀ i ∈ G, s_entails_CLC.aux m (k i φ) s
-  | m (c G φ) s := ∀ t: m.f.states, (∃ la ls, (∀ a ∈ la, a ∈ G) ∧ C_path la ls s t ∧ s_entails_CLC.aux m φ t)
+  | m (c G φ) s := ∀ t: m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → s_entails_CLC.aux m φ t
 
 -- Definition of semantic entailment
 def s_entails_CLC {agents : Type} (m : modelCLK agents) (s : m.f.states) (φ : formCLC agents) : Prop :=

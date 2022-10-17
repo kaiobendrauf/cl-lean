@@ -21,6 +21,10 @@ def finite_conjunction {form : Type} [ft : formula form] : (list form) → form
   | list.nil   := ft.top
   | (f ::fs)    := f ∧' (finite_conjunction fs)
 
+-- finite disjunction of formulas
+def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
+  | list.nil   := ft.bot
+  | (f ::fs)    := f ∨' (finite_disjunction fs)
 
 -- a few helper lemmas about finite conjunctions
 lemma fin_conj_simp {form : Type} [ft : formula form] : 
