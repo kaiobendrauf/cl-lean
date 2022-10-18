@@ -10,7 +10,7 @@ open set list
 
 ---------------------- Soundness ----------------------
 
-noncomputable theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
+theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
   axCLC φ → global_valid φ :=
 begin
   intro h,
@@ -149,118 +149,56 @@ begin
     split,
     { apply hC t,
       apply exists.intro (i :: list.nil),
-      split, 
-      { simp, exact hi, },
-      { apply exists.intro (t :: list.nil),
+      split, simp,
+      {exact hi, },
+      { apply exists.intro list.nil,
         simp [C_path],
-        apply or.intro_right,
         exact hts, }, },
-    { intros u hu,
-      apply hC u,
-      cases hu with is hu,
-      cases hu with his hu,
-      cases hu with ss hu,
-      cases is with hd is,
-      { apply exists.intro (i :: list.nil),
-        split,
-        { simp, exact hi, },
-        { apply exists.intro (t :: list.nil),
-          simp [C_path] at *,
-          apply or.intro_right,
+      { intros u hu,
+        apply hC u,
+        cases hu with is hu,
+        cases hu with his hu,
+        cases hu with ss hu,
+        cases is with hd is,
+        { by_contradiction,
+          exact C_path_nil hu, },
+        { apply exists.intro (i :: hd :: is),
           split,
-          exact hts,
-          exact C_path_nil_left hu, }, },
-      { apply exists.intro (i :: hd :: is),
-        split,
-        { simp at *, split, exact hi, exact his, },
-        { apply exists.intro (t :: ss),
-          simp [C_path] at *,
-          apply or.intro_right,
-          split, exact hts, exact hu, }, }, }, },
+          { simp at *, split, exact hi, exact his, },
+          { apply exists.intro (t :: ss),
+            simp [C_path] at *,
+            split, exact hts, exact hu, }, }, }, },
 
   -- RN
-  { sorry, },
+  { unfold s_entails_CLC.aux,
+    intros m s t hst,
+    apply ih, },
 
   -- RC
-  { sorry, },
-  -- { unfold s_entails_CLC.aux,
-  --   intros m s h,
-  --   induction' G,
-  --   {
-  --     simp [everyone_knows, s_entails_CLC],
-  --   },
-  --   {
-  --     -- simp [s_entails_CLC] at h,
-  --     -- cases h with hl hr,
-  --     split,
-  --     { intros t ht,
-  --       split,
-  --       {
-  --         simp [s_entails_CLC] at h,
-  --         apply h.left t (hd :: G),
-  --         simp,
-  --         -- list agents → list m.f.states →  m.f.states →  m.f.states → Prop
-  --         have hpath: (C_path (hd :: G) (t :: list.nil) s t),
-  --         { simp [C_path],
-  --           apply or.inr,
-  --           split,
-  --           exact ht,
-  --           cases G,
-  --           repeat { simp [C_path], },
-  --         },
-  --         exact hpath,
-  --       },
-  --       {
-  --         simp [s_entails_CLC] at *,
-  --         split,
-  --          { intros u F hF ss hC,
-  --           apply h.left u (hd :: F) 
-  --             begin
-  --               intros i hi,
-  --               cases hi, 
-  --               exact or.inl hi,
-  --               apply hF,
-  --               simpa,
-  --             end
-  --             (t :: ss),
-  --             simp [C_path],
-  --             apply or.intro_right,
-  --             split,
-  --             { exact ht, },
-  --             { exact hC, },
-  --         },
-  --         { intros i hi u F hF ss hC,
-  --           apply h.left u (hd :: F)
-  --           begin
-  --               intros i hi,
-  --               cases hi,
-  --               exact or.inl hi_1,
-  --               apply hF,
-  --               simpa,
-  --             end
-  --             (t :: ss),
-  --             simp [C_path],
-  --             apply or.intro_right,
-  --             split,
-  --             { exact ht, },
-  --             { exact hC, },
-  --         },
-  --       },
-  --     },
-  --     {
-  --       simp [everyone_knows],
-  --     }
-  --   },
-  --   simp [s_entails_CLC] at h,
-    
-
-  -- },
-
-  -- -- 
-  -- { intros m s t h,
-  --   apply h_ih, },
-
-  -- repeat { sorry, }
+  { unfold s_entails_CLC.aux,
+    intros m s hs t hC,
+    cases hC with is hC,
+    cases hC with his hC,
+    cases hC with ss hC,
+    induction' is with i is ih_is,
+    { by_contradiction,
+      exact C_path_nil hC, },
+    {
+      simp[s_entails_CLC.aux, C_path] at *,
+      cases ss with u ss,
+      { simp[C_path] at *,
+        specialize ih m s hs i his.left t hC,
+        exact ih.left, },
+      { simp[C_path] at *,
+        specialize @ih_is hN φ φ_1 G h ih m u,
+        apply ih_is,
+        { apply and.elim_right,
+          apply ih m s hs i his.left u hC.left, },
+          exact his.right,
+          exact hC.right,
+      },
+    },
+  }, 
 end
 
 inductive single : Type
