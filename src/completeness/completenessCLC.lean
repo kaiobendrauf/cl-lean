@@ -175,11 +175,15 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] (ha : nonempty agen
           -- 1.3.5. Contradiction from 1.3.3 & 1.3.4.
           exact hlive univ hf, },
         -- 1.4. Case: G = N
-        { -- 1.4.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N ), from 1.2, by definition Ef .
-          -- 1.4.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N ), from 1.4.1 & 1.1.
-          -- 1.4.3. ∀t, ∅ /∈ E(t)(N ) because E(t) is live.
-          -- 1.4.4. Contradiction from 1.2.5 & 1.2.6.
-          sorry, },
+        { -- 1.4.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N), from 1.2, by definition Ef .
+          simp[h] at hf,
+          -- 1.4.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N), from 1.4.1 & 1.1.
+          rw hempty at hf,
+          cases hf with t hf,
+          -- 1.4.3. ∀t, ∅ ∉ E(t)(N) because E(t) is live.
+          have hlive := (canonical_model_CLC ha).f.E.liveness t G,
+          -- 1.4.4. Contradiction from 1.4.2 & 1.4.3.
+          exact hlive hf.right, },
       end,
       safety :=
       begin
