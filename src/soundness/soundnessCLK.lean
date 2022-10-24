@@ -14,55 +14,73 @@ begin
 intro h,
 induction h,
 
-{ intros m s h1 h2, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1 h2, 
   exact h1, },
 
-{ intros m s h1 h2 h3, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1 h2 h3, 
   apply h1, 
     { exact h3,},
 
     { apply h2, 
       exact h3 }, },
 
-{ intros m s h1 h2,
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1 h2,
   by_contradiction hf,
   exact (h1 hf) (h2 hf), },
 
-{ intros m s h1 h2, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1 h2, 
   exact and.intro h1 h2, },
 
-{ intros m s h1, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1, 
   exact h1.left, },
 
-{ intros m s h1, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1, 
   exact h1.right, },
 
-{ intros m s h1 h2,
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1 h2,
   by_contradiction hf,
   exact h1 hf h2, },
 
-{ intros m s h1, 
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1, 
   exact m.f.E.liveness s h h1, },
 
-{ intros m s,
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s,
   simp [s_entails_CLK],
   exact m.f.E.safety s h, },
 
-{ intros m s h1,
+{ unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+  intros m s h1,
   apply m.f.E.N_max,
   by_contradiction,
   exact h1 h, },
 
-{ intros m s,
-  apply m.f.E.monoticity s h_G {t: m.f.states | s_entails_CLK m t (h_φ & h_ψ)} {t: m.f.states | s_entails_CLK m t h_φ},
+{ unfold global_valid valid_m,
+  intros m s,
+  have := m.f.E.monoticity s h_G {t: m.f.states | s_entails_CLK m t (h_φ & h_ψ)} {t: m.f.states | s_entails_CLK m t h_φ} _,
+  { unfold s_entails_CLK s_entails_CLK.aux at ⊢ this,
+    exact this },
   intros t h1,
+  unfold s_entails_CLK s_entails_CLK.aux at h1,
   exact h1.left, },
 
-  { intros m s h1,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s h1,
     exact m.f.E.superadd s h_G h_F {t: m.f.states | s_entails_CLK m t h_φ} {t: m.f.states | s_entails_CLK m t h_ψ} h1.left h1.right h_hInt, },
 
-  { intros m s,
-    apply h_ih_hImp,
+  { unfold global_valid valid_m,
+    intros m s,
+    have := h_ih_hImp m s,
+    unfold s_entails_CLK s_entails_CLK.aux at ⊢ this,
+    apply this,
     exact h_ih_hL m s, },
 
   { intros m s,
@@ -70,38 +88,48 @@ induction h,
       begin
         apply set.ext,
         intros u,
-        cases (h_ih m u),
+        have h_ih := h_ih m u,
+        unfold s_entails_CLK s_entails_CLK.aux at h_ih,
+        cases h_ih,
         apply iff.intro,
 
         { intro hu,
-          exact left hu, },
+          exact h_ih_left hu, },
 
         { intro hu,
-          exact right hu, }
+          exact h_ih_right hu, }
       end,
+    unfold s_entails_CLK s_entails_CLK.aux,
     apply and.intro,
 
     { intro h1,
-      simp[s_entails_CLK, ←heq] at *,
+      unfold s_entails_CLK s_entails_CLK.aux at *,
+      rw ← heq,
       exact h1, },
 
     { intro h1,
-      simp[s_entails_CLK, heq] at *,
-      exact h1, }, },
+      unfold s_entails_CLK s_entails_CLK.aux at *,
+      rw heq,
+      exact h1, } },
 
-  { intros m s h1 h2 t ht,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s h1 h2 t ht,
     exact h1 t ht (h2 t ht), },
 
-  { intros m s h,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s h,
     exact h s (m.f.rfl h_i s), },
 
-  { intros m s h t ht u hu,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s h t ht u hu,
     exact h u (m.f.trans h_i s t u ht hu), },
 
-  { intros m s h1 h2,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s h1 h2,
     exact h1 (h2 s (m.f.rfl h_i s)), },
 
-  { intros m s t h2,
+  { unfold global_valid valid_m s_entails_CLK s_entails_CLK.aux,
+    intros m s t h2,
     apply h_ih, },
 end
 
@@ -195,7 +223,7 @@ def m_ex (ha: nonempty agents) : modelCLK agents  :=
     end, },
   v := λ _, {}, }
 
-lemma nprfalseCLK {agents: Type} (ha: nonempty agents): ¬ @axCLK agents (⊥) :=
+lemma nprfalseCLK {agents: Type} (ha: nonempty agents) [fintype agents] : ¬ @axCLK agents (⊥) :=
 begin
 apply (mt (soundnessCLK (@formCLK.bot agents))),
 intro hf ,
