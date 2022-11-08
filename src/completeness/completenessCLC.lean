@@ -454,8 +454,6 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
         intros s G X Y hXY,
         -- 4.2. Assume X ∈ Ef (sf )(G).
         intro hX,
-
-
         -- 4.3. First we note that ∀s ∈ S, ∀G ⊆ N,  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G)
         have himp : ∀ s G, 
           (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G → 
@@ -466,7 +464,10 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
           -- 4.3.2. ⊢ φX → φY , from 4.1 (X ⊆ Y ).
           have hax : axCLC ((phi_X_set ha φ X) ~> (phi_X_set ha φ Y)), from
           begin
-            simp[phi_X_set, phi_X, phi_X_list],
+            -- apply @imp_finite_disjunction_subset _ formulaCLC
+            --   (phi_X_list ha φ X.to_finset.to_list) (phi_X_list ha φ Y.to_finset.to_list),
+            -- rw list.subset_def,
+            -- intros f hf,
             sorry,
           end,
           -- 4.3.3.  ̃φX ⊆  ̃φY , from 4.3.2.
@@ -499,8 +500,48 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
           -- 4.4.3. Y ∈ Ef (sf )(G), from 4.4.2, by definition Ef .
           sorry, }
       end,
+
+      --  Ef (sf ) is superadditive ∀G, F ⊆ N (where G ∩ F = ∅), ∀X, Y ⊆ Sf : X ∈
+      --   Ef (sf )(G) and Y ∈ Ef (sf )(F ) ⇒ X ∩ Y ∈ Ef (sf )(G ∪ F )
       superadd :=
-      begin
+      begin      
+        -- 5.1. Let G, F be some G, F ⊆ N , such that G ∩ F = ∅. Let X, Y be some
+          -- X, Y ⊆ S such that X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ).
+        intros s G F X Y hX hY hGF,
+        -- 5.2. First we note that ∀s ∈ S, ∀G, F ⊆ N (where G ∩ F = ∅),
+        -- ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(F ) ⇒
+        -- ̃φX∩Y ∈ E(s)(G ∪ F )
+          -- 5.2.1. Let s be some s ∈ S. Let G, F , be some G, F ⊂ N where G ∩ F = ∅.
+          -- Assume  ̃φX ∈ E(s)(G) and  ̃φY ∈ E(s)(F ).
+          -- 5.2.2. E(s) is supperadditive so: ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈
+          -- E(s)(F ) ⇒ X ∩ Y ∈ E(s)(G ∪ F )
+          -- 5.2.3.  ̃φX ∩  ̃φY ∈ E(s)(G ∪ F ), from 5.2.1 & 5.2.2.
+          -- 5.2.4.  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.2.3, because  ̃φX →  ̃φX∩Y and  ̃φY →
+          -- ̃φX∩Y .
+        -- 5.3. Case G ̸ = N and F ̸ = N
+          -- 5.3.1. ∀t ∈ S, sf = tf ⇒  ̃φX ∈ E(t)(G), from 5.1 (X ∈ Ef (sf )(G)), by
+          -- definition Ef .
+          -- 5.3.2. ∀t ∈ S, sf = tf ⇒  ̃φY ∈ E(t)(F ), from 5.1 (Y ∈ Ef (sf )(F )), by
+          -- definition Ef .
+          -- 5.3.3. ∀t ∈ S, sf = tf ⇒ (  ̃φX ∈ E(t)(G)and  ̃φY ∈ E(t)(F )), from 5.3.1 &
+          -- 5.3.2.
+          -- 5.3.4. ∀t ∈ S, sf = tf ⇒  ̃φX∩Y ∈ E(t)(G ∪ F ), from 5.2 & 5.3.3.
+          -- 5.3.5. Case G ∪ F ̸ = N : X ∩ Y ∈ Ef (sf )(G ∪ F ), from 5.3.4, by definition
+          -- Ef
+          -- 5.3.6. Case G ∪ F = N : sf = sf and  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.3.4. So
+          -- X ∩ Y ∈ Ef (sf )(G ∪ F = N ), by definition Ef
+        -- 5.4. Case G = N or F = N :
+          -- 5.4.1. Rename G, F, X&Y to G′, F ′, X′&Y ′, such that G′ = N , F ′ = ∅,
+          -- X′ ∈ Ef (sf )(G′) and Y ′ ∈ Ef (sf )(F ′).
+          -- 5.4.2. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ), from 5.4.1 (X′ ∈ Ef (sf )(G′)),
+          -- by definition Ef .
+          -- 5.4.3. ∀t ∈ S, sf = tf ⇒  ̃φY ′ ∈ E(t)(∅), from 5.4.1 (Y ′ ∈ Ef (sf )(F ′)), by
+          -- definition Ef .
+          -- 5.4.4. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ) and  ̃φY ′ ∈ E(t)(∅), from 5.4.2 &
+          -- 5.4.3.
+          -- 5.4.5. ∃t ∈ S, sf = tf and  ̃φX′ ∩Y ′ ∈ E(t)(N ), from 5.3 & 5.4.4.
+          -- 5.4.6. X′ ∩ Y ′ ∈ Ef (sf )(N = G′ ∪ F ′), from 5.3.5, by definition Ef
+
         sorry,
       end,
     },

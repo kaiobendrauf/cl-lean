@@ -60,7 +60,7 @@ end
 
 lemma not_bot {form : Type} [ft : formula form] : 
 -- ⊢ ⊤
-  ax (formula.not ft.bot) := 
+  ax (¬' ft.bot) := 
 begin
   rw formula.notdef,
   exact iden,
@@ -68,7 +68,7 @@ end
 
 lemma topnotbot {form : Type} [ft : formula form] : 
 -- ⊢ ⊤ = ¬ ⊥
-  ft.top = formula.not ft.bot :=
+  ft.top = ¬' ft.bot :=
 by simp[formula.notdef, ft.topdef]
 
 lemma cut {form : Type} [ft : formula form] {φ ψ χ : form} : 
@@ -97,7 +97,7 @@ lemma likemp {form : Type} [ft : formula form] {φ ψ : form} :
 
 lemma dne {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ ¬ φ → φ
-  ax ((formula.not (formula.not φ)) →' φ) :=
+  ax ((¬' (¬' φ)) →' φ) :=
 begin
   have h1 : ax (φ →' (φ →' φ)), from p1 _ _,
   exact (cut (cut (p1 _ _) (cut (p7 _ _) (p7 _ _))) (mp _ _ likemp h1)),
@@ -105,7 +105,7 @@ end
 
 lemma dni {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ φ → ¬ ¬ φ
-  ax (φ →' (formula.not (formula.not φ))) :=
+  ax (φ →' (¬' (¬' φ))) :=
 begin
   exact mp _ _ (p7 _ _) dne
 end
@@ -182,7 +182,7 @@ end
 
 lemma not_and_subst {form : Type} [ft : formula form] {φ ψ χ : form} : 
 -- ⊢ (φ ↔' ψ) ⇒ (⊢ ¬ (χ ∧ φ) ⇔ ⊢ ¬ (χ ∧ ψ))
-  ax (φ ↔' ψ) → (ax (formula.not (χ ∧' φ)) ↔ ax (formula.not (χ ∧' ψ))) :=
+  ax (φ ↔' ψ) → (ax (¬' (χ ∧' φ)) ↔ ax (¬' (χ ∧' ψ))) :=
 begin
   intro h1, rw formula.iffdef at *, split, 
   {intro h2,
@@ -199,19 +199,19 @@ end
 
 lemma not_contra {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ (φ ∧ ¬ φ) 
-  ax (formula.not (φ ∧' (formula.not φ))) :=
+  ax (¬' (φ ∧' (¬' φ))) :=
 mp _ _ (mp _ _ (p3 _ _) (cut dne (p6 _ _))) (cut dne (p5 _ _))
 
 lemma phi_and_true {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢  (φ ∧ ⊤) ↔' φ 
-  ax ((φ ∧' (formula.not ft.bot)) ↔' φ) :=
+  ax ((φ ∧' (¬' ft.bot)) ↔' φ) :=
 begin
   rw formula.iffdef at *,
   exact (mp _ _ (mp _ _ (p4 _ _) (p5 _ _)) (mp _ _ (imp_switch (p4 _ _)) not_bot))
 end
 
 lemma phi_and_true' {form : Type} [ft : formula form] {φ : form} : 
-  ax (((φ ∧' (formula.not ft.bot)) →' φ) ∧' (φ →' (φ ∧' (formula.not ft.bot)))) :=
+  ax (((φ ∧' (¬' ft.bot)) →' φ) ∧' (φ →' (φ ∧' (¬' ft.bot)))) :=
 (mp _ _ (mp _ _ (p4 _ _) (p5 _ _)) (mp _ _ (imp_switch (p4 _ _)) not_bot))
 
 
@@ -226,7 +226,7 @@ end
 
 lemma not_contra_equiv_true {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ (φ ∧ ¬ φ) ↔' ¬ ⊥
-  ax ((formula.not (φ ∧' (formula.not φ))) ↔' (formula.not ft.bot) ) :=
+  ax ((¬' (φ ∧' (¬' φ))) ↔' (¬' ft.bot) ) :=
 begin
   rw formula.iffdef at *,
   exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ (p1 _ _) not_bot)) (mp _ _ (p1 _ _) not_contra))
@@ -234,7 +234,7 @@ end
 
 lemma contrapos {form : Type} [ft : formula form] {φ ψ : form} : 
 -- ⊢ ¬ ψ → ¬ φ ⇔ ⊢ φ → ψ
-  ax ((formula.not ψ) →' (formula.not φ)) ↔ ax (φ →' ψ) :=
+  ax ((¬' ψ) →' (¬' φ)) ↔ ax (φ →' ψ) :=
 begin
   split,
   intro h1,
@@ -245,7 +245,7 @@ end
 
 lemma iff_not {form : Type} [ft : formula form] {φ ψ : form} : 
 -- ⊢ φ ↔' ψ ⇒ ⊢ ¬ φ ↔' ¬ ψ
-  ax (φ ↔' ψ) → ax ((formula.not ψ) ↔' (formula.not φ)) :=
+  ax (φ ↔' ψ) → ax ((¬' ψ) ↔' (¬' φ)) :=
 begin
   intro h1,
   rw formula.iffdef at *,
@@ -258,7 +258,7 @@ end
 
 lemma contra_equiv_false {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ (φ ∧ ¬ φ) ↔' ⊥
-  ax (formula.iff(φ ∧' (formula.not φ)) ft.bot) :=
+  ax (formula.iff(φ ∧' (¬' φ)) ft.bot) :=
 begin
   have h1 := iff_not not_contra_equiv_true,
   rw formula.iffdef at *,
@@ -267,7 +267,7 @@ begin
 end
 
 lemma contra_equiv_false' {form : Type} [ft : formula form] {φ : form} : 
-  ax (((φ ∧' (formula.not φ)) →' ft.bot) ∧' (ft.bot →' (φ ∧' (formula.not φ)))) :=
+  ax (((φ ∧' (¬' φ)) →' ft.bot) ∧' (ft.bot →' (φ ∧' (¬' φ)))) :=
 begin
   have h1 := @contra_equiv_false form ft φ,
   rw formula.iffdef at *,
@@ -276,12 +276,12 @@ end
 
 lemma contra_imp_false {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ (φ ∧ ¬ φ) → ⊥
-  ax ((φ ∧' (formula.not φ)) →'  ft.bot) :=
+  ax ((φ ∧' (¬' φ)) →'  ft.bot) :=
 mp _ _ (p5 _ _) contra_equiv_false'
 
 lemma contra_imp_imp_false {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ φ → φ → ⊥
-  ax ((formula.not φ) →' (φ →' ft.bot)) :=
+  ax ((¬' φ) →' (φ →' ft.bot)) :=
 begin
   rw ←and_right_imp,
   exact contra_imp_false,
@@ -289,7 +289,7 @@ end
 
 lemma contra_not_imp_false_ax {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ φ → ⊥ ⇒ ⊢ φ
-  ax ((formula.not (φ)) →' ft.bot) → ax φ :=
+  ax ((¬' (φ)) →' ft.bot) → ax φ :=
 begin
   intro h,
   apply mp,
@@ -300,11 +300,11 @@ end
 
 lemma contra_imp_false_not_ax {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢  φ → ⊥ ⇒ ⊢ ¬ φ
-  ax (φ →' ft.bot) → ax (formula.not (φ)) :=
+  ax (φ →' ft.bot) → ax (¬' (φ)) :=
 begin
   intro h,
-  have hnnn : ax (formula.not (formula.not (formula.not φ))) = 
-    ax ((formula.not (formula.not φ)) →' ft.bot),
+  have hnnn : ax (¬' (¬' (¬' φ))) = 
+    ax ((¬' (¬' φ)) →' ft.bot),
       from by simp[formula.notdef],
   apply contra_not_imp_false_ax,
   rw ← hnnn,
@@ -331,6 +331,19 @@ begin
   exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) 
     (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
     (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
+end
+
+lemma contra_imp_imp_false' {form : Type} [ft : formula form] {φ : form} : 
+-- ⊢ φ → ¬ φ → ⊥
+  ax ((φ) →' (¬' φ →' ft.bot)) :=
+begin
+  rw ←and_right_imp,
+  apply cut,
+  apply mp,
+  apply p5,
+  exact (φ ∧' ¬' φ) →' (¬' φ ∧' φ),
+  exact and_switch',
+  exact contra_imp_false,
 end
 
 lemma and_switch_ax {form : Type} [ft : formula form] {φ ψ : form} : 
@@ -365,7 +378,7 @@ end
 
 lemma contra_imp_false_ax_not {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ¬ φ ⇒ ⊢ φ → ⊥
-  ax (formula.not φ) → ax (φ →' ft.bot) :=
+  ax (¬' φ) → ax (φ →' ft.bot) :=
  begin
   simp[formula.notdef],
 end
@@ -380,7 +393,7 @@ end
 
 lemma demorgans {form : Type} [ft : formula form] {φ ψ : form} : 
 -- ⊢ ¬ (φ ∧ ψ) ⇔ ⊢ φ → ¬ ψ
-  ax (formula.not (φ ∧' ψ)) ↔ ax (φ →' (formula.not ψ)) :=
+  ax (¬' (φ ∧' ψ)) ↔ ax (φ →' (¬' ψ)) :=
 begin
   split,
   { intro h1,
@@ -395,17 +408,11 @@ begin
     exact(and_right_imp.mpr h1), },
 end
 
-lemma or_cases {form : Type} [ft : formula form] {φ ψ χ : form} : 
--- ⊢ (φ → χ) ⇒  ⊢ (ψ → χ) ⇒ ⊢ (¬ φ → ψ) → χ 
-  ax (φ →' χ) → ax (ψ →' χ) → ax ((¬' φ →' ψ) →' χ) :=
+lemma demorgans' {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ ¬ (φ ∧ ψ) → (φ → ¬ ψ)
+  ax (¬' φ→'ψ→' ¬' (¬' φ ∧' ¬' ψ)) :=
 begin
-  intros h1 h2,
-  have h1' := contrapos.mpr h1,
-  have h2' := contrapos.mpr h2,
-  apply cut,
-  apply mp,
-  apply mp,
-  apply p2,
+  sorry,
 end
 
 lemma explosion {form : Type} [ft : formula form] {φ : form} : 
@@ -521,8 +528,39 @@ end
 
 lemma by_contra_ax {form : Type} [ft : formula form] {φ ψ : form} : 
 -- ⊢ φ → ψ → ⊥ ⇒ ⊢ φ → ¬ ψ
- ax (φ →' (ψ →' ft.bot)) → ax (φ →' (formula.not ψ)) :=
+ ax (φ →' (ψ →' ft.bot)) → ax (φ →' (¬' ψ)) :=
 by simp[formula.notdef]
+
+lemma imp_and {form : Type} [ft : formula form] {φ ψ χ : form} :
+  ax ((φ →' (ψ ∧' χ)) →' (φ →' ψ)) :=
+begin
+  apply mp,
+  apply p2,
+  apply mp,
+  apply p1,
+  apply p5,
+end
+
+lemma or_cases {form : Type} [ft : formula form] {φ ψ χ : form} : 
+-- ⊢ (φ → χ) ⇒  ⊢ (ψ → χ) ⇒ ⊢ (¬ φ → ψ) → χ 
+  ax (φ →' χ) → ax (ψ →' χ) → ax ((¬' φ →' ψ) →' χ) :=
+begin
+  intros h1 h2,
+  have h1' := contrapos.mpr h1,
+  have h2' := contrapos.mpr h2,
+  have h3 := imp_imp_and h1' h2',
+  rw ←contrapos,
+  apply by_contra_ax,
+  apply cut h3,
+  apply @cut _ _ _ (¬' (¬' φ →' ψ)) _,
+  { 
+    refine contrapos.mp _,
+    apply cut,
+    apply dne,
+    exact demorgans',
+  },
+  exact contra_imp_imp_false,
+end
 
 -- finite disjunction of formulas
 def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
@@ -560,13 +598,8 @@ begin
     cases hsubset with hf hsubset,
     specialize ih hsubset,
     have hfs' := imp_finite_disjunction f fs' hf,
-    apply cut,
-    { 
-      sorry,
-    },
-    {
-      sorry,
-    },
-    sorry,
+    apply or_cases,
+    exact hfs',
+    exact ih,
   },
 end
