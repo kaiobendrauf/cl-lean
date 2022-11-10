@@ -376,9 +376,9 @@ begin
   (imp_switch (cut (p5 _ _) (cut1 (p4 _ _) (cut2 (cut (p6 _ _) (p6 _ _)) (p4 _ _))))))))
 end
 
-lemma contra_imp_false_ax_not {form : Type} [ft : formula form] {φ : form} : 
--- ⊢ ¬ φ ⇒ ⊢ φ → ⊥
-  ax (¬' φ) → ax (φ →' ft.bot) :=
+lemma contra_iff_false_ax_not {form : Type} [ft : formula form] {φ : form} : 
+-- ⊢ ¬ φ ↔ ⊢ φ → ⊥
+  ax (¬' φ) ↔ ax (φ →' ft.bot) :=
  begin
   simp[formula.notdef],
 end
@@ -408,12 +408,6 @@ begin
     exact(and_right_imp.mpr h1), },
 end
 
-lemma demorgans' {form : Type} [ft : formula form] {φ ψ : form} : 
--- ⊢ ¬ (φ ∧ ψ) → (φ → ¬ ψ)
-  ax (¬' φ→'ψ→' ¬' (¬' φ ∧' ¬' ψ)) :=
-begin
-  sorry,
-end
 
 lemma explosion {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ⊥ → φ 
@@ -539,6 +533,37 @@ begin
   apply mp,
   apply p1,
   apply p5,
+end
+
+def combS {form : Type} [ft : formula form] {φ ψ χ : form} (x : ax (φ →' ψ →' χ)) (y : ax (φ →' ψ))
+  : ax (φ →' χ) :=
+mp _ _ (mp _ _ (p2 _ _ _) x) y
+
+def combS2 {form : Type} [ft : formula form] {φ ψ χ ω : form} (x : ax (φ →' ψ →' χ →' ω)) (y : ax (φ →' ψ)) (z : ax (φ →' χ))
+  : ax (φ →' ω) :=
+combS (combS x y) z
+
+def propS {φ ψ χ : Type} (x : φ → ψ → χ) (y : φ → ψ) : (φ → χ) := λ z, (x z) (y z)
+def propS2 {φ ψ χ ω : Type} (x : φ → ψ → χ → ω) (y : φ → ψ) (z : φ → χ) : (φ → ω) := λ w, (x w) (y w) (z w)
+
+def combK {form : Type} [ft : formula form] {φ ψ : form} (x : ax φ) : ax (ψ →' φ) :=
+mp _ _ (p1 _ _) x
+
+def propK {φ ψ : Type} (x : φ) : ψ → φ := λ _, x
+
+def combI {form : Type} [ft : formula form] {φ : form} : ax (φ →' φ) :=
+iden
+
+def propI {φ : Type} : φ → φ :=
+id
+
+lemma demorgans' {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ ¬ (φ ∧ ψ) → (φ → ¬ ψ)
+  ax (((¬' φ) →' ψ) →' ¬' (¬' φ ∧' ¬' ψ)) :=
+begin
+  simp [formula.notdef],
+  exact combS2 (combK (p2 _ _ _)) (combK (combS (combK (p6 _ _)) combI)) 
+    (combS2 (combK (p2 _ _ _)) (combS (combK (p1 _ _)) combI) (combK (combS (combK (p5 _ _)) combI))),
 end
 
 lemma or_cases {form : Type} [ft : formula form] {φ ψ χ : form} : 

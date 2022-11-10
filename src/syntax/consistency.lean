@@ -579,7 +579,7 @@ lemma ax_neg_containts_pr_false {form : Type} [ft : formula form] {φ : form} {�
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hax :  ax (¬' φ)) : false :=
 begin
   have hbot : (ft.bot) ∈ Γ, from
-    max_ax_contains_by_set_proof hΓ hin (contra_imp_false_ax_not hax),
+    max_ax_contains_by_set_proof hΓ hin (contra_iff_false_ax_not.mp hax),
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
 end
 
