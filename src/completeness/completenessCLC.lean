@@ -243,6 +243,332 @@ begin
   -- 7. Contradiction from 3 and 6.
   apply contra_containts_pr_false t.2 ht htn,
   end
+
+def E_f {agents : Type}  [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) : 
+  (S_f ha φ) → (set agents) → (set (set (S_f ha φ))) := 
+λ sf G, {X | ite (G = univ) 
+  -- condition G = N
+  -- ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N)
+  (∃ t : (canonical_model_CLC ha).f.states, (t.1 ∩ cl(φ)) = sf.1 ∧ 
+    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))
+  -- condition G ≠ N
+  -- ∀t ∈ S, sf = tf ⇒  ̃phiX ∈ E(t)(G)
+  (∀ t : (canonical_model_CLC ha).f.states, (t.1 ∩ cl(φ)) = sf.1 → 
+    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))}
+
+-- 1. Ef (sf ) is live: ∀G ⊆ N : ∅ /∈ Ef (sf )(G)
+lemma Ef_liveness {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+  ∀ s : (S_f ha φ), ∀ G : set agents, ∅ ∉ (E_f ha φ s G) := 
+begin
+  -- 1.1. First we note that  ̃φ∅ =  ̃⊥ = ∅.
+  have hempty : (tilde ha (phi_X_set ha φ ∅)) = ∅, from
+  begin
+    -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
+    simp[phi_X_set, phi_X, phi_X_list, finite_disjunction, tilde],
+    -- 1.1.2.  ̃⊥ = ∅, because all s ∈ S are consistent.
+    simp[eq_empty_iff_forall_not_mem],
+    intro s,
+    apply bot_not_mem_of_ax_consistent s.1 s.2.1,
+  end,
+  -- 1.2. Assume by contradiction ∅ ∈ Ef (sf )(G).
+  intros sf G hf,
+  cases (em (G = univ)),
+  -- 1.4. Case: G = N
+  { -- 1.4.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N), from 1.2, by definition Ef .
+    simp[h] at hf,
+    -- 1.4.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N), from 1.4.1 & 1.1.
+    simp [E_f, hempty] at hf,
+    cases hf with t hf,
+    -- 1.4.3. ∀t, ∅ ∉ E(t)(N) because E(t) is live.
+    have hlive := (canonical_model_CLC ha).f.E.liveness t univ,
+    -- 1.4.4. Contradiction from 1.4.2 & 1.4.3.
+    exact hlive hf.right, },
+  -- 1.3. Case: G ≠ N
+  { -- 1.3.1. ∀t ∈ S, sf = tf ⇒  ̃φ∅ ∈ E(t)(G), from 1.2, by definition Ef
+    simp[E_f, h] at hf,
+    -- 1.3.2. ∀t ∈ S, sf = tf ⇒ ∅ ∈ E(t)(G), from 1.3.1 & 1.1
+    rw hempty at hf,
+    -- 1.3.3. ∅ ∈ E(s)(G), from 1.3.2
+    cases (s_f_to_s ha φ sf) with s hs,
+    specialize hf s hs,
+    -- 1.3.4. ∅ /∈ E(s)(G) because E(s) is live.
+    have hlive := (canonical_model_CLC ha).f.E.liveness s,
+    -- 1.3.5. Contradiction from 1.3.3 & 1.3.4.
+    exact hlive G hf, },
+end
+
+-- 2. Ef (sf) is safe: ∀G ⊆ N : Sf ∈ Ef (sf )(G)
+lemma Ef_safety {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+  ∀ (s : S_f ha φ) (G : set agents), univ ∈ E_f ha φ s G :=
+begin
+  -- 2.1. First we note that  ̃φSf =  ̃⊤ = S
+  have huniv : (tilde ha (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states), from
+  begin
+    simp[tilde],
+    ext1,
+    refine iff_of_true _ trivial,
+    simp,
+    apply max_ax_contains_by_empty_proof x.2,
+    apply univ_disjunct_provability,
+    exact nonempty_S_f ha φ,
+  end,
+  -- 2.2. Additionally, because E(s) is safe for all s ∈ S, ∀G ⊆ N, S ∈ E(s)(G).
+  have hsafe := (canonical_model_CLC ha).f.E.safety,
+  -- 2.4. Case: G = N
+  intros sf G, cases em (G = univ) with hG hG,
+  { -- 2.4.1. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and  ̃φSf ∈ E(t)(N ), by definition Ef .
+    simp[hG] at *,
+    -- 2.4.2. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and S ∈ E(t)(N ), from 2.1 & 2.4.1.
+    simp[E_f, huniv],
+    -- 2.4.3. ∃t ∈ S, sf = tf and S ∈ E(t)(N ), when t = s, because sf = sf and S ∈ E(s)(N ), from 2.2.
+    cases (s_f_to_s ha φ sf) with s hs,
+    apply exists.intro s,
+    -- 2.4.4. Sf ∈ Ef (sf )(N ), from 2.4.2 & 2.4.3s
+    simp at *,
+    split,
+    exact hs,
+    apply hsafe, },
+  -- 2.3. Case: G ≠ N
+  { -- 2.3.1. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒  ̃φSf ∈ E(t)(G), by definition Ef .
+    simp[E_f, hG] at *,
+    -- 2.3.2. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒ S ∈ E(t)(G), from 2.1 & 2.3.1.
+    simp[huniv],
+    -- 2.3.3. Sf ∈ Ef (sf )(G), from 2.2 & 2.3.2
+    intros t ht,
+    apply hsafe, }, 
+end
+
+-- 3. Ef (sf) is N-maximal: ∀X ⊆ Sf : Xᶜ ∉ Ef(sf)(∅) ⇒ X ∈ Ef(sf)(N)
+lemma Ef_nmax {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+  N_max agents (S_f ha φ) (E_f ha φ) :=
+begin
+  -- 3.1. Assume some X ⊆ Sf such that Xᶜ ∉ Ef(sf)(∅).
+  intros sf X hXc,
+  -- 3.2. ¬(Xᶜ ∈ Ef sf ∅), from 3.1.
+  simp[E_f] at *,
+  -- 3.3. ¬(∀t ∈ S, sf = tf ⇒ ~φXᶜ ∈ E(t)(∅)), from 3.2, by definition Ef . 
+  -- 3.4. ∃t ∈ S, sf = tf and ~φXᶜ ∉ E(t)(∅)), from 3.3, by first order logic. 
+  have hempty_ne_univ : (∅ : set (agents)) ≠ (univ : set (agents)), from empty_ne_univ,
+  simp[@empty_ne_univ agents ha] at *, -- clear hempty_ne_univ,
+  -- 3.5. Note that ⊢ φXᶜ ↔ ¬φX , from Lemma 4 and Lemma 5.
+  -- have h_phi_Xc : axCLC ((phi_X_set ha φ Xᶜ) ↔ (¬ (phi_X_set ha φ X))), from
+  -- begin
+  --   simp,
+  --   apply axCLC.MP,
+  --   apply axCLC.MP,
+  --   exact axCLC.Prop4,
+  --   { sorry,
+
+  --   },
+  --   { sorry,
+
+  --   },
+  -- end,
+  cases hXc with t ht,
+  cases ht with ht hXc,
+  apply exists.intro t,
+  split, 
+  { exact ht, },
+  { 
+    have h_tilde: tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) = 
+      tilde ha (phi_X_set ha φ Xᶜ), from
+    begin
+      simp[tilde],
+      ext1 u,
+      split,
+      { intro hu,
+        simp at *,
+        apply max_ax_contains_by_set_proof u.2 hu,
+        
+
+        sorry,
+
+      },
+      { intro hu,
+        simp at *,
+        apply max_ax_contains_by_set_proof u.2 hu,
+        sorry,
+
+      }
+    end,
+    -- 3.6. ∃t ∈ S, sf = tf and ~¬φX ∉ E(t)(∅)), from 3.4 & 3.5
+    have hXc : tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) ∉ 
+      (canonical_model_CLC ha).f.to_frameCL.E.E t ∅, from
+    begin
+      simp[h_tilde] at *,
+      exact hXc,
+    end,
+    
+    -- 3.7. ∃t ∈ S,sf = tf and (~φX)ᶜ ∉ E(t)(∅)), from 3.6, because all s ∈ S are maximally consistent.
+    -- simp at *,
+    have hc : {s : (canonical_model_CLC ha).f.states | ¬' (phi_X_set ha φ X) ∈ s.1} = {s : (canonical_model_CLC ha).f.states | phi_X_set ha φ X ∈ s.1}ᶜ, from
+    begin
+      rw (set.compl_def {s : (canonical_model_CLC ha).f.states | phi_X_set ha φ X ∈ s.1}),
+      ext1,
+      simp,
+      split,
+      { intros hx hf,
+        exact contra_containts_pr_false x.2 hf hx, },
+      { intros hx,
+        exact not_in_from_notin x.2 hx, },
+    end,
+    -- have hXc' : (tilde ha (phi_X_set ha φ X))ᶜ ∉ (canonical_model_CLC ha).f.to_frameCL.E.E t ∅, 
+    --   from by simp[tilde] at *,
+    -- -- -- simp[tilde] at *,
+
+    -- -- 3.8. ∃t ∈ S,sf = tf and φ􏰓 ∈ E(t)(N)), from 3.7, 
+    -- -- because E(s) is N-maximal X for all s ∈ S (∀X ⊆ S|X ∈/ E(s)(∅) ⇒ X ∈ E(s)(N))
+    
+    -- have hnmax := (canonical_model_CLC ha).f.to_frameCL.E.N_max t,
+    -- specialize hnmax (tilde ha (phi_X_set ha φ X)),
+    -- -- apply hnmax,
+
+
+    -- 3.9. Ef (sf )(N), from 3.8, by definition Ef .
+    sorry,
+  },
+
+end
+
+-- Ef (sf ) is outcome monotonic: ∀G ⊆ N, ∀X ⊆ Y ⊆ Sf : X ∈ Ef (sf )(G) ⇒ Y ∈ Ef (sf )(G)
+lemma Ef_monoticity {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+  ∀ (s : S_f ha φ) (G : set agents) (X Y : set (S_f ha φ)), X ⊆ Y → X ∈ E_f ha φ s G → Y ∈ E_f ha φ s G :=
+begin
+  -- 4.1. Let G be some G ⊆ N and X and Y be some X ⊆ Y ⊆ Sf .
+  intros s G X Y hXY,
+  -- 4.2. Assume X ∈ Ef (sf )(G).
+  intro hX,
+  -- 4.3. First we note that ∀s ∈ S, ∀G ⊆ N,  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G)
+  have himp : ∀ s G, 
+    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G → 
+    (tilde ha (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s G, from
+  begin
+    -- 4.3.1. Let s be some s ∈ S and G be some G ⊆ N .
+    clear hX, intros s G hX,
+    -- 4.3.2. ⊢ φX → φY , from 4.1 (X ⊆ Y ).
+    have hax : axCLC ((phi_X_set ha φ X) ~> (phi_X_set ha φ Y)), from
+    begin
+      -- apply @imp_finite_disjunction_subset _ formulaCLC
+      --   (phi_X_list ha φ X.to_finset.to_list) (phi_X_list ha φ Y.to_finset.to_list),
+      -- rw list.subset_def,
+      -- intros f hf,
+      sorry,
+    end,
+    -- 4.3.3.  ̃φX ⊆  ̃φY , from 4.3.2.
+    have h_phiXY : (tilde ha (phi_X_set ha φ X)) ⊆ (tilde ha (phi_X_set ha φ Y)), from
+    begin 
+      rw set.subset_def,
+      intros t ht,
+      apply max_ax_contains_by_set_proof t.2 ht hax,
+    end,
+    -- 4.3.4. E(s) is outcome monotonic for all s ∈ S: ∀G ⊆ N, ∀X ⊆ Y ⊆ S, X ∈ E(s)(G) ⇒ Y ∈ E(s)(G)
+    have hmonoticity := (canonical_model_CLC ha).f.E.monoticity s G _ _ h_phiXY,
+    -- 4.3.5.  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G), from 4.3.3 & 4.3.4
+    apply hmonoticity hX,
+  end,
+  -- 4.5. Case G = N
+  cases em (G = univ) with hG hG,
+  { -- 4.5.1. ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N ), from 4.2, by definition Ef .
+    simp[E_f, hG] at *,
+    -- 4.5.2. ∃t ∈ S, sf = tf and  ̃φY ∈ E(t)(N ), from 4.3 & 4.5.1.
+    -- 4.5.3. Y ∈ Ef (sf )(N ), from 4.5.2, by definition Ef . 
+    cases hX with t ht,
+    apply exists.intro t,
+    split,
+    { exact ht.1 },
+    { exact himp _ _ ht.2, }, },
+  -- 4.4. Case: G ≠ N
+  { -- 4.4.1. ∀t ∈ S, sf = tf ⇒  ̃φX ∈ E(t)(N ), from 4.2, by definition Ef .
+    simp[E_f, hG] at *,
+    -- 4.4.2. ∀t ∈ S, sf = tf ⇒  ̃φY ∈ E(t)(N ), from 4.3 & 4.4.1.
+    -- 4.4.3. Y ∈ Ef (sf )(G), from 4.4.2, by definition Ef .
+    intros t ht,
+    exact himp t G (hX t ht), },
+end
+
+--  Ef (sf ) is superadditive ∀G, F ⊆ N (where G ∩ F = ∅), 
+  -- ∀X, Y ⊆ Sf : X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ) ⇒ X ∩ Y ∈ Ef (sf )(G ∪ F )
+lemma Ef_superadd {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
+  ∀ (s : S_f ha φ) (G F : set agents) (X Y : set (S_f ha φ)),
+  X ∈ E_f ha φ s G → Y ∈ E_f ha φ s F → G ∩ F = ∅ → X ∩ Y ∈ E_f ha φ s (G ∪ F) :=
+begin      
+  -- 5.1. Let G, F be some G, F ⊆ N , such that G ∩ F = ∅. Let X, Y be some
+    -- X, Y ⊆ S such that X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ).
+  -- intros sf G F X Y hX hY hGF,
+  -- 5.2. First we note that ∀s ∈ S, ∀G, F ⊆ N (where G ∩ F = ∅),  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(F ) ⇒  ̃φX∩Y ∈ E(s)(G ∪ F )
+  have hint : ∀ s G F X Y, G ∩ F = ∅ → 
+    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G →
+    (tilde ha (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s F →
+    (tilde ha (phi_X_set ha φ (X ∩ Y))) ∈ (canonical_model_CLC ha).f.E.E s (G ∪ F), from
+  begin
+    -- 5.2.1. Let s be some s ∈ S. Let G, F , be some G, F ⊂ N where G ∩ F = ∅. Assume  ̃φX ∈ E(s)(G) and  ̃φY ∈ E(s)(F ).
+    intros s G F X Y hGF hG hF,
+    -- 5.2.2. E(s) is superadditive so: ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈ E(s)(F ) ⇒ X ∩ Y ∈ E(s)(G ∪ F )
+    have hsuperadd := ((canonical_model_CLC ha).f.E.superadd) s G F,
+    -- 5.2.3.  ̃φX ∩  ̃φY ∈ E(s)(G ∪ F ), from 5.2.1 & 5.2.2.
+    specialize hsuperadd (tilde ha (phi_X_set ha φ X)) (tilde ha (phi_X_set ha φ Y)) hG hF hGF,
+    -- 5.2.4.  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.2.3, because  ̃φX →  ̃φX∩Y and  ̃φY →  ̃φX∩Y .
+    have hint : tilde ha (phi_X_set ha φ X) ∩ tilde ha (phi_X_set ha φ Y) → tilde ha (phi_X_set ha φ (X ∩ Y)), from
+      sorry,
+    
+    sorry,
+  end,
+  
+  intros sf G F X Y hX hY hGF,
+
+  -- 5.4. Case G = N or F = N :
+  have h_G_or_F_univ : ∀ X' Y', X' ∈ E_f ha φ sf univ → Y' ∈ E_f ha φ sf ∅ → (X' ∩ Y') ∈ E_f ha φ sf univ, from
+  begin
+    -- 5.4.1. Rename G, F, X&Y to G′, F ′, X′&Y ′, such that G′ = N , F ′ = ∅, X′ ∈ Ef (sf )(G′) and Y ′ ∈ Ef (sf )(F ′).
+    clear hX hY,
+    intros X' Y',
+    -- 5.4.2. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ), from 5.4.1 (X′ ∈ Ef (sf )(G′)), by definition Ef .
+    intro hX,
+    -- 5.4.3. ∀t ∈ S, sf = tf ⇒  ̃φY ′ ∈ E(t)(∅), from 5.4.1 (Y ′ ∈ Ef (sf )(F ′)), by definition Ef .
+    intro hY,
+    -- 5.4.4. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ) and  ̃φY ′ ∈ E(t)(∅), from 5.4.2 & 5.4.3.
+    simp[E_f, empty_ne_univ] at *,
+    cases hX with t hX,
+    specialize hY t hX.left,
+    apply exists.intro t,
+    split, exact hX.left,
+    -- 5.4.5. ∃t ∈ S, sf = tf and  ̃φX′ ∩Y ′ ∈ E(t)(N ), from 5.3 & 5.4.4.
+    specialize hint t univ ∅ X' Y' (by simp) hX.right hY,
+    simp[univ_union] at hint,
+    exact hint,
+  end,
+
+  cases em (G = univ),
+  { simp[h] at *,
+    simp[hGF] at *,
+    exact h_G_or_F_univ X Y hX hY, },
+  -- case G ≠ N
+  { cases em (F = univ),
+    { simp[h_1] at *,
+      simp[hGF] at *,
+      rw inter_comm X Y,
+      exact h_G_or_F_univ Y X hY hX, },
+    -- 5.3. Case G ≠ N and F ≠ N
+    { -- 5.3.1. ∀t ∈ S, sf = tf ⇒  ̃φX ∈ E(t)(G), from 5.1 (X ∈ Ef (sf )(G)), by definition Ef .
+      -- 5.3.2. ∀t ∈ S, sf = tf ⇒  ̃φY ∈ E(t)(F ), from 5.1 (Y ∈ Ef (sf )(F )), by definition Ef .
+      simp[E_f, h, h_1] at *,
+      -- 5.3.3. ∀t ∈ S, sf = tf ⇒ (  ̃φX ∈ E(t)(G)and  ̃φY ∈ E(t)(F )), from 5.3.1 & 5.3.2.
+      -- 5.3.4. ∀t ∈ S, sf = tf ⇒  ̃φX∩Y ∈ E(t)(G ∪ F ), from 5.2 & 5.3.3.
+
+      -- 5.3.6. Case G ∪ F = N : sf = sf and  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.3.4. So X ∩ Y ∈ Ef (sf )(G ∪ F = N ), by definition Ef
+      cases em (G ∪ F = univ),
+      { have hs := s_f_to_s ha φ sf,
+        cases hs with s hs,
+        specialize hint s G F X Y hGF (hX s hs) (hY s hs),
+        simp[h_2] at *,
+        apply exists.intro s,
+        split, exact hs, exact hint, },
+      -- 5.3.5. Case G ∪ F ̸ = N : X ∩ Y ∈ Ef (sf )(G ∪ F ), from 5.3.4, by definition Ef
+      { simp[h_2],
+        intros t ht,
+        exact hint t G F X Y hGF (hX t ht) (hY t ht), }, }, },
+end
+
  
 def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
   (φ : formCLC agents) :
@@ -254,300 +580,15 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
     E := 
     
 -- ∀u∈Sc if [u]=[s] then [φ ]c ∈Ec(u)(G) G̸=N
-    { E := λ sf G, {X | ite (G = univ) 
-          -- condition G = N
-          -- ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N)
-          (∃ t : (canonical_model_CLC ha).f.states, (t.1 ∩ cl(φ)) = sf.1 ∧ 
-            (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))
-          -- condition G ≠ N
-          -- ∀t ∈ S, sf = tf ⇒  ̃phiX ∈ E(t)(G)
-          (∀ t : (canonical_model_CLC ha).f.states, (t.1 ∩ cl(φ)) = sf.1 → 
-            (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))},
-      
-      -- 1. Ef (sf ) is live: ∀G ⊆ N : ∅ /∈ Ef (sf )(G)
-      liveness :=
-      begin
-        -- 1.1. First we note that  ̃φ∅ =  ̃⊥ = ∅.
-        have hempty : (tilde ha (phi_X_set ha φ ∅)) = ∅, from
-        begin
-          -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
-          simp[phi_X_set, phi_X, phi_X_list, finite_disjunction, tilde],
-          -- 1.1.2.  ̃⊥ = ∅, because all s ∈ S are consistent.
-          simp[eq_empty_iff_forall_not_mem],
-          intro s,
-          apply bot_not_mem_of_ax_consistent s.1 s.2.1,
-        end,
-        -- 1.2. Assume by contradiction ∅ ∈ Ef (sf )(G).
-        intros sf G hf,
-        cases (em (G = univ)),
-        -- 1.4. Case: G = N
-        { -- 1.4.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N), from 1.2, by definition Ef .
-          simp[h] at hf,
-          -- 1.4.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N), from 1.4.1 & 1.1.
-          rw hempty at hf,
-          cases hf with t hf,
-          -- 1.4.3. ∀t, ∅ ∉ E(t)(N) because E(t) is live.
-          have hlive := (canonical_model_CLC ha).f.E.liveness t univ,
-          -- 1.4.4. Contradiction from 1.4.2 & 1.4.3.
-          exact hlive hf.right, },
-        -- 1.3. Case: G ≠ N
-        { -- 1.3.1. ∀t ∈ S, sf = tf ⇒  ̃φ∅ ∈ E(t)(G), from 1.2, by definition Ef
-          simp[h] at hf,
-          -- 1.3.2. ∀t ∈ S, sf = tf ⇒ ∅ ∈ E(t)(G), from 1.3.1 & 1.1
-          rw hempty at hf,
-          -- 1.3.3. ∅ ∈ E(s)(G), from 1.3.2
-          cases (s_f_to_s ha φ sf) with s hs,
-          specialize hf s hs,
-          -- 1.3.4. ∅ /∈ E(s)(G) because E(s) is live.
-          have hlive := (canonical_model_CLC ha).f.E.liveness s,
-          -- 1.3.5. Contradiction from 1.3.3 & 1.3.4.
-          exact hlive G hf, },
-      end,
-
-      -- 2. Ef (sf) is safe: ∀G ⊆ N : Sf ∈ Ef (sf )(G)
-      safety :=
-      begin
-        -- 2.1. First we note that  ̃φSf =  ̃⊤ = S
-        have huniv : (tilde ha (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states), from
-        begin
-          simp[tilde],
-          ext1,
-          refine iff_of_true _ trivial,
-          simp,
-          apply max_ax_contains_by_empty_proof x.2,
-          apply univ_disjunct_provability,
-          exact nonempty_S_f ha φ,
-        end,
-        -- 2.2. Additionally, because E(s) is safe for all s ∈ S, ∀G ⊆ N, S ∈ E(s)(G).
-        have hsafe := (canonical_model_CLC ha).f.E.safety,
-        -- 2.4. Case: G = N
-        intros sf G, cases em (G = univ) with hG hG,
-        { -- 2.4.1. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and  ̃φSf ∈ E(t)(N ), by definition Ef .
-          simp[hG] at *,
-          -- 2.4.2. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and S ∈ E(t)(N ), from 2.1 & 2.4.1.
-          simp[huniv],
-          -- 2.4.3. ∃t ∈ S, sf = tf and S ∈ E(t)(N ), when t = s, because sf = sf and S ∈ E(s)(N ), from 2.2.
-          cases (s_f_to_s ha φ sf) with s hs,
-          apply exists.intro s,
-          -- 2.4.4. Sf ∈ Ef (sf )(N ), from 2.4.2 & 2.4.3s
-          simp at *,
-          split,
-          exact hs,
-          apply hsafe, },
-        -- 2.3. Case: G ≠ N
-        { -- 2.3.1. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒  ̃φSf ∈ E(t)(G), by definition Ef .
-          simp[hG] at *,
-          -- 2.3.2. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒ S ∈ E(t)(G), from 2.1 & 2.3.1.
-          simp[huniv],
-          -- 2.3.3. Sf ∈ Ef (sf )(G), from 2.2 & 2.3.2
-          intros t ht,
-          apply hsafe, }, 
-      end,
-
-      -- 3. Ef (sf) is N-maximal: ∀X ⊆ Sf : Xᶜ ∉ Ef(sf)(∅) ⇒ X ∈ Ef(sf)(N)
-      N_max := sorry,
-      -- begin
-      --   -- 3.1. Assume some X ⊆ Sf such that Xᶜ ∉ Ef(sf)(∅).
-      --   intros sf X hXc,
-      --   -- 3.2. ¬(Xᶜ ∈ Ef sf ∅), from 3.1.
-      --   simp at *,
-      --   -- 3.3. ¬(∀t ∈ S, sf = tf ⇒ ~φXᶜ ∈ E(t)(∅)), from 3.2, by definition Ef . 
-      --   -- 3.4. ∃t ∈ S, sf = tf and ~φXᶜ ∉ E(t)(∅)), from 3.3, by first order logic. 
-      --   have hempty_ne_univ : (∅ : set (agents)) ≠ (univ : set (agents)), from empty_ne_univ,
-      --   simp[@empty_ne_univ agents ha] at *, -- clear hempty_ne_univ,
-      --   -- 3.5. Note that ⊢ φXᶜ ↔ ¬φX , from Lemma 4 and Lemma 5.
-      --   -- have h_phi_Xc : axCLC ((phi_X_set ha φ Xᶜ) ↔ (¬ (phi_X_set ha φ X))), from
-      --   -- begin
-      --   --   simp,
-      --   --   apply axCLC.MP,
-      --   --   apply axCLC.MP,
-      --   --   exact axCLC.Prop4,
-      --   --   { sorry,
-
-      --   --   },
-      --   --   { sorry,
-
-      --   --   },
-      --   -- end,
-      --   cases hXc with t ht,
-      --   cases ht with ht hXc,
-      --   apply exists.intro t,
-      --   split, 
-      --   { exact ht, },
-      --   { 
-      --     have h_tilde: tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) = 
-      --       tilde ha (phi_X_set ha φ Xᶜ), from
-      --     begin
-      --       simp[tilde],
-      --       ext1 u,
-      --       split,
-      --       { intro hu,
-      --         simp at *,
-      --         apply max_ax_contains_by_set_proof u.2 hu,
-              
-
-      --         sorry,
-
-      --       },
-      --       { intro hu,
-      --         simp at *,
-      --         apply max_ax_contains_by_set_proof u.2 hu,
-      --         sorry,
-
-      --       }
-      --     end,
-      --     -- 3.6. ∃t ∈ S, sf = tf and ~¬φX ∉ E(t)(∅)), from 3.4 & 3.5
-      --     have hXc : tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) ∉ 
-      --       (canonical_model_CLC ha).f.to_frameCL.E.E t ∅, from
-      --     begin
-      --       simp[h_tilde] at *,
-      --       exact hXc,
-      --     end,
-          
-      --     -- 3.7. ∃t ∈ S,sf = tf and (~φX)ᶜ ∉ E(t)(∅)), from 3.6, because all s ∈ S are maximally consistent.
-      --     -- simp at *,
-      --     have hc : {s : (canonical_model_CLC ha).f.states | ¬' (phi_X_set ha φ X) ∈ s.1} = {s : (canonical_model_CLC ha).f.states | phi_X_set ha φ X ∈ s.1}ᶜ, from
-      --     begin
-      --       rw (set.compl_def {s : (canonical_model_CLC ha).f.states | phi_X_set ha φ X ∈ s.1}),
-      --       ext1,
-      --       simp,
-      --       split,
-      --       { intros hx hf,
-      --         exact contra_containts_pr_false x.2 hf hx, },
-      --       { intros hx,
-      --         exact not_in_from_notin x.2 hx, },
-      --     end,
-      --     -- have hXc' : (tilde ha (phi_X_set ha φ X))ᶜ ∉ 
-      --     --   (canonical_model_CLC ha).f.to_frameCL.E.E t ∅, from
-      --     -- begin
-      --     --   simp[tilde, (canonical_model_CLC ha).f.states] at *,
-      --     -- end,
-      --     -- -- simp[tilde] at *,
-
-      --     -- -- 3.8. ∃t ∈ S,sf = tf and φ􏰓 ∈ E(t)(N)), from 3.7, 
-      --     -- -- because E(s) is N-maximal X for all s ∈ S (∀X ⊆ S|X ∈/ E(s)(∅) ⇒ X ∈ E(s)(N))
-          
-      --     -- have hnmax := (canonical_model_CLC ha).f.to_frameCL.E.N_max t,
-      --     -- specialize hnmax (tilde ha (phi_X_set ha φ X)),
-      --     -- -- apply hnmax,
-
-
-      --     -- 3.9. Ef (sf )(N), from 3.8, by definition Ef .
-      --     sorry,
-      --   },
-
-      --   -- 3.6. ∃t ∈ S, sf = tf and ~¬φX ∉ E(t)(∅)), from 3.4 & 3.5
-      --   -- have hXc'
-        
-      --   -- 3.7. ∃t ∈ S,sf = tf and φXᶜ ∉ E(t)(∅)), from 3.6, because all s ∈ S are maximally consistent.
-        
-      --   -- 3.8. ∃t ∈ S,sf = tf and φ􏰓 ∈ E(t)(N)), from 3.7, 
-      --   -- because E(s) is N-maximal X for all s ∈ S (∀X ⊆ S|X ∈/ E(s)(∅) ⇒ X ∈ E(s)(N))
-
-      --   -- 3.9. Ef (sf )(N), from 3.8, by definition Ef .
-      -- end,
-
-      -- Ef (sf ) is outcome monotonic: ∀G ⊆ N, ∀X ⊆ Y ⊆ Sf : X ∈ Ef (sf )(G) ⇒ Y ∈ Ef (sf )(G)
-      monoticity :=
-      begin
-        -- 4.1. Let G be some G ⊆ N and X and Y be some X ⊆ Y ⊆ Sf .
-        intros s G X Y hXY,
-        -- 4.2. Assume X ∈ Ef (sf )(G).
-        intro hX,
-        -- 4.3. First we note that ∀s ∈ S, ∀G ⊆ N,  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G)
-        have himp : ∀ s G, 
-          (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G → 
-          (tilde ha (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s G, from
-        begin
-          -- 4.3.1. Let s be some s ∈ S and G be some G ⊆ N .
-          clear hX, intros s G hX,
-          -- 4.3.2. ⊢ φX → φY , from 4.1 (X ⊆ Y ).
-          have hax : axCLC ((phi_X_set ha φ X) ~> (phi_X_set ha φ Y)), from
-          begin
-            -- apply @imp_finite_disjunction_subset _ formulaCLC
-            --   (phi_X_list ha φ X.to_finset.to_list) (phi_X_list ha φ Y.to_finset.to_list),
-            -- rw list.subset_def,
-            -- intros f hf,
-            sorry,
-          end,
-          -- 4.3.3.  ̃φX ⊆  ̃φY , from 4.3.2.
-          have h_phiXY : (tilde ha (phi_X_set ha φ X)) ⊆ (tilde ha (phi_X_set ha φ Y)), from
-          begin 
-            rw set.subset_def,
-            intros t ht,
-            apply max_ax_contains_by_set_proof t.2 ht hax,
-          end,
-          -- 4.3.4. E(s) is outcome monotonic for all s ∈ S: ∀G ⊆ N, ∀X ⊆ Y ⊆ S, X ∈ E(s)(G) ⇒ Y ∈ E(s)(G)
-          have hmonoticity := (canonical_model_CLC ha).f.E.monoticity s G _ _ h_phiXY,
-          -- 4.3.5.  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G), from 4.3.3 & 4.3.4
-          apply hmonoticity hX,
-        end,
-        -- 4.5. Case G = N
-        cases em (G = univ) with hG hG,
-        { -- 4.5.1. ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N ), from 4.2, by definition Ef .
-          simp[hG] at *,
-          -- 4.5.2. ∃t ∈ S, sf = tf and  ̃φY ∈ E(t)(N ), from 4.3 & 4.5.1.
-          -- 4.5.3. Y ∈ Ef (sf )(N ), from 4.5.2, by definition Ef . 
-          cases hX with t ht,
-          apply exists.intro t,
-          split,
-          { exact ht.1 },
-          { exact himp _ _ ht.2, }, },
-        -- 4.4. Case: G ̸ = N
-        { -- 4.4.1. ∀t ∈ S, sf = tf ⇒  ̃φX ∈ E(t)(N ), from 4.2, by definition Ef .
-          simp[hG] at *,
-          -- 4.4.2. ∀t ∈ S, sf = tf ⇒  ̃φY ∈ E(t)(N ), from 4.3 & 4.4.1.
-          -- 4.4.3. Y ∈ Ef (sf )(G), from 4.4.2, by definition Ef .
-          sorry, }
-      end,
-
-      --  Ef (sf ) is superadditive ∀G, F ⊆ N (where G ∩ F = ∅), ∀X, Y ⊆ Sf : X ∈
-      --   Ef (sf )(G) and Y ∈ Ef (sf )(F ) ⇒ X ∩ Y ∈ Ef (sf )(G ∪ F )
-      superadd :=
-      begin      
-        -- 5.1. Let G, F be some G, F ⊆ N , such that G ∩ F = ∅. Let X, Y be some
-          -- X, Y ⊆ S such that X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ).
-        intros s G F X Y hX hY hGF,
-        -- 5.2. First we note that ∀s ∈ S, ∀G, F ⊆ N (where G ∩ F = ∅),
-        -- ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(F ) ⇒
-        -- ̃φX∩Y ∈ E(s)(G ∪ F )
-          -- 5.2.1. Let s be some s ∈ S. Let G, F , be some G, F ⊂ N where G ∩ F = ∅.
-          -- Assume  ̃φX ∈ E(s)(G) and  ̃φY ∈ E(s)(F ).
-          -- 5.2.2. E(s) is supperadditive so: ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈
-          -- E(s)(F ) ⇒ X ∩ Y ∈ E(s)(G ∪ F )
-          -- 5.2.3.  ̃φX ∩  ̃φY ∈ E(s)(G ∪ F ), from 5.2.1 & 5.2.2.
-          -- 5.2.4.  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.2.3, because  ̃φX →  ̃φX∩Y and  ̃φY →
-          -- ̃φX∩Y .
-        -- 5.3. Case G ̸ = N and F ̸ = N
-          -- 5.3.1. ∀t ∈ S, sf = tf ⇒  ̃φX ∈ E(t)(G), from 5.1 (X ∈ Ef (sf )(G)), by
-          -- definition Ef .
-          -- 5.3.2. ∀t ∈ S, sf = tf ⇒  ̃φY ∈ E(t)(F ), from 5.1 (Y ∈ Ef (sf )(F )), by
-          -- definition Ef .
-          -- 5.3.3. ∀t ∈ S, sf = tf ⇒ (  ̃φX ∈ E(t)(G)and  ̃φY ∈ E(t)(F )), from 5.3.1 &
-          -- 5.3.2.
-          -- 5.3.4. ∀t ∈ S, sf = tf ⇒  ̃φX∩Y ∈ E(t)(G ∪ F ), from 5.2 & 5.3.3.
-          -- 5.3.5. Case G ∪ F ̸ = N : X ∩ Y ∈ Ef (sf )(G ∪ F ), from 5.3.4, by definition
-          -- Ef
-          -- 5.3.6. Case G ∪ F = N : sf = sf and  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.3.4. So
-          -- X ∩ Y ∈ Ef (sf )(G ∪ F = N ), by definition Ef
-        -- 5.4. Case G = N or F = N :
-          -- 5.4.1. Rename G, F, X&Y to G′, F ′, X′&Y ′, such that G′ = N , F ′ = ∅,
-          -- X′ ∈ Ef (sf )(G′) and Y ′ ∈ Ef (sf )(F ′).
-          -- 5.4.2. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ), from 5.4.1 (X′ ∈ Ef (sf )(G′)),
-          -- by definition Ef .
-          -- 5.4.3. ∀t ∈ S, sf = tf ⇒  ̃φY ′ ∈ E(t)(∅), from 5.4.1 (Y ′ ∈ Ef (sf )(F ′)), by
-          -- definition Ef .
-          -- 5.4.4. ∃t ∈ S, sf = tf and  ̃φX′ ∈ E(t)(N ) and  ̃φY ′ ∈ E(t)(∅), from 5.4.2 &
-          -- 5.4.3.
-          -- 5.4.5. ∃t ∈ S, sf = tf and  ̃φX′ ∩Y ′ ∈ E(t)(N ), from 5.3 & 5.4.4.
-          -- 5.4.6. X′ ∩ Y ′ ∈ Ef (sf )(N = G′ ∪ F ′), from 5.3.5, by definition Ef
-
-        sorry,
-      end,
-    },
-    rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1.1} = {φ | K' (i) (φ) ∈ t.1.1}},
-    rfl := by simp,
-    sym := λ i s t ht, eq.symm ht,
+    { E          := E_f ha φ,
+      liveness   := Ef_liveness ha φ,
+      safety     := Ef_safety ha φ,
+      N_max      := Ef_nmax ha φ,
+      monoticity := Ef_monoticity ha φ,
+      superadd   := Ef_superadd ha φ, },
+    rel   := λ i s, {t | {φ | K' (i) (φ) ∈ s.1.1} = {φ | K' (i) (φ) ∈ t.1.1}},
+    rfl   := by simp,
+    sym   := λ i s t ht, eq.symm ht,
     trans := λ i s t u hst htu, (rfl.congr htu).mp hst, },
   v := λ  n, {s | (formCLC.var n) ∈ s.1.1}, }
 

@@ -37,7 +37,7 @@ def p6  {form : Type} [ft : formula form] := ft.p6
 def p7  {form : Type} [ft : formula form] := ft.p7
 def mp  {form : Type} [ft : formula form] := ft.mp
 
-infix    `→'` : 80         := formula.imp
+infixr   `→'` : 80         := formula.imp
 infix    `∧'` : 80         := formula.and
 infix    `↔'` : 80         := formula.iff
 notation `¬'` : 80         := formula.not
