@@ -408,7 +408,6 @@ begin
     exact(and_right_imp.mpr h1), },
 end
 
-
 lemma explosion {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ⊥ → φ 
   ax (ft.bot →' φ) :=
@@ -558,12 +557,25 @@ def propI {φ : Type} : φ → φ :=
 id
 
 lemma demorgans' {form : Type} [ft : formula form] {φ ψ : form} : 
--- ⊢ ¬ (φ ∧ ψ) → (φ → ¬ ψ)
+-- ⊢ (¬ φ → ψ) → ¬ (¬ φ ∧ ¬ ψ)
   ax (((¬' φ) →' ψ) →' ¬' (¬' φ ∧' ¬' ψ)) :=
 begin
   simp [formula.notdef],
   exact combS2 (combK (p2 _ _ _)) (combK (combS (combK (p6 _ _)) combI)) 
     (combS2 (combK (p2 _ _ _)) (combS (combK (p1 _ _)) combI) (combK (combS (combK (p5 _ _)) combI))),
+end
+
+lemma demorgans'' {form : Type} [ft : formula form] {φ ψ : form} : 
+  ax (¬' (φ →' ¬' ψ) →' φ ∧' ψ) :=
+begin
+  rw ←contrapos,
+  apply cut _ dni,
+  apply imp_switch,
+  simp[ft.notdef],
+  rw imp_shift,
+  apply cut1,
+  apply p4,
+  exact likemp,
 end
 
 lemma or_cases {form : Type} [ft : formula form] {φ ψ χ : form} : 
@@ -628,3 +640,12 @@ begin
     exact ih,
   },
 end
+
+lemma imp_finite_disjunction_int {form : Type} [ft : formula form] 
+  (fs : list (form)) (gs : list (form)) :
+  ax (finite_disjunction fs →' finite_disjunction gs →' finite_disjunction (fs ∩ gs)) :=
+begin
+
+  sorry,
+end
+
