@@ -97,11 +97,13 @@ end
 -- Lemmas about Sf
 ----------------------------------------------------------
 -- Sf is  finite
-noncomputable lemma fin_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) : 
+noncomputable lemma fin_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) : 
   fintype (S_f ha φ) :=  additive.fintype
 
 -- Sf is not empty
-lemma nonempty_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) : 
+lemma nonempty_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) : 
   nonempty (S_f ha φ) :=  
 begin
   -- simp[S_f, finset.filter],
@@ -111,7 +113,7 @@ begin
   exact nonempty.intro sf,
 end
 
--- sf ⊂ s
+-- sf ⊆ s
 lemma s_f_subset_s {agents : Type} (ha : nonempty agents) [hN : fintype agents] 
   (φ : formCLC agents) (s : (canonical_model_CLC ha).f.states) :
   {x | x ∈ (s_f ha φ s).1.1} ⊆ s.1 :=
@@ -120,8 +122,27 @@ begin
   apply inter_subset_right,
 end
 
+-- sf ⊆ cl φ
+lemma s_f_cl {agents : Type} (ha : nonempty agents) [hN : fintype agents] 
+  (φ : formCLC agents) (sf : (S_f ha φ)) : 
+  sf.1.1 ⊆ cl φ :=
+begin
+  have hs := s_f_to_s ha φ sf,
+  cases hs with s hs,
+  simp at *,
+  rw finset.subset_iff,
+  intros x hx,
+  cases sf,
+  cases sf_val,
+  simp at *,
+  sorry,
+  
+  
+end
+
 -- all sf are consistent
-lemma s_f_ax {agents : Type} (ha : nonempty agents) [hN : fintype agents] (φ : formCLC agents) (sf : (S_f ha φ)): 
+lemma s_f_ax {agents : Type} (ha : nonempty agents) [hN : fintype agents] 
+  (φ : formCLC agents) (sf : (S_f ha φ)) : 
   ax_consistent {x | x ∈ sf.1.1} :=
 begin
   cases (s_f_to_s ha φ sf) with s hs,
@@ -140,6 +161,22 @@ begin
   apply hsfin,
   exact hψfs,
 end
+
+-- sf = tf iff they have the same finset
+lemma s_f_eq {agents : Type} (ha : nonempty agents) [hN : fintype agents] 
+  (φ : formCLC agents) (sf tf : (S_f ha φ)) : 
+  sf = tf ↔ sf.1.1 = tf.1.1 :=
+begin
+  split,
+   repeat 
+   { intro h,
+    cases sf, cases tf,
+    cases sf_val, cases tf_val,
+    simp at *,
+    exact h, },
+end
+
+
 
 ----------------------------------------------------------
 -- Definitions and Lemmas needed for completness / model construction
@@ -276,6 +313,8 @@ end
 --   exact finite.to_finset_mono.mpr hXY,
 -- end
 
+-- Main Lemmas
+----------------------------------------------------------
 -- Lemma 4. ⊢ (∨ {sf ∈Sf } φsf)
 lemma univ_disjunct_provability {agents : Type} [hN : fintype agents] (ha : nonempty agents)  
   (φ : formCLC agents) (hs : nonempty (S_f ha φ)):
@@ -311,7 +350,7 @@ begin
 
 -- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
 lemma unique_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
-  {φ : formCLC agents} (sf  tf : (S_f ha φ)) (h : sf ≠ tf) :
+  {φ : formCLC agents} (sf  tf : (S_f ha φ)) (hneq : sf ≠ tf) :
   axCLC (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) :=
   begin
     -- 1. Assume by contradiction ⊬ φsf → ¬φtf
@@ -328,17 +367,56 @@ lemma unique_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]
     have hand : (phi_s_f ha φ sf ∧' (phi_s_f ha φ tf)) ∈ u.1, 
       from max_ax_contains_by_set_proof u.2 hun demorgans'',
     -- 5. ∃χ ∈ sf ∪ tf , χ /∈ sf ∨ χ /∈ tf , because sf and tf are not identical.
-      cases sf,
+    have hneq' : ∃ f ∈ (sf.1.1 ∪ tf.1.1), (f ∉ sf.1.1) ∨ (f ∉ tf.1.1), from
+    begin
+      cases em (sf.1.1 ⊆ tf.1.1) with hsf hsf,
+      { have hsf := eq_or_ssubset_of_subset hsf,
+        cases hsf with hsf hsf,
+      { by_contradiction,
+        rw ←s_f_eq at hsf,
+        exact hneq hsf, },
+      { have hsf := finset.exists_of_ssubset hsf,
+        cases hsf with f hsf,
+        cases hsf with hfin hfnin,
+        apply exists.intro f,
+        simp,
+        split,
+        { apply or.intro_right, exact hfin, },
+        { apply or.intro_left, exact hfnin, }, }, },
+      { by_contradiction heq,
+        apply hsf,
+        rw finset.subset_iff,
+        intros f hf,
+        simp at heq,
+        specialize heq f,
+        by_contradiction hnt,
+        apply heq,
+        { apply or.intro_left, exact hf, },
+        { apply or.intro_right, exact hnt, }, },
+    end,
     -- 6. χ /∈ s ∨ χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
-    -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
-    -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
-    -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
-    -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
-    -- 11. φsf
-    -- ∧ φtf
-    -- → ⊥, by propositional logic, from 5, 8 & 10.
-    -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency
-    -- of u.
+    cases hneq' with x hneq',
+    cases hneq' with hun hneq',
+    have hx : x ∈ cl φ, from 
+    begin
+      simp at hun,
+      cases hun,
+      have hsf := sf.2,
+      simp hsf[],
+    end,
+    cases hneq',
+    { have hs := s_f_to_s ha φ sf,
+      cases hs with s hs,
+      -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
+      -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+      -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
+      -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+      -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
+      -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
+
+    },
+
+   
   end
 
 ----------------------------------------------------------
