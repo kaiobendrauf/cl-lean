@@ -129,15 +129,12 @@ lemma s_f_cl {agents : Type} (ha : nonempty agents) [hN : fintype agents]
 begin
   have hs := s_f_to_s ha φ sf,
   cases hs with s hs,
-  simp at *,
-  rw finset.subset_iff,
-  intros x hx,
   cases sf,
   cases sf_val,
-  simp at *,
-  sorry,
-  
-  
+  dsimp at *,
+  simp[finset.has_mem] at *,
+  simp[←finset.val_inj] at *,
+  exact sf_val_property.left,
 end
 
 -- all sf are consistent
