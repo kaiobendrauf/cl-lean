@@ -49,6 +49,25 @@ begin
   apply p1,
 end
 
+lemma iff_iden' {form : Type} [ft : formula form] {φ : form} : 
+-- ⊢ φ ↔ φ 
+  ax ((φ →' φ) ∧' (φ →' φ)) := 
+begin
+  apply mp,
+  apply mp,
+  apply p4,
+  repeat {exact iden,},
+end
+
+lemma iff_iden {form : Type} [ft : formula form] {φ : form} : 
+-- ⊢ φ ↔ φ 
+  ax (φ ↔' φ) := 
+begin
+  simp[ft.iffdef],
+  exact iff_iden',
+end
+
+
 lemma prtrue {form : Type} [ft : formula form] : 
 -- ⊢ ⊤
   ax (ft.top) := 
@@ -108,6 +127,15 @@ lemma dni {form : Type} [ft : formula form] {φ : form} :
   ax (φ →' (¬' (¬' φ))) :=
 begin
   exact mp _ _ (p7 _ _) dne
+end
+
+lemma nnn_bot {form : Type} [ft : formula form] : 
+-- ⊢ ⊤
+  ax (¬' (¬' (¬' ft.bot))) := 
+begin
+  apply mp,
+  apply dni,
+  exact not_bot,
 end
 
 lemma imp_if_imp_imp {form : Type} [ft : formula form] {φ ψ χ : form} : 
@@ -642,9 +670,9 @@ begin
 end
 
 -- I don't think this is true: let `fs = [φ]`, `gs = [¬ φ]`
-lemma imp_finite_disjunction_int {form : Type} [ft : formula form] 
-  (fs : list (form)) (gs : list (form)) :
-  ax (finite_disjunction fs →' finite_disjunction gs →' finite_disjunction (fs ∩ gs)) :=
-begin
-  sorry,
-end
+-- lemma imp_finite_disjunction_int {form : Type} [ft : formula form] 
+--   (fs : list (form)) (gs : list (form)) :
+--   ax (finite_disjunction fs →' finite_disjunction gs →' finite_disjunction (fs ∩ gs)) :=
+-- begin
+--   sorry,
+-- end

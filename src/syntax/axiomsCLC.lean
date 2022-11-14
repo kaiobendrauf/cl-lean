@@ -12,7 +12,7 @@ Prop1-Prop7 taken from :
 Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
-inductive axCLC {agents  : Type} [hN : fintype agents] : formCLC agents → Prop 
+inductive axCLC {agents  : Type} : formCLC agents → Prop 
 -- (Prop) Propositional tautologiess
 | Prop1 {φ ψ}                 : axCLC (φ ~> (ψ ~> φ))
 | Prop2 {φ ψ χ}               : axCLC ((φ ~> (ψ ~> χ)) ~> ((φ ~> ψ) ~> (φ ~> χ)))
@@ -52,7 +52,7 @@ inductive axCLC {agents  : Type} [hN : fintype agents] : formCLC agents → Prop
                                 : axCLC (ψ ~> (c G φ))
 
 
-instance formulaCLC {agents : Type} [hN : fintype agents] : formula (formCLC agents) :=
+instance formulaCLC {agents : Type} : formula (formCLC agents) :=
 { bot := ⊥,
   and := formCLC.and,
   imp := formCLC.imp,
@@ -64,34 +64,34 @@ instance formulaCLC {agents : Type} [hN : fintype agents] : formula (formCLC age
   topdef := by simp,
 
   ax  := axCLC,
-  p1 := @axCLC.Prop1 agents hN,
-  p2 := @axCLC.Prop2 agents hN,
-  p3 := @axCLC.Prop3 agents hN,
-  p4 := @axCLC.Prop4 agents hN,
-  p5 := @axCLC.Prop5 agents hN,
-  p6 := @axCLC.Prop6 agents hN,
-  p7 := @axCLC.Prop7 agents hN,
-  mp := @axCLC.MP    agents hN, }
+  p1 := @axCLC.Prop1 agents,
+  p2 := @axCLC.Prop2 agents,
+  p3 := @axCLC.Prop3 agents,
+  p4 := @axCLC.Prop4 agents,
+  p5 := @axCLC.Prop5 agents,
+  p6 := @axCLC.Prop6 agents,
+  p7 := @axCLC.Prop7 agents,
+  mp := @axCLC.MP    agents, }
 
-instance CLformulaCLC {agents : Type} [hN : fintype agents] : CLformula agents (formCLC agents) :=
+instance CLformulaCLC {agents : Type} : CLformula agents (formCLC agents) :=
 { eff := λ G φ, [G] φ,
-  Bot := @axCLC.Bot agents hN,
-  Top := @axCLC.Top agents hN,
-  N   := @axCLC.N   agents hN,
-  M   := @axCLC.M   agents hN,
-  S   := @axCLC.S   agents hN,
-  Eq  := @axCLC.Eq agents hN, }
+  Bot := @axCLC.Bot agents,
+  Top := @axCLC.Top agents,
+  N   := @axCLC.N   agents,
+  M   := @axCLC.M   agents,
+  S   := @axCLC.S   agents,
+  Eq  := @axCLC.Eq agents, }
 
-instance KformulaCLC {agents : Type} [hN : fintype agents] : Kformula agents (formCLC agents) :=
+instance KformulaCLC {agents : Type} : Kformula agents (formCLC agents) :=
 { knows := formCLC.K,
   everyone_knows := formCLC.E,
-  K := @axCLC.K agents hN,
-  T := @axCLC.T agents hN,
-  Four := @axCLC.Four agents hN,
-  Five := @axCLC.Five agents hN,
-  RN := @axCLC.RN agents hN, }
+  K := @axCLC.K agents,
+  T := @axCLC.T agents,
+  Four := @axCLC.Four agents,
+  Five := @axCLC.Five agents,
+  RN := @axCLC.RN agents, }
 
-instance CformulaCLC {agents : Type} [hN : fintype agents] : Cformula agents (formCLC agents) :=
+instance CformulaCLC {agents : Type} : Cformula agents (formCLC agents) :=
 { common_know := formCLC.C,
-  C := @axCLC.C agents hN,
-  RC := @axCLC.RC agents hN, }
+  C := @axCLC.C agents,
+  RC := @axCLC.RC agents, }
