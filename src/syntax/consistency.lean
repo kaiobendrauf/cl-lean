@@ -21,6 +21,12 @@ def finite_conjunction {form : Type} [ft : formula form] : (list form) → form
   | list.nil   := ft.top
   | (f :: fs)  := f ∧' (finite_conjunction fs)  
 
+@[simp] lemma finite_conjunction_nil {form : Type} [ft : formula form] :
+  finite_conjunction (list.nil : list form) = ft.top := rfl
+
+@[simp] lemma finite_conjunction_cons {form : Type} [ft : formula form] (f) (fs : list form) :
+  finite_conjunction (f :: fs) = f ∧' finite_conjunction fs := rfl
+
 -- a few helper lemmas about finite conjunctions
 lemma fin_conj_simp {form : Type} [ft : formula form] : 
   ∀ ψ : form,  ax (¬' (finite_conjunction ((ψ :: (¬' ψ :: list.nil))))) :=
@@ -111,7 +117,6 @@ begin
   have h5 := contrapos.mpr (fin_conj_repeat_helper h3),
   subst h1,
   apply mp _ _ (mp _ _ (p3 _ _) (contrapos.mpr (cut h5 dne))),
-  simp[finite_conjunction] at *,
   have h6 := iff_not and_switch,
   rw ft.iffdef at h6,
   apply contrapos.mpr (cut ((demorgans.mp) (mp _ _ (mp _ _ (p6 _ _) (h6)) h2)) dne),
@@ -147,7 +152,6 @@ def max_ax_consistent {form : Type} [ft : formula form] (Γ : set form) : Prop :
 lemma max_imp_ax {form : Type} [ft : formula form] {Γ : set form} : 
   max_ax_consistent Γ → ax_consistent Γ :=
 λ h1, h1.left
-
 
 -- -- Lemma 5 from class notes
 lemma five_helper {form : Type} [ft : formula form] :
@@ -271,7 +275,7 @@ begin
   {intros ψ h4, cases h4, subst h4, exact h2, subst h4, exact h3},
   have h5 :  ax (¬' (finite_conjunction l)), from fin_conj_simp φ, 
   have h6 : _, from h h2 h3,
-  simp [finite_ax_consistent] at h6,
+  simp [finite_ax_consistent, formula.notdef] at h6,
   simp [formula.notdef] at h5,
   exact h6 h5, },
   intro h1, split, exact h,
@@ -667,32 +671,3 @@ begin
 
   exact contra_not_imp_false_ax (mp _ _ (p5 _ _) hiffbot),
 end
-
-
--- Completeness helper
-----------------------------------------------------------
-lemma comphelper {agents : Type} {form : Type} [ft : formula form] 
-  (φ : form) (hnpr : ¬ ax ft.bot) : 
-  ¬ ax φ → ax_consistent ({¬' φ} : set form) :=
-begin
-  intro h1, intros L h2,
-  simp[finite_ax_consistent],
-  induction L with hd tl ih,
-
-  { simp[finite_conjunction],
-    by_contradiction h3,
-    have hbot : ax ft.bot, from
-      mp _ _ h3 prtrue,
-    exact hnpr hbot, },
-
-  { let L := (hd :: tl),
-    have h4 : (∀ ψ ∈ L, ψ = (¬' φ)) → ax (¬' (finite_conjunction L)) → ax φ,from 
-      fin_conj_repeat hnpr,
-    simp at *, 
-    cases h2 with h2 h3,
-    intro h6, apply h1, apply h4 h2, 
-    exact h3,
-    rw ft.notdef,
-    exact h6, }
-end 
-

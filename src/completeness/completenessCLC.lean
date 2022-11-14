@@ -1,6 +1,7 @@
 import soundness.soundnessCLC
 import completeness.canonicalCL
 import syntax.axiomsCLC
+import syntax.consistency_lemmas
 import tactic.induction
 import data.finset.powerset
 
@@ -282,6 +283,8 @@ end
 
 -- phi X (given a set)
 ----------------------------------------------------------
+
+/-- `phi_X_set ha φ X` is a finite disjunction of all elements of `X`. -/
 noncomputable def phi_X_set {agents : Type} [hN : fintype agents] (ha : nonempty agents)  
   (φ : formCLC agents) (X : set (S_f ha φ)) :
   formCLC agents :=
@@ -310,32 +313,46 @@ end
 --   exact finite.to_finset_mono.mpr hXY,
 -- end
 
+section lemmas
+
+-- Motivation: self-contained `have`-block
+@[simp] lemma tilde_empty {agents : Type} [hN : fintype agents] (ha : nonempty agents)
+  {φ : formCLC agents} : (tilde ha (phi_X_set ha φ ∅)) = ∅ :=
+begin
+  -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
+  simp [phi_X_set, phi_X_finset, phi_X_list, finite_disjunction, tilde],
+  -- 1.1.2.  ̃⊥ = ∅, because all s ∈ S are consistent.
+  simp [eq_empty_iff_forall_not_mem],
+  intro s,
+  exact bot_not_mem_of_ax_consistent s.1 s.2.1
+end
+
+-- Motivation: simple way to prove `phi_X_set`
+lemma ax_phi_s_f_imp_phi_X_set_of_mem {agents : Type} [hN : fintype agents] (ha : nonempty agents)
+  {φ : formCLC agents} {t} {s : set _} (h : s_f ha φ t ∈ s) :
+  ax (phi_s_f ha φ (s_f ha φ t) →' phi_X_set ha φ s) :=
+begin
+  simp [phi_X_set],
+  apply @imp_finite_disjunction (formCLC agents) formulaCLC (phi_s_f ha φ (s_f ha φ t)),
+  apply phi_X_list_contains ha φ,
+  simpa,
+end
+
 -- Main Lemmas
 ----------------------------------------------------------
 -- Lemma 4. ⊢ (∨ {sf ∈Sf } φsf)
-lemma univ_disjunct_provability {agents : Type} [hN : fintype agents] (ha : nonempty agents)  
+lemma univ_disjunct_provability {agents : Type} [hN : fintype agents] (ha : nonempty agents)
   (φ : formCLC agents) (hs : nonempty (S_f ha φ)):
-  axCLC (phi_X_set ha φ (univ : set (S_f ha φ))) :=
+  ax (phi_X_set ha φ (univ : set (S_f ha φ))) :=
 begin
   -- 1. By contradiction, assume that ⊬ (∨ {sf ∈Sf } φsf)
   by_contradiction,
-  -- 2. ∃t ∈ S, (∨ {sf ∈Sf } φsf) ∉ t, from 1.
-  -- 3. ¬(∨ {sf ∈Sf } φsf) ∈ t, because t is maximally consistent, from 2.
-  have hax := @comphelper agents (formCLC agents) formulaCLC 
-  (phi_X_set ha φ (univ : set (S_f ha φ))) (nprfalseCLC ha) h,
-  have hexn := lindenbaum {¬' (phi_X_set ha φ (univ : set (S_f ha φ)))} hax,
-  cases hexn with t' hexn,
-  let t := (⟨t', hexn.left⟩ : (canonical_model_CLC ha).f.states),
-  have htn : ¬' (phi_X_set ha φ univ) ∈ t.1, from by tauto,
+  -- 3. ¬(∨ {sf ∈Sf } φsf) ∈ t, because t is maximally consistent, from 1.
+  obtain ⟨t', hexn, htn⟩ := exists_max_ax_consistent_neg_mem h,
+  let t := (⟨t', hexn⟩ : (canonical_model_CLC ha).f.states),
   -- 4. ⊢ φtf → (∨ {sf ∈Sf } φsf ), by propositional logic, because t ∈ Sf.
-  have himp : ax (phi_s_f ha φ (s_f ha φ t) →' phi_X_set ha φ univ), from
-  begin
-    simp[phi_X_set, phi_X_finset],
-    apply @imp_finite_disjunction (formCLC agents) formulaCLC (phi_s_f ha φ (s_f ha φ t)),
-    simp at *,
-    apply phi_X_list_contains ha φ,
-    simp,
-  end,
+  have himp : ax (phi_s_f ha φ (s_f ha φ t) →' phi_X_set ha φ univ),
+    from ax_phi_s_f_imp_phi_X_set_of_mem ha (mem_univ _),
   -- 5. φtf∈ t, by propositional logic, because all ∀ψ ∈ tf , ψ ∈ t).
   have hphitf : phi_s_f ha φ (s_f ha φ t) ∈ t.1, from phi_s_f_in_s ha φ t, 
   -- 6. (∨{sf ∈Sf } φsf) ∈ t, by propositional logic, from 4 & 5.
@@ -343,78 +360,133 @@ begin
     from max_ax_contains_by_set_proof t.2 hphitf himp,
   -- 7. Contradiction from 3 and 6.
   apply contra_containts_pr_false t.2 ht htn,
-  end
+end
+
+-- Motivation: self-contained `have`-block
+-- 2.1. First we note that  ̃φSf =  ̃⊤ = S
+@[simp] lemma tilde_univ {agents : Type} [hN : fintype agents] (ha : nonempty agents) {φ : formCLC agents} :
+  (tilde ha (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states) :=
+begin
+  simp[tilde],
+  ext1,
+  refine iff_of_true _ trivial,
+  simp,
+  apply max_ax_contains_by_empty_proof x.2,
+  apply univ_disjunct_provability,
+  exact nonempty_S_f ha φ,
+end
+
+end lemmas
+
+/-
+-- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
+lemma unique_s_f_of_not_subset {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
+  {φ : formCLC agents} (sf  tf : (S_f ha φ)) (hneq : ¬ (sf.1.1 ⊆ tf.1.1)) :
+  ax (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) :=
+begin
+  -- 1. Assume by contradiction ⊬ φsf → ¬φtf
+  by_contradiction,
+  -- 2. ∃u ∈ S, (φsf → ¬φtf) /∈ u, from 1.
+  -- 3. ¬(φsf→ ¬φtf) ∈ u, from 2.
+  obtain ⟨u', hexn.left, hun⟩ := exists_max_ax_consistent_neg_mem h,
+  let u := (⟨u', hexn.left⟩ : (canonical_model_CLC ha).f.states),
+  have hun : ¬' (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) ∈ u.1, from by tauto,
+  -- 4. φsf ∧ φtf ∈ u, by propositional logic, from 3.
+  have hand : (phi_s_f ha φ sf ∧' (phi_s_f ha φ tf)) ∈ u.1,
+    from max_ax_contains_by_set_proof u.2 hun demorgans'',
+  -- 5. ∃χ ∈ sf ∪ tf , χ /∈ sf ∨ χ /∈ tf , because sf and tf are not identical.
+  have : ¬(sf.1.1 ⊆ tf.1.1) ∨ ¬(tf.1.1 ⊆ sf.1.1),
+  { rw ← not_and_distrib,
+    rintro ⟨hst, hts⟩,
+    apply hneq,
+    ext : 2,
+    exact subset_antisymm hst hts },
+  obtain ⟨x, hun, hneq'⟩ : ∃ f, f ∈ (sf.1.1 ∪ tf.1.1) ∧ ((f ∉ sf.1.1) ∨ (f ∉ tf.1.1)),
+  { simp only [finset.not_subset] at this, -- Motivation: I recall `not_subset` had something like `x ∈ s ∧ ¬ x ∈ t` so I reworked the statement to make it come true.
+    rcases this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
+      use x;
+      simp only [finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true, true_and] },
+  -- 6. χ /∈ s ∨ χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
+  have hx : x ∈ cl φ, from 
+  begin
+    simp at hun,
+    cases hun,
+    { have hsf := sf.1.2,
+      simp at hsf,
+      exact hsf.1 hun_1 },
+    { have htf := tf.1.2,
+      simp at htf,
+      exact htf.1 hun_1 },
+  end,
+  cases hneq',
+  { have hs := s_f_to_s ha φ sf,
+    cases hs with s hs,
+    -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
+    -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+    -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
+    -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+    -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
+    -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
+
+  },
+
+ 
+end
+-/
 
 -- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
 lemma unique_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
   {φ : formCLC agents} (sf  tf : (S_f ha φ)) (hneq : sf ≠ tf) :
-  axCLC (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) :=
+  ax (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) :=
+begin
+  -- 1. Assume by contradiction ⊬ φsf → ¬φtf
+  by_contradiction,
+  -- 2. ∃u ∈ S, (φsf → ¬φtf) /∈ u, from 1.
+  -- 3. ¬(φsf→ ¬φtf) ∈ u, from 2.
+  obtain ⟨u', hexn.left, hun⟩ := exists_max_ax_consistent_neg_mem h,
+  let u := (⟨u', hexn.left⟩ : (canonical_model_CLC ha).f.states),
+  have hun : ¬' (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) ∈ u.1, from by tauto,
+  -- 4. φsf ∧ φtf ∈ u, by propositional logic, from 3.
+  have hand : (phi_s_f ha φ sf ∧' (phi_s_f ha φ tf)) ∈ u.1,
+    from max_ax_contains_by_set_proof u.2 hun demorgans'',
+  -- 5. ∃χ ∈ sf ∪ tf , χ /∈ sf ∨ χ /∈ tf , because sf and tf are not identical.
+  have : ¬(sf.1.1 ⊆ tf.1.1) ∨ ¬(tf.1.1 ⊆ sf.1.1),
+  { rw ← not_and_distrib,
+    rintro ⟨hst, hts⟩,
+    apply hneq,
+    ext : 2,
+    exact subset_antisymm hst hts },
+  obtain ⟨x, hun, hneq'⟩ : ∃ f, f ∈ (sf.1.1 ∪ tf.1.1) ∧ ((f ∉ sf.1.1) ∨ (f ∉ tf.1.1)),
+  { simp only [finset.not_subset] at this, -- Motivation: I recall `not_subset` had something like `x ∈ s ∧ ¬ x ∈ t` so I reworked the statement to make it come true.
+    rcases this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
+      use x;
+      simp only [finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true, true_and] },
+  -- 6. χ /∈ s ∨ χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
+  have hx : x ∈ cl φ, from 
   begin
-    -- 1. Assume by contradiction ⊬ φsf → ¬φtf
-    by_contradiction,
-    -- 2. ∃u ∈ S, (φsf → ¬φtf) /∈ u, from 1.
-    -- 3. ¬(φsf→ ¬φtf) ∈ u, from 2.
-    have hax := @comphelper agents (formCLC agents) formulaCLC 
-    (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) (nprfalseCLC ha) h,
-    have hexn := lindenbaum {¬' (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf))} hax,
-    cases hexn with u' hexn,
-    let u := (⟨u', hexn.left⟩ : (canonical_model_CLC ha).f.states),
-    have hun : ¬' (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) ∈ u.1, from by tauto,
-    -- 4. φsf ∧ φtf ∈ u, by propositional logic, from 3.
-    have hand : (phi_s_f ha φ sf ∧' (phi_s_f ha φ tf)) ∈ u.1, 
-      from max_ax_contains_by_set_proof u.2 hun demorgans'',
-    -- 5. ∃χ ∈ sf ∪ tf , χ /∈ sf ∨ χ /∈ tf , because sf and tf are not identical.
-    have hneq' : ∃ f ∈ (sf.1.1 ∪ tf.1.1), (f ∉ sf.1.1) ∨ (f ∉ tf.1.1), from
-    begin
-      cases em (sf.1.1 ⊆ tf.1.1) with hsf hsf,
-      { have hsf := eq_or_ssubset_of_subset hsf,
-        cases hsf with hsf hsf,
-      { by_contradiction,
-        rw ←s_f_eq at hsf,
-        exact hneq hsf, },
-      { have hsf := finset.exists_of_ssubset hsf,
-        cases hsf with f hsf,
-        cases hsf with hfin hfnin,
-        apply exists.intro f,
-        simp,
-        split,
-        { apply or.intro_right, exact hfin, },
-        { apply or.intro_left, exact hfnin, }, }, },
-      { by_contradiction heq,
-        apply hsf,
-        rw finset.subset_iff,
-        intros f hf,
-        simp at heq,
-        specialize heq f,
-        by_contradiction hnt,
-        apply heq,
-        { apply or.intro_left, exact hf, },
-        { apply or.intro_right, exact hnt, }, },
-    end,
-    -- 6. χ /∈ s ∨ χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
-    cases hneq' with x hneq',
-    cases hneq' with hun hneq',
-    have hx : x ∈ cl φ, from 
-    begin
-      simp at hun,
-      cases hun,
-      have hsf := sf.2,
-      simp hsf[],
-    end,
-    cases hneq',
-    { have hs := s_f_to_s ha φ sf,
-      cases hs with s hs,
-      -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
-      -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
-      -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
-      -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
-      -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
-      -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
+    simp at hun,
+    cases hun,
+    { have hsf := sf.1.2,
+      simp at hsf,
+      exact hsf.1 hun_1 },
+    { have htf := tf.1.2,
+      simp at htf,
+      exact htf.1 hun_1 },
+  end,
+  cases hneq',
+  { have hs := s_f_to_s ha φ sf,
+    cases hs with s hs,
+    -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
+    -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+    -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
+    -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+    -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
+    -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
 
-    },
+  },
 
-   
-  end
+ 
+end
 
 ----------------------------------------------------------
 -- Playability
@@ -436,24 +508,14 @@ def E_f {agents : Type}  [hN : fintype agents] (ha : nonempty agents) (φ : form
 lemma Ef_liveness {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
   ∀ s : (S_f ha φ), ∀ G : set agents, ∅ ∉ (E_f ha φ s G) := 
 begin
-  -- 1.1. First we note that  ̃φ∅ =  ̃⊥ = ∅.
-  have hempty : (tilde ha (phi_X_set ha φ ∅)) = ∅, from
-  begin
-    -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
-    simp[phi_X_set, phi_X_finset, phi_X_list, finite_disjunction, tilde],
-    -- 1.1.2.  ̃⊥ = ∅, because all s ∈ S are consistent.
-    simp[eq_empty_iff_forall_not_mem],
-    intro s,
-    apply bot_not_mem_of_ax_consistent s.1 s.2.1,
-  end,
   -- 1.2. Assume by contradiction ∅ ∈ Ef (sf )(G).
   intros sf G hf,
-  cases (em (G = univ)),
+  unfold E_f at hf,
+  split_ifs at hf with h h,
   -- 1.4. Case: G = N
   { -- 1.4.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N), from 1.2, by definition Ef .
     simp[h] at hf,
     -- 1.4.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N), from 1.4.1 & 1.1.
-    simp [E_f, hempty] at hf,
     cases hf with t hf,
     -- 1.4.3. ∀t, ∅ ∉ E(t)(N) because E(t) is live.
     have hlive := (canonical_model_CLC ha).f.E.liveness t univ,
@@ -461,9 +523,8 @@ begin
     exact hlive hf.right, },
   -- 1.3. Case: G ≠ N
   { -- 1.3.1. ∀t ∈ S, sf = tf ⇒  ̃φ∅ ∈ E(t)(G), from 1.2, by definition Ef
-    simp[E_f, h] at hf,
     -- 1.3.2. ∀t ∈ S, sf = tf ⇒ ∅ ∈ E(t)(G), from 1.3.1 & 1.1
-    rw hempty at hf,
+    simp[E_f, h] at hf,
     -- 1.3.3. ∅ ∈ E(s)(G), from 1.3.2
     cases (s_f_to_s ha φ sf) with s hs,
     specialize hf s hs,
@@ -477,17 +538,6 @@ end
 lemma Ef_safety {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
   ∀ (s : S_f ha φ) (G : set agents), univ ∈ E_f ha φ s G :=
 begin
-  -- 2.1. First we note that  ̃φSf =  ̃⊤ = S
-  have huniv : (tilde ha (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states), from
-  begin
-    simp[tilde],
-    ext1,
-    refine iff_of_true _ trivial,
-    simp,
-    apply max_ax_contains_by_empty_proof x.2,
-    apply univ_disjunct_provability,
-    exact nonempty_S_f ha φ,
-  end,
   -- 2.2. Additionally, because E(s) is safe for all s ∈ S, ∀G ⊆ N, S ∈ E(s)(G).
   have hsafe := (canonical_model_CLC ha).f.E.safety,
   -- 2.4. Case: G = N
@@ -495,7 +545,7 @@ begin
   { -- 2.4.1. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and  ̃φSf ∈ E(t)(N ), by definition Ef .
     simp[hG] at *,
     -- 2.4.2. Sf ∈ Ef (sf )(N ) iff ∃t ∈ S, sf = tf and S ∈ E(t)(N ), from 2.1 & 2.4.1.
-    simp[E_f, huniv],
+    simp[E_f],
     -- 2.4.3. ∃t ∈ S, sf = tf and S ∈ E(t)(N ), when t = s, because sf = sf and S ∈ E(s)(N ), from 2.2.
     cases (s_f_to_s ha φ sf) with s hs,
     apply exists.intro s,
@@ -506,9 +556,8 @@ begin
     apply hsafe, },
   -- 2.3. Case: G ≠ N
   { -- 2.3.1. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒  ̃φSf ∈ E(t)(G), by definition Ef .
-    simp[E_f, hG] at *,
     -- 2.3.2. Sf ∈ Ef (sf )(G) iff ∀t ∈ S, sf = tf ⇒ S ∈ E(t)(G), from 2.1 & 2.3.1.
-    simp[huniv],
+    simp[E_f, hG] at *,
     -- 2.3.3. Sf ∈ Ef (sf )(G), from 2.2 & 2.3.2
     intros t ht,
     apply hsafe, }, 
@@ -521,17 +570,11 @@ begin
   -- 3.1. Assume some X ⊆ Sf such that Xᶜ ∉ Ef(sf)(∅).
   intros sf X hXc,
   -- 3.2. ¬(Xᶜ ∈ Ef sf ∅), from 3.1.
-  simp[E_f] at *,
   -- 3.3. ¬(∀t ∈ S, sf = tf ⇒ ~φXᶜ ∈ E(t)(∅)), from 3.2, by definition Ef . 
   -- 3.4. ∃t ∈ S, sf = tf and ~φXᶜ ∉ E(t)(∅)), from 3.3, by first order logic. 
-  have hempty_ne_univ : (∅ : set (agents)) ≠ (univ : set (agents)), from empty_ne_univ,
-  simp[@empty_ne_univ agents ha] at *, -- clear hempty_ne_univ,
-  cases hXc with t ht,
-  cases ht with ht hXc,
-  apply exists.intro t,
-  split, 
-  { exact ht, },
-  -- 3.5. Note that ⊢ φXᶜ ↔ ¬φX , from Lemma 4 and Lemma 5.
+  simp[E_f, empty_ne_univ] at *,
+  obtain ⟨t, ht, hXc⟩ := hXc,
+  refine ⟨t, ht, _⟩,
   { 
     have h_tilde: tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) = 
       tilde ha (phi_X_set ha φ Xᶜ), from
@@ -547,6 +590,8 @@ begin
       { intro hu,
         simp at *,
         apply max_ax_contains_by_set_proof u.2 hu,
+        unfold phi_X_set phi_X_finset phi_X_list,
+        apply unique_s_f,
         sorry,
       }
     end,
@@ -949,44 +994,37 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
 -- end
 
 
-
-
 ----------------------------------------------------------
 -- Completeness
 ----------------------------------------------------------
 
 -- Completeness
 ----------------------------------------------------------
--- theorem completenessCLC (φ : formCLC agents) (ha : nonempty agents) : 
---   global_valid φ → axCLC φ :=
--- begin
---   -- rw from contrapositive
---   rw ←not_imp_not, 
---   -- assume ¬ ⊢ φ
---   intro hnax,
---   -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
---   have hax := @comphelper agents (formCLC agents) formulaCLC φ (nprfalseCLC ha) hnax,
---   -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
---   have hmax := lindenbaum {¬φ} hax,
---   simp at *, 
---   cases hmax with s hmax, 
---   cases hmax with hmax hnφ,
---   -- show that φ is not globally valid, 
---   -- by showing that there exists some model where φ is not valid.
---   simp[global_valid],
---   -- let that model be the canonical model
---   apply exists.intro (canonical_model_CLK ha),
---   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
---   simp[valid_m],
---   -- let that state (s) be the maximally consistent set extended from {¬ φ}
---   apply exists.intro (subtype.mk s hmax),
---   -- assume by contradiction that M s ⊨ φ
---   intro hf,
---   -- by the truth lemma φ ∈ s
---   have hφ, from (truth_lemma_CL ha φ (subtype.mk s hmax)).mp hf,
---   -- in that state (s), φ ∈ s, so we do not have ¬ φ ∈ s (by consistency)
---   -- contradiction with hnφ
---   apply contra_containts_pr_false hmax hφ hnφ,
--- end
+theorem completenessCLC {agents : Type} [h : fintype agents] (φ : formCLC agents) (ha : nonempty agents) : 
+  global_valid φ → axCLC φ :=
+begin
+  -- rw from contrapositive
+  rw ←not_imp_not, 
+  -- assume ¬ ⊢ φ
+  intro hnax,
+  -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
+  obtain ⟨s, hmax, hnφ⟩ := @exists_max_ax_consistent_neg_mem (formCLC agents) _ _ hnax,
+  -- show that φ is not globally valid, 
+  -- by showing that there exists some model where φ is not valid.
+  simp[global_valid],
+  -- let that model be the canonical model
+  apply exists.intro (canonical_model_CLC ha),
+  -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
+  simp[valid_m],
+  -- let that state (s) be the maximally consistent set extended from {¬ φ}
+  apply exists.intro (subtype.mk s hmax),
+  -- assume by contradiction that M s ⊨ φ
+  intro hf,
+  -- by the truth lemma φ ∈ s
+  have hφ, from (truth_lemma_CLC ha φ (subtype.mk s hmax)).mp hf,
+  -- in that state (s), φ ∈ s, so we do not have ¬ φ ∈ s (by consistency)
+  -- contradiction with hnφ
+  apply contra_containts_pr_false hmax hφ hnφ,
+end
 
 end canonical

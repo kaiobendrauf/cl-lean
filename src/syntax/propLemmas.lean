@@ -641,11 +641,10 @@ begin
   },
 end
 
+-- I don't think this is true: let `fs = [φ]`, `gs = [¬ φ]`
 lemma imp_finite_disjunction_int {form : Type} [ft : formula form] 
   (fs : list (form)) (gs : list (form)) :
   ax (finite_disjunction fs →' finite_disjunction gs →' finite_disjunction (fs ∩ gs)) :=
 begin
-
   sorry,
 end
-

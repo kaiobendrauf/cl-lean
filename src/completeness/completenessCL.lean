@@ -1,6 +1,7 @@
 import soundness.soundnessCL
 import completeness.canonicalCL
 import syntax.axiomsCL
+import syntax.consistency_lemmas
 import tactic.induction
 
 local attribute [instance] classical.prop_decidable
@@ -200,15 +201,11 @@ begin
   -- rw from contrapositive
   rw ←not_imp_not, 
   -- assume ¬ ⊢ φ
-  intro hnax,
+  rintro (hnax : ¬ ax φ),
   -- from ¬ ⊢ φ, have that {¬ φ} is a consistent set
-  have hax := @comphelper agents (formCL agents) formulaCL φ (nprfalseCL ha) hnax,
   -- with Lindenbaum, extend {¬ φ} into a maximally consistent set
-  have hmax := lindenbaum {¬φ} hax,
-  simp at *, 
-  cases hmax with s hmax, 
-  cases hmax with hmax hnφ,
-  -- show that φ is not globally valid, 
+  obtain ⟨s, hmax, hnφ⟩ := exists_max_ax_consistent_neg_mem hnax,
+  -- show that φ is not globally valid,
   -- by showing that there exists some model where φ is not valid.
   simp[global_valid],
   -- let that model be the canonical model

@@ -42,7 +42,7 @@ infix    `∧'` : 80         := formula.and
 infix    `↔'` : 80         := formula.iff
 notation `¬'` : 80         := formula.not
 notation `⊤'` : 80         := formula.top
-notation `⊥'` : 80         := ¬' ⊤'
+notation `⊥'` : 80         := formula.bot -- ¬' ⊤'
 infix    `∨'` : 80         := λ φ ψ, (¬' φ) →' ψ
 
 
