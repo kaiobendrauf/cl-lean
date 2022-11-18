@@ -138,6 +138,26 @@ begin
   exact not_bot,
 end
 
+lemma iff_dne {form : Type} [ft : formula form] {φ : form} : 
+  ax (((¬' (¬' φ)) →' φ) ∧' (φ →' (¬' (¬' φ)))) :=
+begin
+  apply mp,
+  apply mp,
+  apply p4,
+  exact dne,
+  exact dni,
+end
+
+lemma iff_dni {form : Type} [ft : formula form] {φ : form} : 
+  ax ((φ →' (¬' (¬' φ))) ∧' ((¬' (¬' φ)) →' φ)) :=
+begin
+  apply mp,
+  apply mp,
+  apply p4,
+  exact dni,
+  exact dne,
+end
+
 lemma imp_if_imp_imp {form : Type} [ft : formula form] {φ ψ χ : form} : 
 -- ⊢ (φ → χ) ⇒  ⊢ φ → (ψ → χ)
   ax (φ →' χ) → ax (φ →' (ψ →' χ)) :=

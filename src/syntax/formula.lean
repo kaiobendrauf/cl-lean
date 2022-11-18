@@ -84,11 +84,11 @@ notation `K'` : 80         := Kformula.knows
 notation `E'` : 80         := Kformula.everyone_knows
 
 class Cformula (agents : out_param Type) (form : Type) [formula form] [Kformula agents form]:=
-(common_know :  set (agents) → form → form)
+(common_know : (set (agents)) → form → form)
 (C : ∀ φ: form, ∀ G: set (agents), ax ((common_know G φ) →' (E' G (φ ∧' (common_know G φ)))))
 (RC : ∀ φ ψ : form, ∀ G : set (agents), ax (ψ →' (E' G (φ ∧' ψ))) → ax (ψ →' (common_know G φ)))
 
 def C  {agents : Type} {form : Type} [ft : formula form] [kf : Kformula agents form] [cf : Cformula agents form] := cf.C
 def RC {agents : Type} {form : Type} [ft : formula form] [kf : Kformula agents form] [cf : Cformula agents form] := cf.RC
 
-prefix `C'` : 80 := Cformula.common_know
+notation `C'` : 80 := Cformula.common_know
