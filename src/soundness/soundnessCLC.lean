@@ -10,7 +10,7 @@ open set list
 
 ---------------------- Soundness ----------------------
 
-theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
+theorem soundnessCLC {agents: Type} (φ : formCLC agents) : 
   axCLC φ → global_valid φ :=
 begin
   intro h,
@@ -190,7 +190,7 @@ begin
         specialize ih m s hs i his.left t hC,
         exact ih.left, },
       { simp[C_path] at *,
-        specialize @ih_is hN φ φ_1 G h ih m u,
+        specialize ih_is h ih m u,
         apply ih_is,
         { apply and.elim_right,
           apply ih m s hs i his.left u hC.left, },
@@ -203,7 +203,6 @@ end
 
 inductive single : Type
   | one: single
-
 
 lemma univ_single : (set.univ: set single) = {single.one} := 
 begin
@@ -290,8 +289,8 @@ def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK
     end, },
   v := λ _, {}, }
 
-lemma nprfalseCLC {agents : Type} [hN : fintype agents] (ha : nonempty agents):
-  ¬ (@axCLC agents hN (formCLC.bot)) :=
+lemma nprfalseCLC {agents : Type} [hN : fintype agents] (ha : nonempty agents) :
+  ¬ (axCLC (formCLC.bot : formCLC agents )) :=
 begin
   apply (mt (soundnessCLC (@formCLC.bot agents))),
   intro hf ,

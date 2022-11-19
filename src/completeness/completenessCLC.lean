@@ -2,7 +2,7 @@ import soundness.soundnessCLC
 import completeness.canonicalCL
 import syntax.axiomsCLC
 import syntax.consistency_lemmas
-import syntax.CLClemmas
+-- import syntax.CLClemmas
 import tactic.induction
 import data.finset.powerset
 
@@ -35,21 +35,26 @@ def canonical_model_CLC {agents : Type} [hN : fintype agents] (ha : nonempty age
 
 noncomputable def cl_C {agents : Type} [hN : fintype agents] (G : set (agents)) (φ : formCLC agents) : 
   finset (formCLC agents) :=
-finset.image (λ i, k (i) (c G φ)) (to_finset G)
+finset.image (λ i, k (i) (c G φ)) (to_finset G) ∪ finset.image (λ i, (¬ k (i) (c G φ))) (to_finset G)
 
-def E_list_to_form {agents : Type} (φ : formCLC agents) : 
-  list (agents) → formCLC agents
-| list.nil  := ⊤
-| (i :: is) := (k i φ) & (E_list_to_form is)
+-- def E_list_to_form {agents : Type} (φ : formCLC agents) : 
+--   list (agents) → formCLC agents
+-- | list.nil  := ⊤
+-- | (i :: is) := (k i φ) & (E_list_to_form is)
+
+-- def cl_E_list {agents : Type} (φ : formCLC agents) : 
+--   list (agents) → set (formCLC agents)
+-- | list.nil  := ∅ 
+-- | (i :: is) := {(k i φ), (¬ (k i φ))} ∪ (cl_E_list is)
 
 noncomputable def cl_E {agents : Type} [hN : fintype agents] (G : set (agents)) (φ : formCLC agents) : 
-  formCLC agents := 
-E_list_to_form φ (finset.to_list (to_finset G))
+  finset (formCLC agents) := 
+finset.image (λ i, k i φ) (to_finset G) ∪ finset.image (λ i, (¬ (k i φ))) (to_finset G)
 
-noncomputable def cl_imp {agents : Type} : 
-  formCLC agents → formCLC agents → finset (formCLC agents)
-| φ bot  := {(imp φ bot)}
-| φ ψ    := {(imp φ ψ), ¬ (imp φ ψ)} 
+-- noncomputable def cl_imp {agents : Type} : 
+--   formCLC agents → formCLC agents → finset (formCLC agents)
+-- | φ bot  := {(imp φ bot)}
+-- | φ ψ    := {(imp φ ψ), ¬ (imp φ ψ)} 
 
 noncomputable def cl {agents : Type} [hN : fintype agents] : 
   formCLC agents → finset (formCLC agents)
@@ -61,7 +66,7 @@ noncomputable def cl {agents : Type} [hN : fintype agents] :
                     (ite (G = ∅) (finset.empty : finset (formCLC agents)) 
                          ({(c (G) ([G] φ)), ¬(c (G) ([G] φ))} ∪ cl_C G ([G] φ)))
 | (k i φ)       := cl φ ∪ {(k i φ), ¬ (k i φ)}
-| (e G φ)       := cl φ ∪ {(e G φ), ¬ (e G φ), cl_E G φ }
+| (e G φ)       := cl φ ∪ {(e G φ), ¬ (e G φ)} ∪ (cl_E G φ)
 | (c G φ)       := cl φ ∪ {(c G φ), ¬ (c G φ)} ∪ cl_C G φ
 
 
@@ -135,42 +140,24 @@ lemma cl_closed_single_neg {agents : Type} [hN : fintype agents]
   ∃ ψ, (ψ ∈ cl φ ∧ axCLC (ψ ↔ (¬ x))) :=
 begin
   induction φ,
-  { unfold cl at *,
-    rw finset.mem_insert at hx,
+  repeat 
+    {unfold cl at *,
+    simp at hx,
     cases hx,
-    { simp [hx] at *,
-      apply exists.intro (¬ bot),
-      simp,
-      exact @iff_iden' (formCLC agents) _ _, },
-    { simp at hx,
+    { apply exists.intro (¬ x),
+      simp [hx] at *,
+      exact @iff_iden' (formCLC agents) _ _, },},
+  { { apply exists.intro (bot),
       simp[hx] at *,
-      apply exists.intro (bot),
-      simp,
       apply axCLC.MP,
       apply axCLC.MP,
       apply axCLC.Prop4,
       exact @dni (formCLC agents) _ _,
       exact @nnn_bot (formCLC agents) _, }, },
-  { unfold cl at *,
-    rw finset.mem_insert at hx,
-    cases hx,
-    { simp [hx] at *,
-      apply exists.intro (¬ var φ),
-      simp,
-      exact @iff_iden' (formCLC agents) _ _, },
-    { simp at hx,
+  { { apply exists.intro (var φ),
       simp[hx] at *,
-      apply exists.intro (var φ),
-      simp,
       exact @iff_dni (formCLC agents) _ _, }, },
-  { unfold cl at *,
-    simp at hx,
-    cases hx,
-    { simp [hx] at *,
-      apply exists.intro (¬ (φ_φ & φ_ψ)),
-      simp,
-      exact @iff_iden' (formCLC agents) _ _, },
-    cases hx,
+  { cases hx,
     { specialize φ_ih_φ hx,
       cases φ_ih_φ with ψ hψ,
       apply exists.intro ψ,
@@ -227,13 +214,7 @@ begin
         { apply exists.intro (φ_φ ~> φ_ψ),
           simp[hx],
           exact @iff_dni (formCLC agents) _ _, }, }, }, },
-  { unfold cl at *,
-    simp at hx,
-    cases hx,
-    { apply exists.intro (¬ ([φ_G] φ_φ)),
-      simp[hx],
-      exact @iff_iden' (formCLC agents) _ _, },
-    cases hx,
+  { cases hx,
     { specialize φ_ih hx,
       cases φ_ih with ψ hψ,
       apply exists.intro ψ,
@@ -256,23 +237,79 @@ begin
         simp[hx],
         exact @iff_iden' (formCLC agents) _ _, },
       cases hx,
-      { apply exists.intro ((c φ_G ([φ_G]φ_φ))),
+      { apply exists.intro (c φ_G ([φ_G]φ_φ)),
         simp[hx],
         exact @iff_dni (formCLC agents) _ _, },
       { unfold cl_C at *,
         simp at hx,
-        cases hx with i hi,
-        apply exists.intro (¬ c φ_G ([φ_G]φ_φ)),
-        simp[←hi.right],
-        apply axCLC.MP,
-        apply axCLC.MP,
-        apply axCLC.Prop4,
-        apply @n_imp_nk _ (formCLC agents) _ _ _ _ _ _,
-        sorry,
-      },
-    },
-  },
-  repeat { sorry },
+        cases hx, 
+        { cases hx with i hi,
+          apply exists.intro (¬ k i (c φ_G ([φ_G]φ_φ))),
+          simp[hi.left, ←hi.right],
+          exact @iff_iden' (formCLC agents) _ _, },
+        { cases hx with i hi,
+          apply exists.intro (k i (c φ_G ([φ_G]φ_φ))),
+          simp[hi.left, ←hi.right],
+          exact @iff_dni (formCLC agents) _ _, }, }, }, },
+  { cases hx,
+    { specialize φ_ih hx,
+      cases φ_ih with ψ hψ,
+      apply exists.intro ψ,
+      split,
+      apply finset.mem_union_left,
+      exact hψ.1,
+      exact hψ.2, },
+    { apply exists.intro (k φ_a φ_φ),
+      simp[hx],
+      exact @iff_dni (formCLC agents) _ _, }, },
+  { cases hx,
+    { specialize φ_ih hx,
+      cases φ_ih with ψ hψ,
+      apply exists.intro ψ,
+      split,
+      apply finset.mem_union_left,
+      apply finset.mem_union_left,
+      exact hψ.1,
+      exact hψ.2, },
+    cases hx,
+    { apply exists.intro ((e φ_G (φ_φ))),
+      simp[hx],
+      exact @iff_dni (formCLC agents) _ _, },
+    { unfold cl_E at *,
+      simp at hx,
+      cases hx,
+      { cases hx with i hi,
+        apply exists.intro (¬ k i φ_φ),
+        simp[hi.left, ←hi.right],
+        exact @iff_iden' (formCLC agents) _ _, },
+      { cases hx with i hi,
+        apply exists.intro (k i φ_φ),
+        simp[hi.left, ←hi.right],
+        exact @iff_dni (formCLC agents) _ _, }, }, },
+  { cases hx,
+    { specialize φ_ih hx,
+      cases φ_ih with ψ hψ,
+      apply exists.intro ψ,
+      split,
+      apply finset.mem_union_left,
+      apply finset.mem_union_left,
+      exact hψ.1,
+      exact hψ.2, },
+    cases hx,
+    { apply exists.intro ((c φ_G (φ_φ))),
+      simp[hx],
+      exact @iff_dni (formCLC agents) _ _, },
+    { unfold cl_C at *,
+      simp at hx,
+      cases hx,
+      { cases hx with i hi,
+        apply exists.intro (¬ k i (c φ_G φ_φ)),
+        simp[hi.left, ←hi.right],
+        exact @iff_iden' (formCLC agents) _ _, },
+      { cases hx with i hi,
+        apply exists.intro (k i (c φ_G φ_φ)),
+        simp[hi.left, ←hi.right],
+        exact @iff_dni (formCLC agents) _ _, }, }, },
 end
 
 ----------------------------------------------------------
@@ -401,8 +438,7 @@ def tilde {agents : Type} [hN : fintype agents] (ha : nonempty agents) (ψ : for
 -- phi sf
 ----------------------------------------------------------
 noncomputable def phi_s_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
-  (φ : formCLC agents) (sf : S_f ha φ) :
-  formCLC agents :=
+  (φ : formCLC agents) (sf : S_f ha φ) : formCLC agents :=
 finite_conjunction (finset.to_list (sf.1.1))
 
 -- phi sf ∈ s
@@ -648,6 +684,71 @@ end
 -/
 
 -- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
+lemma unique_s_f_helper {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
+  (fs gs : list (formCLC agents)) (x y : formCLC agents) (hax : axCLC (x ↔' ¬' y)) 
+  (hx : x ∈ fs ∨ x ∈ gs) (hy : y ∈ fs ∨ y ∈ gs) :
+  axCLC (¬ ((finite_conjunction fs) & (finite_conjunction gs))) :=
+begin
+  have hneq : x ≠ y, from
+  begin
+    by_contradiction,
+    sorry,
+  end,
+  induction fs,
+  -- { simp at *,
+  --   apply @cut (formCLC agents) _ _,
+  --   apply @iff_l (formCLC agents) _ _,
+  --   apply @true_and_phi (formCLC agents) _ _,
+  --   induction gs,
+  --   { finish, },
+  --   { cases hx,
+
+  --   }
+
+  -- }
+  { induction gs with g gs gih,
+    { tauto, },
+    { simp at *,
+      apply @cut (formCLC agents) _ _,
+      apply @iff_l (formCLC agents) _ _,
+      apply @true_and_phi (formCLC agents) _ _,
+      cases hx,
+      { cases hy,
+        { rw [←hy] at hx,
+          by_contradiction,
+          exact hneq hx, },
+        { induction gs with g' gs gih',
+          { finish, },
+          { cases hy, 
+            { simp[←hx, ←hy] at *,
+              apply cut,
+              apply iff_r,
+              apply and_commute,
+              apply imp_and_l,
+
+              have hjbk := not_and_subst,
+
+
+
+            }
+
+          }
+
+        }
+
+      },
+      {
+
+      }
+
+
+
+    }
+    simp at *,
+
+  }
+end
+
 lemma unique_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
   {φ : formCLC agents} (sf  tf : (S_f ha φ)) (hneq : sf ≠ tf) :
   ax (phi_s_f ha φ sf →' ¬' (phi_s_f ha φ tf)) :=
@@ -683,6 +784,7 @@ begin
     cases hun with h h,
     repeat { exact finset.subset_iff.mp (s_f_subset_cl ha φ _) h, },
   end,
+
   have hs := s_f_to_s ha φ sf, cases hs with s hs, simp at hs,
   have ht := s_f_to_s ha φ tf, cases ht with t ht, simp at ht,
   have hst : x ∉ s.1 ∨ x ∉ t.1, from
@@ -711,21 +813,54 @@ begin
   -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
   have hψ := cl_closed_single_neg φ x hx,
   cases hψ with ψ hψ,
-  have hψax := hψ.2,
-  simp at hψax,
   -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
   have hst : ((ψ) ∈ s.1) ∨ ((ψ) ∈ t.1), from
   begin
     cases hst with hnx hnx,
     { apply or.intro_left,
       apply max_ax_contains_by_set_proof s.2 hnx,
-      
-
-    }
-    apply max_ax_contains_by_set_proof s.2,
+      apply @iff_r (formCLC agents) _ _,
+      exact hψ.2, },
+    { apply or.intro_right,
+      apply max_ax_contains_by_set_proof t.2 hnx,
+      apply @iff_r (formCLC agents) _ _,
+      exact hψ.2, },
   end,
   -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+  have hst : ((ψ) ∈ sf.1.1.1) ∨ ((ψ) ∈ tf.1.1.1), from
+  begin
+    rw ext_iff at hs ht,
+    cases hst with hsf htf,
+    { apply or.intro_left,
+      apply (hs ψ).mp,
+      exact mem_sep hsf hψ.1, },
+    { apply or.intro_right,
+      apply (ht ψ).mp,
+      exact mem_sep htf hψ.1, },
+  end,
   -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
+  have haxf : axCLC (¬' (phi_s_f ha φ sf ∧' phi_s_f ha φ tf)), from
+  begin
+    simp at *,
+    cases hst with hsf htf,
+    { cases hun with hsfx htfx,
+      { simp[phi_s_f],
+        have hxl := (finset.mem_to_list sf.1.1).mpr hsfx,
+        simp at hxl,
+        induction (sf.1.1).to_list,
+        { simp[finite_conjunction],
+
+        }
+
+
+      },
+      {
+
+      },
+
+    }
+    sorry,
+  end,
   -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
   
   sorry,
@@ -1102,7 +1237,7 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
 
 --     { -- ⊢ [N]φ ↔ ¬[∅]¬φ
 --       have hempty : axCLC (([univ]φ) ↔ ¬([∅](¬φ))), from 
---         @univ_iff_empty agents (formCLC agents) _ _ _,
+--         @univ_iff_empty agents (formCLC agents) _ _,
 --       simp [hG] at *, clear hG,
 
 --       split,

@@ -381,6 +381,15 @@ begin
     (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
 end
 
+lemma true_and_phi {form : Type} [ft : formula form] {φ : form} : 
+-- ⊢  (⊤ ∧ φ) ↔' φ 
+  ax (((¬' ft.bot) ∧' φ) ↔' φ) :=
+begin
+  rw formula.iffdef at *,
+  exact mp _ _(mp _ _ (p4 _ _) (cut (iff_l and_switch) (iff_l phi_and_true))) 
+    (mp _ _ (p4 _ _) not_bot),
+end
+
 lemma contra_imp_imp_false' {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ φ → ¬ φ → ⊥
   ax ((φ) →' (¬' φ →' ft.bot)) :=
