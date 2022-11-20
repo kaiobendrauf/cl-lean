@@ -1,4 +1,5 @@
 import syntax.consistency
+import tactic.induction
 
 -- Motivation: easier to prove Lean's `and` than in `ax`
 @[simp] lemma ax_and {form : Type} [ft : formula form] {φ ψ : form} :
@@ -77,6 +78,49 @@ end
 lemma consistent_of_not_ax {form : Type} [ft : formula form] {φ : form}
   (hφ : ¬ ax φ) : ¬ ax (⊥' : form) :=
 mt (mp _ _ ax_bot_elim) hφ
+
+lemma contra_con_cons {form : Type} [ft : formula form] (fs gs : list (form)) (x y : form) 
+  (hax : ax (y ↔' ¬' x)) (hx : x ∈ fs) (hy : y ∈ gs) :
+  ax (¬' ((finite_conjunction fs) ∧'  (finite_conjunction gs))) :=
+begin
+  induction' fs with f fs ihf,
+  { finish, },
+  { induction gs with g gs ihg,
+    { finish, },
+    { cases hx,
+      { cases hy,
+        { rw[←hx, ←hy],
+          simp[finite_conjunction],
+          rw ft.notdef,
+          apply cut (iff_r and_commute),
+          apply imp_and_l,
+          apply cut (iff_l and_switch),
+          apply cut (iff_r and_commute),
+          apply imp_and_l,
+          -- apply cut (iff_l and_switch),
+          rw ←contra_iff_false_ax_not,
+          rw demorgans,
+          apply iff_l,
+          exact hax, },
+        { simp[finite_conjunction],
+          rw ft.notdef,
+          apply cut (iff_r and_commute),
+          apply cut (iff_l and_switch),
+          apply cut (iff_r and_commute),
+          apply imp_and_l,
+          apply cut (iff_l and_switch),
+          rw ←contra_iff_false_ax_not,
+          apply ihg hy, }, },
+      { rw ft.notdef,
+        apply cut (iff_l and_switch),
+        apply cut (iff_r and_commute),
+        apply cut (iff_l and_switch),
+        apply cut (iff_r and_commute),
+        apply imp_and_l,
+        specialize @ihf ft (g :: gs) x y hax hy hx,
+        rw ft.notdef at ihf,
+        exact ihf, }, }, },
+end
 
 /-- A singleton set is consistent iff the theory is consistent and the formula is not disprovable.
 -/

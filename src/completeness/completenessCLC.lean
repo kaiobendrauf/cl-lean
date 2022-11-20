@@ -69,63 +69,6 @@ noncomputable def cl {agents : Type} [hN : fintype agents] :
 | (e G φ)       := cl φ ∪ {(e G φ), ¬ (e G φ)} ∪ (cl_E G φ)
 | (c G φ)       := cl φ ∪ {(c G φ), ¬ (c G φ)} ∪ cl_C G φ
 
-
--- lemma cl_closed_single_neg_helper {agents : Type} [hN : fintype agents] (φ : formCLC agents) :
---   ∃ ψ, (ψ ∈ cl φ ∧ axCLC (ψ ↔ (¬ φ))) :=
--- begin
---   cases φ,
---   { unfold cl at *,
---     -- rw finset.mem_insert at hx ,
---     apply exists.intro (¬ bot),
---     split, simp,
---     simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- rw finset.mem_insert at hx,
---     apply exists.intro (¬ var φ),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- simp at hx,
---     apply exists.intro (¬ (φ_φ & φ_ψ)),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- split_ifs at hx,
---     { simp[h] at *,
---       apply exists.intro φ_φ, 
---       split, simp,
---       apply axCLC.MP,
---       apply axCLC.MP,
---       apply axCLC.Prop4,
---       exact @dni (formCLC agents) _ _,
---       exact @dne (formCLC agents) _ _, },
---     { simp[h] at *,
---       apply exists.intro (¬ (φ_φ ~> φ_ψ)),
---       split, simp,
---       exact @iff_iden' (formCLC agents) _ _, }, },
---   { unfold cl at *,
---     -- simp at hx,
---     apply exists.intro (¬ ([G] φ)),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- simp at hx,
---     apply exists.intro (¬ (k a φ)),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- simp at hx,
---     apply exists.intro (¬ (e G φ)),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
---   { unfold cl at *,
---     -- simp at hx,
---     apply exists.intro (¬ (c G φ)),
---     split, simp,
---     exact @iff_iden' (formCLC agents) _ _, },
--- end
-
 lemma cl_contains_phi {agents : Type} [hN : fintype agents] (φ : formCLC agents) :
   φ ∈ cl φ :=
 begin
@@ -684,69 +627,48 @@ end
 -/
 
 -- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
-lemma unique_s_f_helper {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
-  (fs gs : list (formCLC agents)) (x y : formCLC agents) (hax : axCLC (x ↔' ¬' y)) 
-  (hx : x ∈ fs ∨ x ∈ gs) (hy : y ∈ fs ∨ y ∈ gs) :
-  axCLC (¬ ((finite_conjunction fs) & (finite_conjunction gs))) :=
+lemma unique_s_f_helper {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
+  {φ x : formCLC agents} (sf  tf : (S_f ha φ)) (hxf : x ∈ sf.1.1) (hnf : x ∉ tf.1.1) :
+  axCLC (¬' (phi_s_f ha φ sf∧'phi_s_f ha φ tf)) := 
 begin
-  have hneq : x ≠ y, from
+  -- 6. χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
+  have hx : x ∈ cl φ, 
+    from finset.subset_iff.mp (s_f_subset_cl ha φ _) hxf,
+
+  have hs := s_f_to_s ha φ sf, cases hs with s hs, simp at hs,
+  have ht := s_f_to_s ha φ tf, cases ht with t ht, simp at ht,
+  have hn : x ∉ t.1, from
   begin
-    by_contradiction,
-    sorry,
+      by_contradiction hf,
+      apply hnf,
+      apply (ext_iff.mp ht x).mp,
+      exact mem_inter hf hx, 
   end,
-  induction fs,
-  -- { simp at *,
-  --   apply @cut (formCLC agents) _ _,
-  --   apply @iff_l (formCLC agents) _ _,
-  --   apply @true_and_phi (formCLC agents) _ _,
-  --   induction gs,
-  --   { finish, },
-  --   { cases hx,
-
-  --   }
-
-  -- }
-  { induction gs with g gs gih,
-    { tauto, },
-    { simp at *,
-      apply @cut (formCLC agents) _ _,
-      apply @iff_l (formCLC agents) _ _,
-      apply @true_and_phi (formCLC agents) _ _,
-      cases hx,
-      { cases hy,
-        { rw [←hy] at hx,
-          by_contradiction,
-          exact hneq hx, },
-        { induction gs with g' gs gih',
-          { finish, },
-          { cases hy, 
-            { simp[←hx, ←hy] at *,
-              apply cut,
-              apply iff_r,
-              apply and_commute,
-              apply imp_and_l,
-
-              have hjbk := not_and_subst,
-
-
-
-            }
-
-          }
-
-        }
-
-      },
-      {
-
-      }
-
-
-
-    }
-    simp at *,
-
-  }
+  -- 7. ¬χ ∈ t, from 6, because s and t are maximally consistent.
+  have hnx : ((¬' x) ∈ t.1) := not_in_from_notin t.2 hn,
+  -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+  have hψ := cl_closed_single_neg φ x hx,
+  cases hψ with ψ hψ,
+  -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
+  have hst : ((ψ) ∈ t.1), from
+  begin
+    apply max_ax_contains_by_set_proof t.2 hnx,
+    apply @iff_r (formCLC agents) _ _,
+    exact hψ.2,
+  end,
+  -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+  have hst : ((ψ) ∈ tf.1.1.1), from
+  begin
+    rw ext_iff at ht,
+    apply (ht ψ).mp,
+    exact mem_sep hst hψ.1,
+  end,
+  -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
+  simp[phi_s_f],
+  apply @contra_con_cons (formCLC agents) _ _,
+  exact hψ.2,
+  exact (sf.1.1).mem_to_list.mpr hxf,
+  exact (tf.1.1).mem_to_list.mpr hst,
 end
 
 lemma unique_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
@@ -777,95 +699,19 @@ begin
       rcases this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
         use x;
         simp only [finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true, true_and] },
-  -- 6. χ /∈ s ∨ χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
   rw finset.mem_union at hun,
-  have hx : x ∈ cl φ, from 
-  begin
-    cases hun with h h,
-    repeat { exact finset.subset_iff.mp (s_f_subset_cl ha φ _) h, },
-  end,
 
-  have hs := s_f_to_s ha φ sf, cases hs with s hs, simp at hs,
-  have ht := s_f_to_s ha φ tf, cases ht with t ht, simp at ht,
-  have hst : x ∉ s.1 ∨ x ∉ t.1, from
-  begin
-    cases hneq' with h h,
-    { apply or.intro_left,
-      by_contradiction hf,
-      apply h,
-      apply (ext_iff.mp hs x).mp,
-      exact mem_inter hf hx, },
-    { apply or.intro_right,
-      by_contradiction hf,
-      apply h,
-      apply (ext_iff.mp ht x).mp,
-      exact mem_inter hf hx, },
-  end,
-  -- 7. ¬χ ∈ s ∨ ¬χ ∈ t, from 6, because s and t are maximally consistent.
-  have hst : ((¬' x) ∈ s.1) ∨ ((¬' x) ∈ t.1), from
-  begin
-    cases hst with h h,
-    { apply or.intro_left,
-      apply not_in_from_notin s.2 h,},
-    { apply or.intro_right,
-      apply not_in_from_notin t.2 h,},
-  end,
-  -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
-  have hψ := cl_closed_single_neg φ x hx,
-  cases hψ with ψ hψ,
-  -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
-  have hst : ((ψ) ∈ s.1) ∨ ((ψ) ∈ t.1), from
-  begin
-    cases hst with hnx hnx,
-    { apply or.intro_left,
-      apply max_ax_contains_by_set_proof s.2 hnx,
-      apply @iff_r (formCLC agents) _ _,
-      exact hψ.2, },
-    { apply or.intro_right,
-      apply max_ax_contains_by_set_proof t.2 hnx,
-      apply @iff_r (formCLC agents) _ _,
-      exact hψ.2, },
-  end,
-  -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
-  have hst : ((ψ) ∈ sf.1.1.1) ∨ ((ψ) ∈ tf.1.1.1), from
-  begin
-    rw ext_iff at hs ht,
-    cases hst with hsf htf,
-    { apply or.intro_left,
-      apply (hs ψ).mp,
-      exact mem_sep hsf hψ.1, },
-    { apply or.intro_right,
-      apply (ht ψ).mp,
-      exact mem_sep htf hψ.1, },
-  end,
-  -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
-  have haxf : axCLC (¬' (phi_s_f ha φ sf ∧' phi_s_f ha φ tf)), from
-  begin
-    simp at *,
-    cases hst with hsf htf,
-    { cases hun with hsfx htfx,
-      { simp[phi_s_f],
-        have hxl := (finset.mem_to_list sf.1.1).mpr hsfx,
-        simp at hxl,
-        induction (sf.1.1).to_list,
-        { simp[finite_conjunction],
-
-        }
-
-
-      },
-      {
-
-      },
-
-    }
-    sorry,
-  end,
+  -- 11. φsf ∧ φtf → ⊥, from helper  (6-10)
   -- 12. ⊥ ∈ u, by propositional logic, from 4 & 11, which contradicts the consistency of u.
-  
-  sorry,
-
- 
+  apply ax_neg_containts_pr_false u.2 hand,
+  cases hun with hxf hxf,
+  { cases hneq' with hnf hnf,
+    { finish, },
+    { apply unique_s_f_helper _ _ hxf hnf, }, },
+  { cases hneq' with hnf hnf,
+    { apply cut (iff_l and_switch),
+      apply unique_s_f_helper _ _ hxf hnf, },
+    { finish, }, },
 end
 
 ----------------------------------------------------------
