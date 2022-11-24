@@ -6,12 +6,14 @@ Authors : Paula Neeley
 
 import syntax.formula 
 import data.set.basic
+import tactic.induction
 local attribute [instance] classical.prop_decidable
 
 
 variables {agents : Type}
  
 ---------------------- Helper Lemmas ----------------------
+
 
 lemma MP' {form : Type} [ft : formula form] {φ ψ : form} 
 -- ⊢ φ ⇒  ⊢ φ → ψ ⇒  ⊢ ψ 
@@ -289,6 +291,18 @@ begin
   exact mp _ _ (p7 _ _) h1,
   intro h1,
   exact mp _ _ (cut (cut (mp _ _ hs1 dni) (mp _ _ hs2 dne)) (p7 _ _)) h1,
+end
+
+lemma contrapos' {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ (¬ ψ → ¬ φ) ↔ (φ → ψ)
+  ax (((¬' ψ) →' (¬' φ)) ↔' (φ →' ψ)) :=
+begin
+  simp [ft.iffdef],
+  apply mp,
+  apply mp,
+  apply p4,
+  { apply p7, },
+  { apply cut (cut (mp _ _ hs1 dni) (mp _ _ hs2 dne)) (p7 _ _),},
 end
 
 lemma iff_not {form : Type} [ft : formula form] {φ ψ : form} : 
@@ -656,10 +670,102 @@ begin
   exact contra_imp_imp_false,
 end
 
+-- Motivation: easier to prove Lean's `and` than in `ax`
+@[simp] lemma ax_and {form : Type} [ft : formula form] {φ ψ : form} :
+  ax (φ ∧' ψ) ↔ ax φ ∧ ax ψ :=
+⟨λ h, ⟨mp _ _ (p5 _ _) h, mp _ _ (p6 _ _) h⟩,
+ λ ⟨h1, h2⟩, mp _ _ (mp _ _ (p4 _ _) h1) h2⟩
+
+-- Motivation: corresponds to Lean's `iff.intro`
+@[simp] lemma ax_iff_intro {form : Type} [ft : formula form] {φ ψ : form}
+  (h1 : ax (φ →' ψ)) (h2 : ax (ψ →' φ)) : ax (φ ↔' ψ) :=
+begin
+  simp only [ft.iffdef, ax_and],
+  exact ⟨h1, h2⟩
+end
+
+-- Motivation: corresponds more or less to Lean's `imp_congr`
+@[simp] lemma ax_imp_congr_left {form : Type} [ft : formula form] {φ φ' ψ : form}
+  (hl : ax (φ ↔' φ')) : ax ((φ →' ψ) ↔' (φ' →' ψ)) :=
+ax_iff_intro
+  (mp _ _ (imp_switch hs1) (iff_r hl))
+  (mp _ _ (imp_switch hs1) (iff_l hl))
+
+/-- `φ` is provable iff `ψ` is, if it's provable `φ` and `ψ` are equivalent.
+
+If we have the deduction theorem, the converse is also true: formulas are provably equivalent iff
+their provability is equivalent. -/
+-- Motivation: allows rewriting after proving equivalence
+lemma ax_iff_mp {form : Type} [ft : formula form] {φ ψ : form} (hiff : ax (φ ↔' ψ)) :
+  ax φ ↔ ax ψ :=
+⟨mp _ _ (iff_l hiff), mp _ _ (iff_r hiff)⟩
+
+-- Motivation: for simplication in combination with `ax_iff_mp`
+@[simp] lemma ax_and_top_iff {form : Type} [ft : formula form] {φ : form} :
+  ax ((φ ∧' ⊤') ↔' φ) :=
+by simpa [ft.topdef, ft.notdef] using @phi_and_true _ _ φ
+
+-- Motivation: for simplication in combination with `ax_iff_mp`
+@[simp] lemma ax_top_imp_iff {form : Type} [ft : formula form] (φ : form) :
+  ax ((⊤' →' φ) ↔' φ) :=
+ax_iff_intro
+  (combS combI (combK prtrue)) -- λ h, h prtrue
+  (p1 _ _)
+
+  -- Motivation: for simplication in combination with `ax_iff_mp`
+@[simp] lemma ax_not_bot_imp_iff {form : Type} [ft : formula form] (φ : form) :
+  ax (((¬' ⊥' ) →' φ) ↔' φ) :=
+begin
+  have h := ax_top_imp_iff φ,
+  rw ft.topdef at h,
+  rw ft.notdef,
+  exact h,
+end
+
+-- Motivation: useful simplification lemma
+@[simp] lemma ax_top_imp {form : Type} [ft : formula form] {φ : form} :
+  ax (⊤' →' φ) ↔ ax φ :=
+ax_iff_mp (ax_top_imp_iff φ)
+
+@[simp] lemma ax_not_bot_imp {form : Type} [ft : formula form] {φ : form} :
+  ax ((¬' ⊥' ) →' φ) ↔ ax φ :=
+begin
+  have h := @ax_top_imp _ _ φ,
+  rw ft.topdef at h,
+  rw ft.notdef,
+  exact h,
+end
+
+-- Motivation: corresponds to Lean's `false.elim`
+@[simp] lemma ax_bot_elim {form : Type} [ft : formula form] {φ : form} :
+  ax (⊥' →' φ) :=
+(ax_iff_mp (ax_imp_congr_left contra_equiv_false)).mp (p5 _ _)
+
 -- finite disjunction of formulas
 def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
   | list.nil   := ft.bot
   | (f :: fs)  := f ∨' (finite_disjunction fs)
+
+def disjunct_rw_iff {form : Type} [ft : formula form] (φ ψ : form) : 
+  ax ((¬' φ) →' ψ) ↔ ax (finite_disjunction (φ :: ψ :: list.nil)) :=
+begin
+  split,
+  { simp [finite_disjunction],
+    intro h,
+    apply mp,
+    apply mp,
+    apply hs1,
+    exact ψ,
+    apply contra_imp_imp_false',
+    exact h,
+  },
+  { simp [finite_disjunction],
+    intro h,
+    apply @cut _ _ _ (¬' (¬' ψ)),
+    rw ft.notdef at *,
+    exact h,
+    exact dne, },
+end
 
 lemma imp_finite_disjunction {form : Type} [ft : formula form] 
   (φ : form) (fs : list (form)) (h : φ ∈ fs) :
@@ -682,12 +788,11 @@ begin
 end
 
 lemma imp_finite_disjunction_subset {form : Type} [ft : formula form] 
-  (fs : list (form)) (fs' : list (form)) (hsubset : fs ⊆ fs') :
+  (fs fs': list (form)) (hsubset : fs ⊆ fs') :
   ax (finite_disjunction fs →' finite_disjunction fs') :=
 begin
   induction fs with f fs ih,
-  { simp[finite_disjunction] at *, 
-    exact  explosion, },
+  { simp[finite_disjunction], },
   { simp [finite_disjunction] at *,
     cases hsubset with hf hsubset,
     specialize ih hsubset,
@@ -697,6 +802,81 @@ begin
     exact ih,
   },
 end
+
+def disjunct_of_disjuncts {form : Type} [ft : formula form] (fs fs': list (form)) : 
+  ax ((finite_disjunction ((finite_disjunction fs) :: (finite_disjunction fs') :: list.nil)) ↔' 
+      (finite_disjunction (fs ++ fs'))) :=
+begin
+  rw ft.iffdef,
+  apply and_ax,
+  { rw finite_disjunction,
+    apply or_cases,
+    { apply imp_finite_disjunction_subset,
+      simp, },
+    { simp [finite_disjunction],
+      have hdne := @dne _ _ (finite_disjunction fs'),
+      simp [ft.notdef] at *,
+      apply cut,
+      apply hdne,
+      apply imp_finite_disjunction_subset,
+      simp, }, },
+  { induction' fs,
+    { simp [finite_disjunction] at *,
+      apply cut1,
+      apply p1,
+      have hdni := @dni form ft (@finite_disjunction form ft fs'),
+      rw ft.notdef at *,
+      exact hdni, },
+    { specialize @ih ft,
+      apply or_cases,
+      { rw finite_disjunction,
+        simp,
+        apply cut,
+        apply @imp_finite_disjunction form ft _ (hd :: fs),
+        exact set.mem_insert hd (λ (hd : form), list.mem hd fs),
+        apply cut1,
+        apply contra_imp_imp_false',
+        apply explosion, },
+      { apply cut,
+        apply ih,
+        apply or_cases,
+        { apply @cut1 _ _ _ (⊥'),
+          apply cut,
+          apply @imp_finite_disjunction_subset form ft _ (hd :: fs),
+          simp,
+          apply contra_imp_imp_false',
+          apply explosion, },
+        { unfold finite_disjunction,
+          apply p1, }, }, }, },
+end
+
+lemma disjunc_disjunct {form : Type} [ft : formula form] 
+  (fs fs' : list (form)) :
+  ax ((¬' (finite_disjunction fs) →' finite_disjunction fs') →' finite_disjunction (fs ++ fs'))  :=
+begin
+  apply or_cases,
+  apply imp_finite_disjunction_subset,
+  simp,
+  apply imp_finite_disjunction_subset,
+  simp,
+end
+
+
+lemma ax_iff_disjunc_disjunct {form : Type} [ft : formula form] (fs fs' : list (form)) :
+  ax (¬' (finite_disjunction fs) →' finite_disjunction fs') ↔ ax (finite_disjunction (fs ++ fs'))  :=
+begin
+  split,
+  { intro h,
+    apply MP' h,
+    apply disjunc_disjunct, },
+  { intro h,
+    rw disjunct_rw_iff,
+    apply MP' h,
+    apply iff_r,
+    apply disjunct_of_disjuncts, },
+end
+
+
 
 -- I don't think this is true: let `fs = [φ]`, `gs = [¬ φ]`
 -- lemma imp_finite_disjunction_int {form : Type} [ft : formula form] 
