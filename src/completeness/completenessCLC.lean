@@ -465,6 +465,7 @@ begin
     exact list.subset_cons_of_subset (phi_s_f ha φ hd) ih, },
 end
 
+
 -- phi X (given a finset)
 ----------------------------------------------------------
 noncomputable def phi_X_finset {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
@@ -559,6 +560,9 @@ end
 --   rw finset.mem_to_list at *,
 --   exact hXY hf,
 -- end
+
+
+
 
 -- phi X (given a set)
 ----------------------------------------------------------
@@ -782,6 +786,68 @@ begin
     { finish, }, },
 end
 
+lemma phi_X_list_unique {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : list (S_f ha φ)) (hXY : X.disjoint Y) (hX : list.nodup X) (hY : list.nodup Y) :
+  axCLC (finite_disjunction (phi_X_list ha φ X)→' ¬' (finite_disjunction (phi_X_list ha φ Y))) :=
+begin
+  induction' X with x X ihx,
+  { simp [phi_X_list, finite_disjunction],
+    apply @explosion (formCLC agents), },
+  { simp [phi_X_list, finite_disjunction],
+    apply @or_cases (formCLC agents),
+    { induction Y with y Y ihy,
+      { simp [phi_X_list, finite_disjunction],
+        apply MP',
+        apply not_bot,
+        apply axCLC.Prop1, },
+      { simp [phi_X_list, finite_disjunction] at *,
+        rw ←contrapos,
+        apply cut,
+        apply dne,
+        apply or_cases,
+        apply unique_s_f, 
+        by_contradiction,
+        simp[h] at hXY,
+        exact hXY,
+        rw ←contrapos,
+        apply cut,
+        apply dne,
+        apply ihy hY.right,
+        exact hXY.2.1,
+        exact hXY.2.2, }, },
+    { apply ihx,
+      exact hY,
+      apply list.disjoint_of_disjoint_cons_left hXY,
+      simp at hX,
+      exact hX.2, }, },
+end
+
+lemma phi_X_finset_unique {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : finset (S_f ha φ)) (hXY : X ∩ Y = ∅) :
+  axCLC ((phi_X_finset ha φ X) →' ¬' (phi_X_finset ha φ (Y))) :=
+begin
+  simp[phi_X_finset],
+  apply phi_X_list_unique,
+  rw list.disjoint_left,
+  intros f hf,
+  simp at *,
+  by_contradiction,
+  exact finset.eq_empty_iff_forall_not_mem.mp hXY f (finset.mem_inter_of_mem hf h),
+  repeat {exact finset.nodup_to_list _, },
+end
+
+lemma phi_X_set_unique {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : set (S_f ha φ)) (hXY : X ∩ Y = ∅) :
+  axCLC ((phi_X_set ha φ X) →' ¬' (phi_X_set ha φ (Y))) :=
+begin
+  simp[phi_X_set],
+  apply phi_X_finset_unique,
+  apply finset.eq_empty_iff_forall_not_mem.mpr,
+  intros f hf,
+  simp at *,
+  exact eq_empty_iff_forall_not_mem.mp hXY f ((mem_inter_iff f X Y).mpr hf),  
+end
+
 end lemmas
 
 
@@ -889,10 +955,9 @@ begin
       { intro hu,
         simp at *,
         apply max_ax_contains_by_set_proof u.2 hu,
-        unfold phi_X_set phi_X_finset phi_X_list,
-        -- apply unique_s_f,
-        sorry,
-      }
+        unfold phi_X_set,
+        apply phi_X_set_unique,
+        simp, },
     end,
 
     -- 3.6. ∃t ∈ S, sf = tf and ~¬φX ∉ E(t)(∅)), from 3.4 & 3.5
