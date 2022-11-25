@@ -465,6 +465,18 @@ begin
     exact list.subset_cons_of_subset (phi_s_f ha φ hd) ih, },
 end
 
+lemma phi_X_list_single {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (sf : (S_f ha φ)) :
+  axCLC ((phi_s_f ha φ sf) ↔' finite_disjunction (phi_X_list ha φ (sf :: list.nil))) :=
+begin
+  apply @ax_iff_intro (formCLC agents),
+  { unfold phi_X_list finite_disjunction,
+    apply cut,
+    exact dni,
+    exact iden, },
+  { unfold phi_X_list finite_disjunction,
+    exact dne, },
+end
 
 -- phi X (given a finset)
 ----------------------------------------------------------
@@ -1037,6 +1049,76 @@ begin
     exact himp t G (hX t ht), },
 end
 
+lemma phi_X_list_inter {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : list (S_f ha φ)) (hX : list.nodup X) (hY : list.nodup Y) :
+  axCLC (finite_disjunction (phi_X_list ha φ X)→' finite_disjunction (phi_X_list ha φ Y) →' 
+        finite_disjunction (phi_X_list ha φ (X ∩ Y))) :=
+begin
+  induction' X with x X ihx,
+  { simp [phi_X_list, finite_disjunction],
+    apply axCLC.Prop1, },
+  { simp [phi_X_list, finite_disjunction],
+    apply @or_cases (formCLC agents),
+    { cases (em (x ∈ Y)),
+      { apply cut,
+        apply iff_l,
+        apply phi_X_list_single,
+        apply @cut _ _ _ (finite_disjunction (phi_X_list ha φ ((x :: X) ∩ Y))),
+        apply imp_finite_disjunction_subset,
+        apply phi_X_list_subset,
+        simp,
+        exact h,
+        exact axCLC.Prop1, },
+      { apply cut,
+        apply iff_l,
+        apply phi_X_list_single,
+        apply cut1,
+        apply phi_X_list_unique,
+        exact list.singleton_disjoint.mpr h,
+        exact list.nodup_singleton x,
+        exact hY,
+        exact explosion, }, },
+    { simp at hX,
+      specialize ihx Y hY hX.2,
+      apply cut1,
+      apply ihx,
+      apply imp_finite_disjunction_subset,
+      apply phi_X_list_subset,
+      intros y hy,
+      simp at *,
+      split,
+      apply or.intro_right,
+      exact hy.1,
+      exact hy.2, }, },
+end
+
+lemma phi_X_finset_inter {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : finset (S_f ha φ)) :
+  axCLC ((phi_X_finset ha φ X) →' phi_X_finset ha φ Y →' (phi_X_finset ha φ (X ∩ Y))) :=
+begin
+  unfold phi_X_finset,
+  apply @cut1 (formCLC agents),
+  apply phi_X_list_inter,
+  repeat {exact finset.nodup_to_list _, },
+  apply imp_finite_disjunction_subset,
+  apply phi_X_list_subset,
+  intros x hx,
+  simp [finset.mem_to_list] at *,
+  exact hx,
+end
+
+lemma phi_X_set_inter {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+  (φ : formCLC agents) (X Y : set (S_f ha φ)) :
+  axCLC ((phi_X_set ha φ X) →' (phi_X_set ha φ Y) →' (phi_X_set ha φ (X ∩ Y))) :=
+begin
+  simp[phi_X_set],
+  apply @cut1 (formCLC agents),
+  apply phi_X_finset_inter,
+  apply phi_X_subset_Y_imp,
+  intros x hx,
+  simp at *,
+  exact hx, 
+end
 --  Ef (sf ) is superadditive ∀G, F ⊆ N (where G ∩ F = ∅), 
   -- ∀X, Y ⊆ Sf : X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ) ⇒ X ∩ Y ∈ Ef (sf )(G ∪ F )
 lemma Ef_superadd {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
@@ -1061,22 +1143,16 @@ begin
     -- 5.2.4.  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.2.3, because  ̃φX →  ̃φX∩Y and  ̃φY →  ̃φX∩Y .
     have h_tilde_eq : tilde ha (phi_X_set ha φ X) ∩ tilde ha (phi_X_set ha φ Y) = tilde ha (phi_X_set ha φ (X ∩ Y)), from
     begin
-      ext1,
+      ext1 s,
       simp[tilde],
       split,
-      { 
-        intro h,
-
-        -- apply max_ax_contains_by_set_proof_2h x.2 h.left h.right,
-        sorry,
-        
-
-
-      },
+      { intro h,
+        apply max_ax_contains_by_set_proof_2h s.2 h.1 h.2 ,
+        apply phi_X_set_inter, },
       { intro h,
         split,
         repeat 
-        { apply max_ax_contains_by_set_proof x.2 h,
+        { apply max_ax_contains_by_set_proof s.2 h,
           apply phi_X_set_subset_Y_imp,
           simp, }, },
     end,
