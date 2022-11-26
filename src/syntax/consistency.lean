@@ -65,10 +65,11 @@ lemma fin_conj_append {form : Type} [ft : formula form] {Γ : set form} {L L' : 
   ax (((finite_conjunction L') ∧' (finite_conjunction L)) ↔' (finite_conjunction (L' ++ L))) :=
 begin
   induction L', rw finite_conjunction,
-  simp [ft.iffdef, topnotbot] at *,
+  rw ft.iffdef,
+  rw topnotbot,
   exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch') (mp _ _ (p5 _ _) phi_and_true'))) 
     (cut (mp _ _ (p6 _ _) phi_and_true') (mp _ _ (p5 _ _) and_switch'))),
-  simp [ft.iffdef, topnotbot] at *,
+  rw ft.iffdef at *,
   exact mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p5 _ _) and_commute') 
     (imp_and_imp (mp _ _ (p5 _ _) L'_ih))))
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) L'_ih)) (mp _ _ (p6 _ _) and_commute')))
@@ -79,10 +80,10 @@ lemma fin_conj_append' {form : Type} [ft : formula form] {Γ : set form} {L L' :
   ((finite_conjunction (L' ++ L)) →' ((finite_conjunction L') ∧' (finite_conjunction L)))) :=
 begin
   induction L', rw finite_conjunction,
-  simp [ft.iffdef, topnotbot] at *,
+  rw topnotbot,
   exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch') (mp _ _ (p5 _ _) phi_and_true')))
     (cut (mp _ _ (p6 _ _) phi_and_true') (mp _ _ (p5 _ _) and_switch'))),
-  simp [ft.iffdef, topnotbot] at *,
+  rw ft.iffdef at *,
   exact mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p5 _ _) and_commute') 
     (imp_and_imp (mp _ _ (p5 _ _) L'_ih))))
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) L'_ih)) (mp _ _ (p6 _ _) and_commute')))
@@ -470,9 +471,9 @@ begin
     contradiction },
   { simp [ax_consistent, finite_ax_consistent] at hφ,
     rcases hφ with ⟨(list.nil | ⟨x, xs⟩), sub, pf⟩,
-    { simp [finite_conjunction] at pf,
+    { unfold finite_conjunction at pf,
       -- we have ⊥, so (φ → ⊥) should also follow
-      simp [formula.notdef],
+      rw ft.notdef,
       exact ax_bot_imp pf, },
     { -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
       induction xs, 
@@ -496,7 +497,6 @@ lemma false_of_always_false' {form : Type} [ft : formula form] (φ : form)
 begin
   rw ft.iffdef,
   have hfoaf : _, from (false_of_always_false φ),
-  simp,
   apply mp,
   apply mp,
   apply p4,
@@ -550,7 +550,7 @@ begin
   split,
   { simp, },
 
-  { simp[finite_conjunction],
+  { unfold finite_conjunction,
     apply mp,
     apply p1,
     exact hproves, },
@@ -606,7 +606,7 @@ begin
 
   -- ⊢ φ ↔ χ, from hiff
   have hiff' : ax (φ ↔' χ), from hiff hiffbot,
-  simp[ft.iffdef] at hiff',
+  rw ft.iffdef at hiff',
 
   -- χ ∈ s, from hiff
   have h : χ ∈ Γ, from 
@@ -667,7 +667,7 @@ begin
 
   have hiffbot :  ax ((¬' (ψ →' φ)) ↔' ft.bot), from
     set_empty_iff_false hempty,
-  simp[ft.iffdef] at hiffbot,
+  rw ft.iffdef at hiffbot,
 
   exact contra_not_imp_false_ax (mp _ _ (p5 _ _) hiffbot),
 end
