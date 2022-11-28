@@ -1324,14 +1324,29 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
 ----------------------------------------------------------
 -- Truth Lemma
 ----------------------------------------------------------
-lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
-  (φ : formCLC agents) (sf : (S_f ha φ)) : 
-  (s_entails_CLC (@filtered_model_CLC agents hN ha φ) sf φ) ↔ (φ ∈ sf.1.1.1) :=
+
+inductive subformula {agents : Type} : formCLC agents → formCLC agents → Prop
+| refl (φ) : subformula φ φ
+| trans {φ ψ χ} : subformula φ ψ → subformula ψ χ → subformula φ χ
+| and_left (φ ψ) : subformula φ (φ ∧' ψ)
+| and_right (φ ψ) : subformula ψ (φ ∧' ψ)
+| imp_left (φ ψ) : subformula φ (φ →' ψ)
+| imp_right (φ ψ) : subformula ψ (φ →' ψ)
+
+lemma subformula.cl_subset {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
 begin
-  have hs := s_f_to_s ha φ sf,
+  induction h; sorry
+end
+
+lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  (χ : formCLC agents) (sf : (S_f ha χ)) (φ) (hφ : subformula φ χ) :
+  (s_entails_CLC (@filtered_model_CLC agents hN ha χ) sf φ) ↔ (φ ∈ sf.1.1.1) :=
+begin
+  have hs := s_f_to_s ha χ sf,
   cases hs with s hs,
   -- This proof is by induction on φ.
-  induction' φ with n φ ψ _ _ φ ψ _ _,
+  induction' φ fixing ha hN s φ sf with n φ ψ _ _ φ ψ _ _,
 
   { -- case bot
     simp [s_entails_CLC, s_entails_CLC.aux],
@@ -1344,20 +1359,24 @@ begin
     simpa [s_entails_CLC, s_entails_CLC.aux], },
 
   { -- case and
-    specialize @ih_φ ha hN s,
-    specialize @ih_ψ ha hN s,
-    simp [s_entails_CLC, s_entails_CLC.aux, ih_φ, ih_ψ] at *,
+    specialize ih_φ hs (subformula.trans (subformula.and_left _ _) hφ),
+    specialize ih_ψ hs (subformula.trans (subformula.and_right _ _) hφ),
+    simp [s_entails_CLC, s_entails_CLC.aux] at *,
+    rw [ih_φ, ih_ψ,
+        ← show ↑s ∩ ↑(cl χ) = (↑↑sf : finset _).val, from /- hs -/ sorry], -- TODO: what's the difference between ↑sf and sf.val?
+    rw [multiset.mem_inter, multiset.mem_inter, multiset.mem_inter],
     split,
     { intro h,
-      apply s_f_contains,
-      exact hs,
-      sorry,
-      -- exact max_ax_contains_by_set_proof_2h s.2 h.left h.right axCLC.Prop4, 
-      exact @cl_contains_phi agents hN (φ & ψ), },
-    { intro h,
-
       split,
-      exact max_ax_contains_by_set_proof s.2 h axCLC.Prop5,
+      convert @max_ax_contains_by_set_proof_2h (formCLC agents) _ _ _ _ _ s.2 _ _ axCLC.Prop4, -- TODO: what's the difference between ↑s and s.val?
+      { sorry },
+      { sorry },
+      iterate 3 { sorry }, -- Should disappear once `↑s` and `s.val` are made equal
+      convert hφ.cl_subset (@cl_contains_phi agents hN (φ & ψ)),
+      sorry }, -- Should disappear once `↑s` and `s.val` are made equal
+    { intro h,
+      split,
+      exact max_ax_contains_by_set_proof s.2 sorry axCLC.Prop5,
       exact max_ax_contains_by_set_proof s.2 h axCLC.Prop6, }, },
   repeat  {sorry},
 
