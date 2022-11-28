@@ -377,7 +377,7 @@ begin
 end
 
 lemma and_switch {form : Type} [ft : formula form] {φ ψ : form} : 
--- ⊢ (φ ∧ ψ) ↔' (ψ ∧ φ)
+-- ⊢ (φ ∧ ψ) ↔ (ψ ∧ φ)
   ax ((φ ∧' ψ) ↔' (ψ ∧' φ)) :=
 begin
   rw formula.iffdef at *,
@@ -395,8 +395,16 @@ begin
     (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
 end
 
+lemma iff_switch {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ (φ ↔ ψ) ↔ (ψ ↔ φ)
+  ax ((φ ↔' ψ) ↔' (ψ ↔' φ)) :=
+begin
+  rw ft.iffdef,
+  exact and_switch',
+end
+
 lemma true_and_phi {form : Type} [ft : formula form] {φ : form} : 
--- ⊢  (⊤ ∧ φ) ↔' φ 
+-- ⊢  (⊤ ∧ φ) ↔ φ 
   ax (((¬' ft.bot) ∧' φ) ↔' φ) :=
 begin
   rw formula.iffdef at *,
