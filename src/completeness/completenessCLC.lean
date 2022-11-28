@@ -78,6 +78,7 @@ begin
     repeat { simp[h] at *, }, },
 end
 
+
 lemma cl_closed_single_neg {agents : Type} [hN : fintype agents] 
   (φ x : formCLC agents) (hx : x ∈ cl φ) :
   ∃ ψ, (ψ ∈ cl φ ∧ axCLC (ψ ↔ (¬ x))) :=
@@ -1328,15 +1329,118 @@ def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agen
 inductive subformula {agents : Type} : formCLC agents → formCLC agents → Prop
 | refl (φ) : subformula φ φ
 | trans {φ ψ χ} : subformula φ ψ → subformula ψ χ → subformula φ χ
-| and_left (φ ψ) : subformula φ (φ ∧' ψ)
-| and_right (φ ψ) : subformula ψ (φ ∧' ψ)
-| imp_left (φ ψ) : subformula φ (φ →' ψ)
-| imp_right (φ ψ) : subformula ψ (φ →' ψ)
+| and_left (φ ψ) : subformula φ (φ & ψ)
+| and_right (φ ψ) : subformula ψ (φ & ψ)
+| imp_left (φ ψ) : subformula φ (φ ~> ψ)
+| imp_right (φ ψ) : subformula ψ (φ ~> ψ)
+| effectivity (G) (φ) : subformula φ ([G] φ)
+| knows (i) (φ) : subformula φ (k i φ)
+| everyone_knows (G) (φ) : subformula φ (e G φ)
+| common_know (G) (φ) : subformula φ (c G φ)
+
+
+lemma subformula.cl_subset_and_left {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ & ψ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_and_right {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ & ψ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_imp_left {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ ~> ψ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_imp_right {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ ~> ψ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_effectivity {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ : formCLC agents} {G : set (agents)} : cl φ ⊆ cl ([G] φ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_knows {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ : formCLC agents} {i : agents}  : cl φ ⊆ cl (k i φ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_everyone_knows {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ : formCLC agents} {G : set (agents)} : cl φ ⊆ cl (e G φ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
+
+lemma subformula.cl_subset_common_know {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ : formCLC agents} {G : set (agents)} : cl φ ⊆ cl (c G φ) :=
+begin
+  intros x h,
+  induction φ,
+  repeat
+  { simp [cl] at *,
+    repeat {cases h, simp [h],},
+    {simp [h], }, },
+end
 
 lemma subformula.cl_subset {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   {φ ψ : formCLC agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
 begin
-  induction h; sorry
+  induction h,
+  { exact finset.subset.rfl, },
+  { exact finset.subset.trans h_ih_ᾰ h_ih_ᾰ_1, },
+  { exact subformula.cl_subset_and_left, },
+  { exact subformula.cl_subset_and_right, },
+  { exact subformula.cl_subset_imp_left, },
+  { exact subformula.cl_subset_imp_right, },
+  { exact subformula.cl_subset_effectivity, },
+  { exact subformula.cl_subset_knows, },
+  { exact subformula.cl_subset_everyone_knows, },
+  { exact subformula.cl_subset_common_know, },
 end
 
 lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
