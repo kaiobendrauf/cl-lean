@@ -403,6 +403,18 @@ begin
   exact and_switch',
 end
 
+lemma iff_switch_ax {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ (φ ↔ ψ) ↔  ⊢ (ψ ↔ φ)
+  ax (φ ↔' ψ) ↔ ax (ψ ↔' φ) :=
+begin
+  split, 
+  repeat
+  { intro h,
+    apply MP' h,
+    apply iff_l,
+    apply iff_switch, },
+end
+
 lemma true_and_phi {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢  (⊤ ∧ φ) ↔ φ 
   ax (((¬' ft.bot) ∧' φ) ↔' φ) :=
@@ -677,6 +689,19 @@ begin
   },
   exact contra_imp_imp_false,
 end
+
+lemma or_inl {form : Type} [ft : formula form] {φ ψ : form} : 
+--  ⇒  ⊢ (φ) → (¬ φ → ψ)
+  ax ((φ) →' ((¬' φ) →' ψ)) :=
+begin
+  apply cut1,
+  exact contra_imp_imp_false',
+  exact explosion,
+end
+
+lemma or_inr {form : Type} [ft : formula form] {φ ψ : form} : 
+--  ⇒  ⊢ (φ) → ⊢ (¬ φ → χ)
+  ax ((ψ) →' ((¬' φ) →' ψ)) := p1 ψ (¬' φ)
 
 -- Motivation: easier to prove Lean's `and` than in `ax`
 @[simp] lemma ax_and {form : Type} [ft : formula form] {φ ψ : form} :

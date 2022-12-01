@@ -38,7 +38,7 @@ inductive axCLC {agents  : Type} : formCLC agents → Prop
         (hL: axCLC φ)          : axCLC (ψ)
 -- (Eq) ⊢ φ ↔ ψ ⇒⊢ [G]φ ↔ [G]ψ
 | Eq    {φ ψ} {G}
-        (h: axCLC (φ ↔ ψ))     : axCLC (([G] φ) ↔ ([G] ψ))
+        (h: axCLC (φ <~> ψ))    : axCLC (([G] φ) <~> ([G] ψ))
 
 | K     {φ ψ} {i}              : axCLC ((k i (φ ~> ψ)) ~> ((k i φ) ~> (k i ψ)))
 | T     {φ} {i}                : axCLC ((k i φ) ~> φ)
@@ -57,7 +57,7 @@ instance formulaCLC {agents : Type} : formula (formCLC agents) :=
   and := formCLC.and,
   imp := formCLC.imp,
   not := λ φ, ¬ φ,
-  iff := λ φ ψ, φ ↔ ψ,
+  iff := λ φ ψ, φ <~> ψ,
   top := ⊤,
   notdef := by simp,
   iffdef := by simp,
