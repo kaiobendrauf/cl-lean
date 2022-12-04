@@ -92,6 +92,8 @@ lemma topnotbot {form : Type} [ft : formula form] :
   ft.top = ¬' ft.bot :=
 by simp[formula.notdef, ft.topdef]
 
+
+
 lemma cut {form : Type} [ft : formula form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒  ⊢ (ψ → χ) ⇒  ⊢ (φ → χ)
  ax (φ →' ψ) → ax (ψ →' χ) → ax (φ →' χ) :=
@@ -105,6 +107,7 @@ begin
   exact h2,
   exact h1,
 end 
+
 
 lemma hs1 {form : Type} [ft : formula form] {φ ψ χ : form} : 
 -- ⊢ (ψ → χ) → ((φ → ψ) → (φ → χ))
@@ -499,11 +502,20 @@ begin
     exact(and_right_imp.mpr h1), },
 end
 
-lemma explosion {form : Type} [ft : formula form] {φ : form} : 
+@[simp] lemma explosion {form : Type} [ft : formula form] {φ : form} : 
 -- ⊢ ⊥ → φ 
   ax (ft.bot →' φ) :=
 begin
   apply contrapos.mp, exact (mp _ _ (p1 _ _) not_bot)
+end
+
+@[simp] lemma contra_explosion {form : Type} [ft : formula form] {φ ψ : form} : 
+-- ⊢ φ → ¬ φ → ψ 
+  ax (φ →' (¬' φ) →' ψ) :=
+begin
+  apply cut1,
+  exact contra_imp_imp_false',
+  exact explosion,
 end
 
 lemma and_iden {form : Type} [ft : formula form] {φ : form} : 
@@ -669,6 +681,7 @@ begin
   exact likemp,
 end
 
+
 lemma or_cases {form : Type} [ft : formula form] {φ ψ χ : form} : 
 -- ⊢ (φ → χ) ⇒  ⊢ (ψ → χ) ⇒ ⊢ (¬ φ → ψ) → χ 
   ax (φ →' χ) → ax (ψ →' χ) → ax ((¬' φ →' ψ) →' χ) :=
@@ -774,30 +787,116 @@ end
   ax (⊥' →' φ) :=
 (ax_iff_mp (ax_imp_congr_left contra_equiv_false)).mp (p5 _ _)
 
+lemma iff_cut {form : Type} [ft : formula form] {φ ψ χ : form} : 
+-- ⊢ φ ↔ ψ ⇒ ⊢ ψ → φ
+  ax (φ ↔' ψ) → ax (ψ ↔' χ) → ax (φ ↔' χ)  :=
+begin
+  intros h1 h2,
+  apply ax_iff_intro,
+  { apply cut,
+    exact iff_l h1,
+    exact iff_l h2, },
+  { apply cut,
+    exact iff_r h2,
+    exact iff_r h1, },
+end
+
+-- ⊢ ((φ ↔ χ) ⇒ ⊢ ((φ ∧ ψ) ↔ (χ ∧ ψ))
+lemma and_cut_l {form : Type} [ft : formula form] {φ ψ χ : form} (hl : ax (φ ↔' χ)) :
+  ax ((φ ∧' ψ) ↔' (χ ∧' ψ)) :=
+begin
+  refine ax_iff_intro _ _,
+  { apply imp_imp_and,
+    { apply cut,
+      apply p5,
+      apply iff_l,
+      exact hl, },
+    { exact p6 _ _, }, },
+  { apply imp_imp_and,
+    { apply cut,
+      apply p5,
+      apply iff_r,
+      exact hl, },
+    { exact p6 _ _, }, },
+end
+
+-- ⊢ ((ψ ↔ χ) ⇒ ⊢ ((φ ∧ ψ) ↔ (φ ∧ χ))
+lemma and_cut_r {form : Type} [ft : formula form] {φ ψ χ : form} (hr : ax (ψ ↔' χ)) :
+  ax ((φ ∧' ψ) ↔' (φ ∧' χ)) :=
+begin
+  refine ax_iff_intro _ _,
+  { apply imp_imp_and,
+    { exact p5 _ _, },
+    { apply cut,
+      apply p6,
+      apply iff_l,
+      exact hr, }, },
+  { apply imp_imp_and,
+    { exact p5 _ _, },
+    { apply cut,
+      apply p6,
+      apply iff_r,
+      exact hr, }, },
+end
+
+
+lemma demorgans''' {form : Type} [ft : formula form] {φ ψ : form} : 
+  ax (¬' (φ ∧' ψ) ↔' (φ →' (¬' ψ))) :=
+begin
+  apply ax_iff_intro,
+  { refine and_right_imp.mp _,
+    refine by_contra_ax _,
+    refine and_right_imp.mp _,
+    apply cut,
+    apply iff_r,
+    apply and_commute,
+    refine and_right_imp.mpr _,
+    refine imp_switch _,
+    apply cut,
+    apply iff_l,
+    apply and_switch,
+    exact contra_explosion, },
+  { refine contrapos.mp _,
+    apply cut,
+    apply dne,
+    apply cut,
+    apply iff_l,
+    apply and_switch,
+    refine and_right_imp.mpr _,
+    rw ft.notdef,
+    apply imp_shift.mpr,
+    exact likemp, }
+end
+
 -- finite disjunction of formulas
 def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
   | list.nil   := ft.bot
   | (f :: fs)  := f ∨' (finite_disjunction fs)
 
-def disjunct_rw_iff {form : Type} [ft : formula form] (φ ψ : form) : 
+def disjunct_rw_iff {form : Type} [ft : formula form] {φ ψ : form} : 
+  ax (((¬' φ) →' ψ) ↔' (finite_disjunction (φ :: ψ :: list.nil))) :=
+begin
+  apply ax_iff_intro,
+  { simp [finite_disjunction],
+    apply imp_switch,
+    apply cut1,
+    exact likemp,
+    exact contra_explosion, },
+  { simp [finite_disjunction],
+    apply imp_switch,
+    apply cut1,
+    exact likemp,
+    apply @cut _ _ _ (¬' (¬' ψ)),
+    rw ft.notdef,
+    exact iden,
+    exact dne, },
+end
+
+def ax_disjunct_rw_iff {form : Type} [ft : formula form] {φ ψ : form} : 
   ax ((¬' φ) →' ψ) ↔ ax (finite_disjunction (φ :: ψ :: list.nil)) :=
 begin
-  split,
-  { simp [finite_disjunction],
-    intro h,
-    apply mp,
-    apply mp,
-    apply hs1,
-    exact ψ,
-    apply contra_imp_imp_false',
-    exact h,
-  },
-  { simp [finite_disjunction],
-    intro h,
-    apply @cut _ _ _ (¬' (¬' ψ)),
-    rw ft.notdef at *,
-    exact h,
-    exact dne, },
+  refine ax_iff_mp _,
+  exact disjunct_rw_iff,
 end
 
 lemma imp_finite_disjunction {form : Type} [ft : formula form] 
@@ -894,7 +993,6 @@ begin
   simp,
 end
 
-
 lemma ax_iff_disjunc_disjunct {form : Type} [ft : formula form] (fs fs' : list (form)) :
   ax (¬' (finite_disjunction fs) →' finite_disjunction fs') ↔ ax (finite_disjunction (fs ++ fs'))  :=
 begin
@@ -903,9 +1001,91 @@ begin
     apply MP' h,
     apply disjunc_disjunct, },
   { intro h,
-    rw disjunct_rw_iff,
+    rw ax_disjunct_rw_iff,
     apply MP' h,
     apply iff_r,
     apply disjunct_of_disjuncts, },
+end
+
+lemma iff_disjunc_disjunct {form : Type} [ft : formula form] (fs fs' : list (form)) :
+  ax ((¬' (finite_disjunction fs) →' finite_disjunction fs') ↔' (finite_disjunction (fs ++ fs')))  :=
+begin
+  apply ax_iff_intro,
+  { apply disjunc_disjunct, },
+  { apply cut,
+    apply iff_r,
+    apply disjunct_of_disjuncts,
+    apply iff_r,
+    exact disjunct_rw_iff, },
+end
+
+lemma or_switch {form : Type} [ft : formula form] {φ ψ : form} :
+  ax ((¬' φ →' ψ) ↔' (¬' ψ →' φ)) :=
+begin
+  refine ax_iff_intro _ _,
+  repeat 
+  { apply or_cases,
+    exact p1 _ _,
+    exact or_inl, },
+end
+
+-- ⊢ ((φ ↔ z) ⇒ ⊢ ((φ ∨ y) ↔ (z ∨ y))
+lemma or_cut_l {form : Type} [ft : formula form] {φ ψ χ : form} (hl : ax (φ ↔' χ)) :
+  ax ((¬' φ →' ψ) ↔' (¬' χ →' ψ)) :=
+begin
+  refine ax_iff_intro _ _,
+  { apply or_cases,
+    { apply cut,
+      apply iff_l hl,
+      exact or_inl, },
+    { exact p1 _ _, }, },
+  { apply or_cases,
+    { apply cut,
+      apply iff_r hl,
+      exact or_inl, },
+    { exact p1 _ _, }, },
+end
+
+-- ⊢ ((ψ ↔ z) ⇒ ⊢ ((φ ∨ y) ↔ (φ ∨ z))
+lemma or_cut_r {form : Type} [ft : formula form] {φ ψ χ : form} (hr : ax (ψ ↔' χ)) :
+  ax ((¬' φ →' ψ) ↔' (¬' φ →' χ)) :=
+begin
+  apply iff_cut,
+  exact or_switch,
+  apply iff_cut,
+  exact or_cut_l hr,
+  exact or_switch,
+end
+
+-- ⊢ ((φ ∧ ψ) ∨ (φ ∧ χ)) ↔ (φ ∧ (ψ ∨ χ))
+lemma distr_or_and {form : Type} [ft : formula form] {φ ψ χ : form} :
+  ax (((¬' (φ ∧' ψ)) →' (φ ∧' χ)) ↔' (φ ∧' ((¬' ψ) →' χ))) :=
+begin
+  apply ax_iff_intro,
+  { apply or_cases,
+    { apply imp_and_imp,
+      exact contra_explosion, }, 
+    { apply imp_and_imp,
+      exact p1 _ _, }, },
+  { apply and_right_imp.mpr,
+    refine imp_shift.mp _,
+    apply imp_switch,
+    apply cut,
+    apply iff_l,
+    apply demorgans''',
+    apply imp_shift.mp,
+    refine imp_imp_iff_imp.mp _,
+    apply imp_switch,
+    apply cut1,
+    exact likemp,
+    apply imp_switch,
+    apply imp_shift.mp,
+    apply imp_switch,
+    apply imp_shift.mp,
+    apply imp_switch,
+    apply cut1,
+    exact likemp,
+    apply imp_switch,
+    exact p4 _ _, }
 end
 

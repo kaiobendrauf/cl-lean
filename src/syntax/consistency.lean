@@ -101,7 +101,6 @@ begin
   exact cut (mp _ _ double_imp (p4 _ _)) (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (fs_ih h2))),
 end
 
-
 lemma fin_conj_repeat {form : Type} [ft : formula form] {φ : form} {fs : list form}
   (hnpr : ¬ ( ax ft.bot)) :
   (∀ ψ ∈ fs, ψ = ¬' φ) →  ax (¬' (finite_conjunction fs)) →  ax φ :=
@@ -134,6 +133,48 @@ begin
   exact absurd (h1 φ h5) (set.eq_empty_iff_forall_not_mem.mp h2 φ)
 end
 
+lemma finite_conj_forall_iff {form : Type} [ft : formula form] {fs : list form} : 
+  (∀ x ∈ fs, ax x) ↔ ax (finite_conjunction fs) :=
+begin
+  induction fs,
+  { simp [finite_conjunction],
+    exact prtrue, },
+  { unfold finite_conjunction,
+    split,
+    { intro h,
+      rw ax_and,
+      split,
+      { apply h, 
+        simp },
+      { apply fs_ih.mp,
+        intros x hx,
+        apply h, 
+        simp [hx], }, },
+    { intros h x hx,
+      cases hx,
+      { simp [hx] at *,
+        exact h.left, },
+      { rw ax_and at h,
+        apply fs_ih.mpr h.right,
+        exact hx, }, }, },
+end
+
+lemma finite_conj_forall_imp {form : Type} [ft : formula form] {fs : list form} : 
+  (∀ x ∈ fs, ax ((finite_conjunction fs) →' x)) :=
+begin
+  induction fs,
+  { simp only [list.not_mem_nil, forall_false_left, implies_true_iff], },
+  { intros x hx,
+    unfold finite_conjunction, 
+    cases hx,
+    { simp [hx] at *,
+      exact p5 _ _, },
+    { apply cut,
+      { apply iff_l,
+        exact and_switch, },
+      { refine imp_and_l _,
+        exact fs_ih x hx, }, }, },
+end
 
 -- Consistency for a finite set of formulas L
 def finite_ax_consistent {form : Type} [ft : formula form] (fs : list (form)) : Prop := 

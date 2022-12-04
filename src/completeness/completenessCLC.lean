@@ -344,12 +344,12 @@ end
 -- Lemmas about Sf
 ----------------------------------------------------------
 -- Sf is  finite
-noncomputable lemma fin_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+noncomputable instance fin_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
   (φ : formCLC agents) : 
   fintype (S_f ha φ) :=  additive.fintype
 
 -- Sf is not empty
-lemma nonempty_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+instance nonempty_S_f {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
   (φ : formCLC agents) :
   nonempty (S_f ha φ) :=
 begin
@@ -438,6 +438,7 @@ begin
   rwa [hs, not_and_distrib]
 end
 
+-- ψ ∈ cl φ ⇒ ((∀ sf, ψ ∉ sf) ⇔ (⊢ ψ ↔ ⊥))
 lemma tilde_empty_iff_false_sf {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
   {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ) (hempty : {sf : (S_f ha φ) | ψ ∈ sf} = ∅) : 
   axCLC (ψ ↔' ⊥) :=
@@ -457,6 +458,38 @@ begin
   apply hempty sf hψ,
 end
 
+-- x ∉ sf ⇒ ∃ y ∈ sf, ⊢ (y ↔ ¬ x)
+lemma s_f_closed {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
+  {φ x : formCLC agents} {sf : (S_f ha φ)} (hnf : x ∉ sf) (hx : x ∈ cl φ)  :
+  ∃ y, y ∈ sf ∧ axCLC (y <~> ¬ x) :=
+begin
+  -- χ ∉ t, from 5, by definition Sf , because χ ∈ cl(φ).
+  have hs := s_f_to_s ha φ sf, cases hs with s hs, simp at hs,
+  have hn : x ∉ s, from
+  begin
+      by_contradiction hf,
+      apply hnf,
+      exact hs.mpr ⟨hf, hx⟩,
+  end,
+  -- ¬χ ∈ t, from hn, because s and t are maximally consistent.
+  have hnx : ((¬' x) ∈ s.1) := not_in_from_notin s.2 hn,
+  -- ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+  have hy := cl_closed_single_neg φ x hx,
+  cases hy with y hy,
+  -- ψ ∈ s ∨ ψ ∈ t, from hnx & hy, because s and t are maximally consistent.
+  have hst : y ∈ s, from
+  begin
+    apply max_ax_contains_by_set_proof s.2 hnx,
+    apply @iff_r (formCLC agents) _ _,
+    exact hy.2,
+  end,
+  -- ψ ∈ sf ∨ ψ ∈ tf , from hst & hy, by definition Sf .
+  have hst : y ∈ sf := hs.mpr ⟨hst, hy.1⟩,
+  apply exists.intro y,
+  split,
+  exact hst,
+  exact hy.right,
+end 
 
 ----------------------------------------------------------
 -- Definitions and Lemmas needed for completness / model construction
@@ -495,6 +528,63 @@ begin
   end,
   apply hinduct,
   simp,
+end
+
+lemma phi_s_f_forall_iff {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ : formCLC agents} (sf : S_f ha φ) : 
+  (∀ x : formCLC agents, x ∈ sf → axCLC x) ↔ axCLC (phi_s_f ha φ sf) :=
+begin
+  unfold phi_s_f,
+  have h_con := @finite_conj_forall_iff (formCLC agents) _ (sf.1.1).to_list,
+  split,
+  { intro h,
+    apply h_con.mp,
+    intros x hx,
+    apply h,
+    have hx : x ∈ sf.1.1, from (multiset.mem_to_list x _).mp hx,
+    exact hx, },
+  { intros h x hx,
+    apply h_con.mpr,
+    exact h,
+    rw multiset.mem_to_list,
+    exact hx, },
+end
+
+lemma phi_s_f_forall_imp {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ : formCLC agents} (sf : S_f ha φ) : 
+  (∀ x ∈ sf, axCLC ((phi_s_f ha φ sf) ~> x)) :=
+begin
+  unfold phi_s_f,
+  intros x hx,
+  have hx : x ∈ sf.1.1.to_list, from (multiset.mem_to_list x _).mpr hx,
+  exact @finite_conj_forall_imp (formCLC agents) _ (sf.1.1).to_list x (hx),
+end
+
+lemma phi_s_f_conj_contains_ax {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (sf : S_f ha φ) (hψ : ψ ∈ sf) : 
+  axCLC (phi_s_f ha φ sf) ↔ axCLC (ψ & (phi_s_f ha φ sf)) :=
+begin
+  split,
+  { intro h,
+    apply @and_ax (formCLC agents),
+    exact (phi_s_f_forall_iff sf).mpr h ψ hψ,
+    exact h, },
+  { intro h,
+    apply and.elim_right,
+    apply (@ax_and (formCLC agents) _ ψ (phi_s_f ha φ sf)).mp,
+    exact h, },
+end
+
+lemma phi_s_f_conj_contains {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (sf : S_f ha φ) (hψ : ψ ∈ sf) : 
+  axCLC ((phi_s_f ha φ sf) <~> (ψ & (phi_s_f ha φ sf))) :=
+begin
+  apply @ax_iff_intro (formCLC agents),
+  { apply imp_imp_and,
+    exact phi_s_f_forall_imp _ _ hψ,
+    exact iden, },
+  { refine imp_and_r _,
+    exact iden, },
 end
 
 -- phi X (given a list)
@@ -552,6 +642,42 @@ begin
     exact iden, },
   { unfold phi_X_list finite_disjunction,
     exact dne, },
+end
+
+lemma phi_X_list_conj_contains {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (X : list (S_f ha φ)) (hψ : ∀ sf, sf ∈ X → ψ ∈ sf) : 
+  axCLC (finite_disjunction (phi_X_list ha φ X) <~> (ψ & finite_disjunction (phi_X_list ha φ X))) :=
+begin
+  induction X with sf X ih,
+  { simp [phi_X_list, finite_disjunction],
+    apply @and_ax (formCLC agents),
+    exact explosion,
+    exact imp_and_r iden, },
+  { simp [phi_X_list, finite_disjunction],
+    apply @and_ax (formCLC agents),
+    { apply or_cases,
+      { apply imp_imp_and,
+        { apply cut,
+          apply iff_l,
+          apply phi_s_f_conj_contains sf,
+          apply hψ,
+          simp,
+          exact p5 _ _, },
+        { exact contra_explosion, }, },
+      { have hψ' : ∀ sf, sf ∈ X → ψ ∈ sf, from
+        begin
+          intros tf htf,
+          apply hψ,
+          simp [htf],
+        end,
+        specialize ih hψ',
+        have ih := (@ax_and (formCLC agents) _ _ _).mp ih,
+        apply imp_imp_and,
+        { apply cut,
+          exact ih.left,
+          exact p5 _ _, },
+        { exact p1 _ _, }, }, },
+      { exact p6 _ _, }, },
 end
 
 -- phi X (given a finset)
@@ -636,6 +762,15 @@ begin
     apply phi_X_list_append'',
   },
 end
+
+-- lemma phi_X_list_conj_contains {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+--   {φ ψ : formCLC agents} (X : finset (S_f ha φ)) (hψ : ∀ sf ∈ X, ψ ∈ sf) : 
+--   axCLC (ψ & (phi_X_finset ha φ X)) :=
+-- begin
+--   unfold phi_X_finset,
+-- end
+
+
 
 -- phi X (given a set)
 ----------------------------------------------------------
@@ -758,45 +893,26 @@ begin
   simp,
   apply max_ax_contains_by_empty_proof x.2,
   apply univ_disjunct_provability,
-  exact nonempty_S_f ha φ,
+  exact canonical.nonempty_S_f ha φ,
 end
-
 
 -- Lemma 5. ∀sf , tf ∈ Sf , sf ̸ = tf ⇒⊢ φsf→ ¬φtf
 lemma unique_s_f_helper {agents : Type} [hN : fintype agents] [ha : nonempty agents]  
   {φ x : formCLC agents} (sf  tf : (S_f ha φ)) (hxf : x ∈ sf) (hnf : x ∉ tf) :
   axCLC (¬' (phi_s_f ha φ sf∧'phi_s_f ha φ tf)) := 
 begin
-  -- 6. χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
-  have hx : x ∈ cl φ, 
-    from finset.subset_iff.mp (s_f_subset_cl ha φ _) hxf,
-
-  have hs := s_f_to_s ha φ sf, cases hs with s hs, simp at hs,
-  have ht := s_f_to_s ha φ tf, cases ht with t ht, simp at ht,
-  have hn : x ∉ t, from
-  begin
-      by_contradiction hf,
-      apply hnf,
-      exact ht.mpr ⟨hf, hx⟩,
-  end,
-  -- 7. ¬χ ∈ t, from 6, because s and t are maximally consistent.
-  have hnx : ((¬' x) ∈ t.1) := not_in_from_notin t.2 hn,
-  -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
-  have hψ := cl_closed_single_neg φ x hx,
-  cases hψ with ψ hψ,
-  -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
-  have hst : ψ ∈ t, from
-  begin
-    apply max_ax_contains_by_set_proof t.2 hnx,
-    apply @iff_r (formCLC agents) _ _,
-    exact hψ.2,
-  end,
-  -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
-  have hst : ψ ∈ tf := ht.mpr ⟨hst, hψ.1⟩,
+  -- -- 6. χ /∈ t, from 5, by definition Sf , because χ ∈ cl(φ).
+  -- -- 7. ¬χ ∈ t, from 6, because s and t are maximally consistent.
+  -- -- 8. ∃ψ, (ψ ↔ ¬χ) ∧ (ψ ∈ cl(φ)), because cl is closed under single negations.
+  -- -- 9. ψ ∈ s ∨ ψ ∈ t, from 7 & 8, because s and t are maximally consistent.
+  -- -- 10. ψ ∈ sf ∨ ψ ∈ tf , from 8 & 9, by definition Sf .
+  have hst := s_f_closed hnf (finset.subset_iff.mp (s_f_subset_cl ha φ _) hxf),
+  cases hst with ψ hst,
+  cases hst with hst hψ,
   -- 11. φsf ∧ φtf → ⊥, by propositional logic, from 5, 8 & 10.
   simp[phi_s_f],
   apply @contra_con_cons (formCLC agents) _ _,
-  exact hψ.2,
+  exact hψ,
   exact (sf.1.1).mem_to_list.mpr hxf,
   exact (tf.1.1).mem_to_list.mpr hst,
 end
@@ -906,57 +1022,133 @@ begin
   exact eq_empty_iff_forall_not_mem.mp hXY f ((mem_inter_iff f X Y).mpr hf),  
 end
 
-
+lemma contra_fin_disjunct_psi_and_not {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ) (sfs : list (S_f ha φ)) 
+  (hsfs : ∀ sf : (@S_f agents _ ha φ), sf ∈ sfs → ψ ∉ sf) :
+  axCLC (⊥' <~> (ψ & finite_disjunction (phi_X_list ha φ sfs))) :=
+begin
+  apply @ax_iff_intro (formCLC agents),
+  exact explosion,
+  induction sfs with sf sfs ih,
+  { unfold phi_X_list finite_disjunction,
+    exact p6 _ _, },
+  { unfold phi_X_list finite_disjunction at *,
+    have hsfs' : ∀ sf : (@S_f agents _ ha φ), sf ∈ sfs → ψ ∉ sf, from
+    begin
+      intros sf hsf,
+      apply hsfs,
+      simp [hsf],
+    end,
+    specialize ih hsfs',
+    refine and_right_imp.mpr _,
+    apply or_cases,
+    { have hχ := s_f_closed (hsfs sf (by simp)) hψ,
+      cases hχ with χ hχ,
+      apply cut,
+      apply iff_l,
+      apply phi_s_f_conj_contains sf hχ.left,
+      apply imp_and_l,
+      apply cut,
+      apply iff_l,
+      apply hχ.2,
+      exact iden, },
+    { refine and_right_imp.mp _,
+      apply ih, }, },
+end
 
 lemma phi_X_contains_iff_psi_helper_list {agents : Type} [hN : fintype agents] [ha : nonempty agents]
-  (φ ψ : formCLC agents) (hψ : ψ ∈ cl φ)  (sfs : list (S_f ha φ)) 
+  {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ)  (sfs tfs : list (S_f ha φ))
   (hsfs : ∀ sf : (@S_f agents _ ha φ), sf ∈ sfs → ψ ∈ sf)
-  (hempty : (sfs = list.nil → axCLC (ψ <~> ⊥)) ∨ (sfs ≠ list.nil)) :
-  axCLC (finite_disjunction (phi_X_list ha φ sfs)) ↔ axCLC ψ :=
+  (htfs : ∀ tf : (@S_f agents _ ha φ), tf ∈ tfs → ψ ∉ tf)
+  (hSf : axCLC (finite_disjunction (phi_X_list ha φ tfs ++ phi_X_list ha φ sfs))) :
+  -- (hempty : (sfs = list.nil → axCLC (⊥' <~> ψ)) ∨ (sfs ≠ list.nil)) :
+  axCLC ((finite_disjunction (phi_X_list ha φ sfs)) <~> ψ) :=
 begin
-  induction sfs with sf sfs,
-  { simp at hempty,
-    unfold phi_X_list finite_disjunction,
-    apply @ax_iff_mp (formCLC agents),
-    rw @iff_switch_ax (formCLC agents),
-    exact hempty, },
-  {
-    simp at hsfs,
-    -- ↔ ∨ {sf |ψ∈sf }(ψ ∧ φsf), by propositional logic.
-    unfold phi_X_list finite_disjunction phi_s_f,
-    -- ↔ ⊥ ∨ (∨{sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
+  -- ↔ ∨ {sf |ψ∈sf }(ψ ∧ φsf), by propositional logic.
+  apply @iff_cut (formCLC agents),
+  exact (phi_X_list_conj_contains sfs hsfs),
+  -- ↔ ⊥ ∨ (∨{sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
+  apply iff_cut,
+  exact iff_switch_ax.mp (ax_not_bot_imp_iff _),
+  -- ↔ (∨ {tf |¬ψ∈tf }(ψ ∧ φtf)) ∨ (∨ {sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
+  apply iff_cut,
+  apply or_cut_l,
+  apply contra_fin_disjunct_psi_and_not hψ tfs htfs,
+   -- ↔ ψ ∧ ((∨ {tf |¬ψ∈tf } φtf ) ∨ (∨ {sf |ψ∈sf } φsf )), by propositional logic.
+  apply @iff_cut _ _ _ 
+    (ψ & (¬' (finite_disjunction (phi_X_list ha φ tfs)) →' finite_disjunction (phi_X_list ha φ sfs))),
+  apply distr_or_and,
+  -- ↔ ψ ∧ (∨ {sf ∈Sf } φsf ), because {tf | ¬ψ ∈ tf } ∪ {sf | ψ ∈ sf } = Sf .
+  apply iff_cut,
+  apply and_cut_r,
+  apply iff_disjunc_disjunct,
+  -- ↔ ψ ∧ ⊤, from Lemma 4.
+  -- ↔ ψ, by propositional logic.
+  apply ax_iff_intro,
+  exact p5 _ _,
+  apply cut,
+  apply MP',
+  exact hSf,
+  exact p4 _ _,
+  apply iff_l,
+  exact and_switch,
+end
 
-    -- ↔ (∨ {tf |¬ψ∈tf }(ψ ∧ φtf)) ∨ (∨ {sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
-    -- ↔ ψ ∧ ((∨ {tf |¬ψ∈tf } φtf ) ∨ (∨ {sf |ψ∈sf } φsf )), by propositional logic.
-    -- ↔ ψ ∧ (∨ {sf ∈Sf } φsf ), because {tf | ¬ψ ∈ tf } ∪ {sf | ψ ∈ sf } = Sf .
-    -- ↔ ψ ∧ ⊤, from Lemma 4.
-    -- ↔ ψ, by propositional logic.
+-- lemma phi_X_contains_iff_psi_helper_finset {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+--   {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ)  (sfs tfs: finset (S_f ha φ)) 
+--   (hsfs : ∀ sf : (@S_f agents _ ha φ), sf ∈ sfs → ψ ∈ sf)
+--   (htfs : ∀ tf : (@S_f agents _ ha φ), tf ∈ tfs → ψ ∉ tf)
+--   (hSf : axCLC (phi_X_finset ha φ (tfs ∪ sfs))) :
+--   axCLC ( (phi_X_finset ha φ sfs) <~> ψ) :=
+-- begin
+--   unfold phi_X_finset,
+--   apply phi_X_contains_iff_psi_helper_list hψ _ tfs.to_list,
+--   simp [finset.to_list], exact hsfs,
+--   simp [finset.to_list], exact htfs,
+--   apply @axCLC.MP _ (finite_disjunction (phi_X_list ha φ (tfs ∪ sfs).to_list)),
+--   { apply @imp_finite_disjunction_subset (formCLC agents),
+--     apply phi_X_list_append'', },
+--   { unfold phi_X_finset at hSf,
+--     exact hSf, },
+-- end
 
-  sorry,
-  }
+lemma phi_X_contains_iff_psi_helper_finset {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ)  (sfs: finset (S_f ha φ)) 
+  (hsfs : ∀ sf : (@S_f agents _ ha φ), sf ∈ sfs → ψ ∈ sf)
+  (htfs : ∀ tf : (@S_f agents _ ha φ), tf ∉ sfs → ψ ∉ tf)
+  (hSf : axCLC (phi_X_finset ha φ (sfsᶜ ∪ sfs))) :
+  axCLC ( (phi_X_finset ha φ sfs) <~> ψ) :=
+begin
+  unfold phi_X_finset,
+  apply phi_X_contains_iff_psi_helper_list hψ _ sfsᶜ.to_list,
+  simp [finset.to_list], exact hsfs,
+  simp [finset.to_list], exact htfs,
+  apply @axCLC.MP _ (finite_disjunction (phi_X_list ha φ (sfsᶜ ∪ sfs).to_list)),
+  { apply @imp_finite_disjunction_subset (formCLC agents),
+    apply phi_X_list_append'', },
+  { unfold phi_X_finset at hSf,
+    exact hSf, },
 end
 
 
 -- Lemma 6. ∀ ψ ∈ cl(φ), φ{sf |ψ∈sf } ↔ ψ
 lemma phi_X_contains_iff_psi {agents : Type} [hN : fintype agents] [ha : nonempty agents]
   (φ ψ : formCLC agents) (hψ : ψ ∈ cl φ) :
-  axCLC (phi_X_set ha φ {sf | ψ ∈ sf}) ↔ axCLC ψ :=
+  axCLC (phi_X_set ha φ {sf | ψ ∈ sf} <~> ψ) :=
 begin
-  cases (em ({sf : S_f ha φ | ψ ∈ sf} = ∅)),
-  { have := (tilde_empty_iff_false_sf hψ h),
-  sorry,
-
-  },
   -- φ{sf |ψ∈sf } ↔ ∨ {sf |ψ∈sf } φsf, by definition φX.
-  unfold phi_X_set phi_X_finset phi_X_list,
-  -- ↔ ∨ {sf |ψ∈sf }(ψ ∧ φsf), by propositional logic.
-  -- have h1 : axCLC (finite_disjunction (phi_X_list ha φ X)) ↔
-  -- ↔ ⊥ ∨ (∨{sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
-  -- ↔ (∨ {tf |¬ψ∈tf }(ψ ∧ φtf)) ∨ (∨ {sf |ψ∈sf }(ψ ∧ φsf)), by propositional logic.
-  -- ↔ ψ ∧ ((∨ {tf |¬ψ∈tf } φtf ) ∨ (∨ {sf |ψ∈sf } φsf )), by propositional logic.
-  -- ↔ ψ ∧ (∨ {sf ∈Sf } φsf ), because {tf | ¬ψ ∈ tf } ∪ {sf | ψ ∈ sf } = Sf .
-  -- ↔ ψ ∧ ⊤, from Lemma 4.
-  -- ↔ ψ, by propositional logic.
+  unfold phi_X_set,
+  -- let hXc : finite Xᶜ, from finite.of_fintype Xᶜ,
+  -- let Xc : finset (S_f ha φ), from finite.to_finset hXc,
+  apply phi_X_contains_iff_psi_helper_finset hψ,
+  simp,
+  simp,
+  -- apply axCLC.MP,
+  -- apply imp_finite_disjunction_subset,
+  have hSf := univ_disjunct_provability ha φ (canonical.nonempty_S_f ha φ),
+  have huniv : {sf | ψ ∈ sf} ∪ {sf | ψ ∈ sf}ᶜ = univ,
+    from union_compl_self {sf : S_f ha φ | ψ ∈ sf},
+  
   sorry,
 end
 
@@ -1064,7 +1256,7 @@ begin
         apply (phi_X_set_disjunct_of_disjuncts ha φ _ _).mpr,
         rw (union_compl_self X),
         apply univ_disjunct_provability,
-        exact nonempty_S_f ha φ, },
+        exact canonical.nonempty_S_f ha φ, },
       { intro hu,
         simp at *,
         apply max_ax_contains_by_set_proof u.2 hu,
