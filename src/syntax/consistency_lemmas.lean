@@ -156,4 +156,4 @@ lemma exists_max_ax_consistent_neg_mem {form : Type} [ft : formula form] {φ : f
   ∃ (Γ : set form), max_ax_consistent Γ ∧ ¬' φ ∈ Γ :=
 by simpa using lindenbaum _ (comphelper hφ)
 
-lemma conj_contains
+-- lemma conj_contains

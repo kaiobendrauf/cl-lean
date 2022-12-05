@@ -26,7 +26,7 @@ ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_right A B) h)
 ----------------------------------------------------------
 namespace canonical
 
-def canonicalCL (agents : Type) (form : Type) [ft : formula form] [clf : CLformula agents form] 
+@[simps?] def canonicalCL (agents : Type) (form : Type) [ft : formula form] [clf : CLformula agents form] 
   (ha : nonempty agents) (hnpr : ¬ ax  ft.bot) : frameCL agents := 
 { -- S is the set of all maximal CL-consistent set of formulas
   states := {Γ : (set (form)) // (max_ax_consistent Γ)},
@@ -288,7 +288,7 @@ def canonicalCL (agents : Type) (form : Type) [ft : formula form] [clf : CLformu
 
 -- }
 
-def canonical_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
+@[simps?] def canonical_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
   (form : Type) [ft : formula form] [clf : CLformula agents form] [kf: Kformula agents form]
   (hnpr : ¬ ax  ft.bot) : frameCLK agents :=
 { rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1} = {φ | K' (i) (φ) ∈ t.1}},

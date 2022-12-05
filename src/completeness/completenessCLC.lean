@@ -17,7 +17,7 @@ namespace canonical
 ----------------------------------------------------------
 -- Canonical CL Model (not a valid CLC model)
 ----------------------------------------------------------
-def canonical_model_CLC {agents : Type} [hN : fintype agents] (ha : nonempty agents) : 
+@[simps?] def canonical_model_CLC {agents : Type} [hN : fintype agents] (ha : nonempty agents) : 
   modelCLK agents :=
 { f := canonical_CLK ha (formCLC agents) (nprfalseCLC ha),
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
@@ -31,6 +31,10 @@ instance states.set_like {agents : Type} [hN : fintype agents] (ha : nonempty ag
 
 @[simp] lemma states.val_eq_coe {agents : Type} [hN : fintype agents] {ha : nonempty agents}
   (s : (canonical_model_CLC ha).1.states) : s.1 = s := rfl
+
+  @[simp] lemma set_like.set_of_mem {S A : Type*} [h : set_like S A] (s : S) : {x | x ∈ s} = s := rfl
+
+
 
 ----------------------------------------------------------
 -- Filtration closure cl
@@ -439,7 +443,7 @@ begin
 end
 
 -- ψ ∈ cl φ ⇒ ((∀ sf, ψ ∉ sf) ⇔ (⊢ ψ ↔ ⊥))
-lemma tilde_empty_iff_false_sf {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
+lemma S_f_empty_iff_false_sf {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
   {φ ψ : formCLC agents} (hψ : ψ ∈ cl φ) (hempty : {sf : (S_f ha φ) | ψ ∈ sf} = ∅) : 
   axCLC (ψ ↔' ⊥) :=
 begin
@@ -491,14 +495,30 @@ begin
   exact hy.right,
 end 
 
+@[simp] lemma set_of_S_f {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} (sf : S_f ha φ) :
+  sf ∈ {sf : S_f ha φ | ψ ∈ sf} ↔ (ψ ∈ sf) := mem_set_of
+
 ----------------------------------------------------------
 -- Definitions and Lemmas needed for completness / model construction
 ----------------------------------------------------------
 -- Tilde
 ----------------------------------------------------------
-def tilde {agents : Type} [hN : fintype agents] (ha : nonempty agents) (ψ : formCLC agents): 
+def tilde {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
   set ((canonical_model_CLC ha).f.states) :=
 {s : (canonical_model_CLC ha).f.states | ψ ∈ s}
+
+lemma h_tilde_compl {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
+  tilde (¬ ψ) = (tilde ψ)ᶜ := 
+begin
+  ext,
+  simp[tilde],
+  split,
+  { intros hx hf,
+    exact contra_containts_pr_false x.2 hf hx, },
+  { intros hx,
+    exact not_in_from_notin x.2 hx, },
+end
 
 -- phi sf
 ----------------------------------------------------------
@@ -832,11 +852,25 @@ begin
     exact hf, },
 end
 
+-- Effectivity
+----------------------------------------------------------
+def E_f {agents : Type}  [hN : fintype agents] [ha : nonempty agents] {φ : formCLC agents} : 
+  (S_f ha φ) → (set agents) → (set (set (S_f ha φ))) := 
+λ sf G, {X | ite (G = univ) 
+  -- condition G = N
+  -- ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N)
+  (∃ t : (canonical_model_CLC ha).f.states, (∀ {x}, x ∈ sf ↔ x ∈ t ∧ x ∈ cl φ) ∧ 
+    (tilde (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))
+  -- condition G ≠ N
+  -- ∀t ∈ S, sf = tf ⇒  ̃phiX ∈ E(t)(G)
+  (∀ t : (canonical_model_CLC ha).f.states, (∀ {x}, x ∈ sf ↔ x ∈ t ∧ x ∈ cl φ) → 
+    (tilde (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))}
+
 section lemmas
 
 -- Motivation: self-contained `have`-block
 @[simp] lemma tilde_empty {agents : Type} [hN : fintype agents] (ha : nonempty agents)
-  {φ : formCLC agents} : (tilde ha (phi_X_set ha φ ∅)) = ∅ :=
+  {φ : formCLC agents} : (tilde (phi_X_set ha φ ∅)) = ∅ :=
 begin
   -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
   simp [phi_X_set, phi_X_finset, phi_X_list, finite_disjunction, tilde],
@@ -844,6 +878,25 @@ begin
   simp [eq_empty_iff_forall_not_mem],
   intro s,
   exact bot_not_mem_of_ax_consistent s.1 s.2.1
+end
+
+lemma tilde_ax_iff {agents : Type} [hN : fintype agents] [ha : nonempty agents] (φ : formCLC agents)
+  {ψ χ : formCLC agents} (hax : axCLC (ψ <~> χ)) : 
+  tilde ψ = tilde χ :=
+begin
+  unfold tilde,
+  ext1 s,
+  split,
+  { intro hs,
+    simp at *,
+    apply max_ax_contains_by_set_proof s.2 hs,
+    apply iff_l,
+    apply hax, },
+  { intro hs,
+    simp at *,
+    apply max_ax_contains_by_set_proof s.2 hs,
+    apply iff_r,
+    apply hax, },
 end
 
 -- Motivation: simple way to prove `phi_X_set`
@@ -885,7 +938,7 @@ end
 -- Motivation: self-contained `have`-block
 -- 2.1. First we note that  ̃φSf =  ̃⊤ = S
 @[simp] lemma tilde_univ {agents : Type} [hN : fintype agents] (ha : nonempty agents) {φ : formCLC agents} :
-  (tilde ha (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states) :=
+  (tilde (phi_X_set ha φ (univ : set (S_f ha φ)))) = (univ : set (canonical_model_CLC ha).f.states) :=
 begin
   simp[tilde],
   ext1,
@@ -1122,6 +1175,112 @@ begin
   exact (em (ψ ∈ sf)),
 end
 
+lemma imp_ax_imp {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} (h : ∀ (a : (canonical_model_CLC ha).f.to_frameCL.states), φ ∈ a → ψ ∈ a) :
+  axCLC (φ ~> ψ) :=
+begin
+  by_contradiction hc,
+  obtain ⟨t', hexn, htn⟩ := @exists_max_ax_consistent_neg_mem (formCLC agents) _ _ hc,
+  let t := (⟨t', hexn⟩ : (canonical_model_CLC ha).f.to_frameCL.states),
+  have hand : (φ & (¬ ψ)) ∈ t.1, from  max_ax_contains_by_set_proof t.2 htn demorgans'''',
+  have hph : φ ∈ t.1, from max_ax_contains_by_set_proof t.2 hand (p5 _ _),
+  have hps : (¬ ψ) ∈ t.1, from max_ax_contains_by_set_proof t.2 hand (p6 _ _),
+  specialize h t hph,
+  exact contra_containts_pr_false t.2 h hps,
+end
+
+-- Lemma 7.  ̃ψ ∈ E(s)(G) iff [G]ψ ∈ s
+lemma E_s_contains_tilde_iff_E_in_s {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  (φ ψ : formCLC agents) (s : (canonical_model_CLC ha).f.states) (G : set agents) :
+  ((tilde ψ) ∈ ((canonical_model_CLC ha).f.E.E s G)) ↔ (([G] ψ) ∈ s) :=
+begin
+  let hE : (canonical_model_CLC ha).f.to_frameCL.E.E = λ s G, {X | ite (G = univ) 
+          -- condition G = N
+          (∀ φ, ({t | φ ∈ t} ⊆ Xᶜ) → ([∅]' φ) ∉ s.val)
+          -- condition G ≠ N
+          (∃ φ, {t | φ ∈ t} ⊆ X ∧ ([G]' φ) ∈ s.val)},
+        from rfl,
+  let hs : (canonical_model_CLC ha).f.to_frameCL.states = {Γ : (set (formCLC agents)) // (max_ax_consistent Γ)}, 
+    from rfl,
+  -- Proof. We consider the case when G ̸ = N and G = N separately.
+  cases (em (G = univ)) with hG hG,
+  { -- 2. case G = N
+    rw hG,
+    split,
+    { -- 2.1. ⇒
+      -- 2.1.1. Assume  ̃ψ ∈ E(s)(N ).
+      intro h,
+      -- 2.1.2. ∀ ̃χ ⊆  ̃ψᶜ : [∅]χ /∈ s, from 2.1.1, by definition E.
+      simp [hE] at h {eta := ff}, clear hE,
+      -- 2.1.3. ∀ ̃χ ⊆  ̃¬ψ : [∅]χ /∈ s, from 2.1.2, because  ̃ψᶜ =  ̃¬ψ.
+      have h_subeq : {t : (canonical_model_CLC ha).f.to_frameCL.states | (¬ ψ) ∈ t} ⊆ (tilde ψ)ᶜ, from
+      begin
+        intros t ht hf,
+        simp[tilde] at *,
+        exact contra_containts_pr_false t.2 hf ht,
+      end,
+      -- 2.1.4. [N ]ψ ∈ s, from 2.1.3, by axiom N.
+      specialize h (¬ ψ) h_subeq,
+      have hin := not_in_from_notin s.2 h,
+      apply max_ax_contains_by_set_proof s.2 hin axCLC.N, },
+    { -- 2.2. ⇐
+      -- 2.2.1. Assume [N ]ψ ∈ s.
+      intro h,
+      -- 2.2.2. ¬[∅]¬ψ ∈ s, from 2.2.1
+      have hin : (¬ ([∅] (¬ ψ))) ∈ s, from
+      begin
+        apply max_ax_contains_by_set_proof s.2 h,
+        exact iff_l (@univ_iff_empty agents (formCLC agents) _ _ ψ),
+      end,
+      -- 2.2.3. ¬∃χ,  ̃χ ⊆  ̃¬ψ : [∅]χ ∈ s, from proof by contradiction, 
+        -- else by definition E we would have [∅]¬ψ ∈ s, which contradicts with 2.2.2.
+      have hne : ¬ ∃ (χ : formCLC agents), (tilde χ) ⊆ (tilde ¬ ψ) ∧ ([∅]' χ) ∈ s, from 
+      begin
+        intro hf,
+        cases hf with χ hf,
+        cases hf with himp hf,
+        simp [tilde] at himp,
+        have hax : axCLC (χ ~>(¬ ψ)), from imp_ax_imp himp,
+        have hf : ([∅]' (¬' ψ)) ∈ s, from
+        begin
+          apply max_ax_contains_by_set_proof s.2 hf,
+          apply @derived_monoticity_rule agents (formCLC agents),
+          exact hax,
+        end,
+        apply contra_containts_pr_false s.2 hf hin,
+      end,
+      -- 2.2.4. ∀χ,  ̃χ ⊆  ̃¬ψ : [∅]χ /∈ s, from 2.2.3, by first order logic.
+      simp at hne,
+      -- 2.2.5. ∀χ,  ̃χ ⊆  ̃ψ : [∅]χ /∈ s, because all s ∈ S are maximally consistent.
+      rw h_tilde_compl at hne,
+      -- 2.2.6.  ̃ψ ∈ E(s)(N ), from 2.2.5, by definition E.
+      simp [hE] {eta := ff},
+      exact hne, }, },
+  { -- 1. case G ̸ = N
+    split,
+    { -- 1.1. ⇒
+      -- 1.1.1. Assume  ̃ψ ∈ E(s)(G).
+      intro h,
+      -- 1.1.2. ∃ ̃χ ⊆  ̃ψ : [G]χ ∈ s, from 1.1.1, by definition E.
+      simp [hE, hG] at h {eta := ff},
+      -- 1.1.3. ⊢ χ → ψ, from 1.1.2.
+      cases h with χ h,
+      cases h with himp h,
+      simp [tilde] at himp,
+      have hax : axCLC (χ ~> ψ), from imp_ax_imp himp,
+      -- 1.1.4. [G]ψ ∈ s, from 1.1.2 & 1.1.3, by lemma 2.
+      apply max_ax_contains_by_set_proof s.2 h,
+      apply @derived_monoticity_rule agents (formCLC agents),
+      exact hax, },
+    { -- 1.2. ⇐ is immediate by definition.
+      simp [hE, hG],
+      intro h,
+      apply exists.intro ψ,
+      split,
+      simp [tilde],
+      exact h, }, },
+end
+
 
 end lemmas
 
@@ -1130,21 +1289,9 @@ end lemmas
 -- Playability
 ----------------------------------------------------------
 
-def E_f {agents : Type}  [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) : 
-  (S_f ha φ) → (set agents) → (set (set (S_f ha φ))) := 
-λ sf G, {X | ite (G = univ) 
-  -- condition G = N
-  -- ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N)
-  (∃ t : (canonical_model_CLC ha).f.states, (∀ {x}, x ∈ sf ↔ x ∈ t ∧ x ∈ cl φ) ∧ 
-    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))
-  -- condition G ≠ N
-  -- ∀t ∈ S, sf = tf ⇒  ̃phiX ∈ E(t)(G)
-  (∀ t : (canonical_model_CLC ha).f.states, (∀ {x}, x ∈ sf ↔ x ∈ t ∧ x ∈ cl φ) → 
-    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E (t) (G))}
-
 -- 1. Ef (sf ) is live: ∀G ⊆ N : ∅ /∈ Ef (sf )(G)
 lemma Ef_liveness {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
-  ∀ s : (S_f ha φ), ∀ G : set agents, ∅ ∉ (E_f ha φ s G) := 
+  ∀ s : (S_f ha φ), ∀ G : set agents, ∅ ∉ (E_f s G) := 
 begin
   -- 1.2. Assume by contradiction ∅ ∈ Ef (sf )(G).
   intros sf G hf,
@@ -1174,7 +1321,7 @@ end
 
 -- 2. Ef (sf) is safe: ∀G ⊆ N : Sf ∈ Ef (sf )(G)
 lemma Ef_safety {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
-  ∀ (s : S_f ha φ) (G : set agents), univ ∈ E_f ha φ s G :=
+  ∀ (s : S_f ha φ) (G : set agents), univ ∈ E_f s G :=
 begin
   -- 2.2. Additionally, because E(s) is safe for all s ∈ S, ∀G ⊆ N, S ∈ E(s)(G).
   have hsafe := (canonical_model_CLC ha).f.E.safety,
@@ -1203,7 +1350,7 @@ end
 
 -- 3. Ef (sf) is N-maximal: ∀X ⊆ Sf : Xᶜ ∉ Ef(sf)(∅) ⇒ X ∈ Ef(sf)(N)
 lemma Ef_nmax {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
-  N_max agents (S_f ha φ) (E_f ha φ) :=
+  N_max agents (S_f ha φ) (E_f) :=
 begin
   -- 3.1. Assume some X ⊆ Sf such that Xᶜ ∉ Ef(sf)(∅).
   intros sf X hXc,
@@ -1214,8 +1361,8 @@ begin
   obtain ⟨t, ht, hXc⟩ := hXc,
   refine ⟨t, @ht, _⟩,
   { 
-    have h_tilde: tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) = 
-      tilde ha (phi_X_set ha φ Xᶜ), from
+    have h_tilde: tilde (¬ (phi_X_set ha φ X) : formCLC agents) = 
+      tilde (phi_X_set ha φ Xᶜ), from
     begin
       simp[tilde],
       ext1 u,
@@ -1236,33 +1383,23 @@ begin
     end,
 
     -- 3.6. ∃t ∈ S, sf = tf and ~¬φX ∉ E(t)(∅)), from 3.4 & 3.5
-    have hX : tilde ha (¬ (phi_X_set ha φ X) : formCLC agents) ∉ 
+    have hX : tilde (¬ (phi_X_set ha φ X) : formCLC agents) ∉ 
       (canonical_model_CLC ha).f.to_frameCL.E.E t ∅, from
     begin
       simp[h_tilde] at *,
       exact hXc,
     end,  
     -- 3.7. ∃t ∈ S,sf = tf and (~φX)ᶜ ∉ E(t)(∅)), from 3.6, because all s ∈ S are maximally consistent.
-    have h_tilde_eq : tilde ha (¬ (phi_X_set ha φ X)) = (tilde ha (phi_X_set ha φ X))ᶜ, from
-    begin
-      ext,
-      simp[tilde],
-      split,
-      { intros hx hf,
-        exact contra_containts_pr_false x.2 hf hx, },
-      { intros hx,
-        exact not_in_from_notin x.2 hx, },
-    end,
   simp at *,
-  simp[h_tilde_eq] at hX,
+  simp[h_tilde_compl] at hX,
     -- 3.8. ∃t ∈ S,sf = tf and φ􏰓 ∈ E(t)(N)), from 3.7, because E(s) is N-maximal X for all s ∈ S (∀X ⊆ S|X ∈/ E(s)(∅) ⇒ X ∈ E(s)(N))
     -- 3.9. Ef (sf )(N), from 3.8, by definition Ef .
-  exact (canonical_model_CLC ha).f.to_frameCL.E.N_max t (tilde ha (phi_X_set ha φ X)) hX, },
+  exact (canonical_model_CLC ha).f.to_frameCL.E.N_max t (tilde (phi_X_set ha φ X)) hX, },
 end
 
 -- Ef (sf ) is outcome monotonic: ∀G ⊆ N, ∀X ⊆ Y ⊆ Sf : X ∈ Ef (sf )(G) ⇒ Y ∈ Ef (sf )(G)
 lemma Ef_monoticity {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
-  ∀ (sf : S_f ha φ) (G : set agents) (X Y : set (S_f ha φ)), X ⊆ Y → X ∈ E_f ha φ sf G → Y ∈ E_f ha φ sf G :=
+  ∀ (sf : S_f ha φ) (G : set agents) (X Y : set (S_f ha φ)), X ⊆ Y → X ∈ E_f sf G → Y ∈ E_f sf G :=
 begin
   -- 4.1. Let G be some G ⊆ N and X and Y be some X ⊆ Y ⊆ Sf .
   intros s G X Y hXY,
@@ -1270,8 +1407,8 @@ begin
   intro hX,
   -- 4.3. First we note that ∀s ∈ S, ∀G ⊆ N,  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(G)
   have himp : ∀ s G, 
-    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G → 
-    (tilde ha (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s G, from
+    (tilde (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G → 
+    (tilde (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s G, from
   begin
     -- 4.3.1. Let s be some s ∈ S and G be some G ⊆ N .
     clear hX, intros s G hX,
@@ -1279,7 +1416,7 @@ begin
     have hax : axCLC ((phi_X_set ha φ X) ~> (phi_X_set ha φ Y)), 
       from phi_X_set_subset_Y_imp _ _ _ _ hXY,
     -- 4.3.3.  ̃φX ⊆  ̃φY , from 4.3.2.
-    have h_phiXY : (tilde ha (phi_X_set ha φ X)) ⊆ (tilde ha (phi_X_set ha φ Y)), from
+    have h_phiXY : (tilde (phi_X_set ha φ X)) ⊆ (tilde (phi_X_set ha φ Y)), from
     begin 
       rw set.subset_def,
       intros t ht,
@@ -1384,25 +1521,25 @@ end
   -- ∀X, Y ⊆ Sf : X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ) ⇒ X ∩ Y ∈ Ef (sf )(G ∪ F )
 lemma Ef_superadd {agents : Type} [hN : fintype agents] (ha : nonempty agents) (φ : formCLC agents) :
   ∀ (sf : S_f ha φ) (G F : set agents) (X Y : set (S_f ha φ)),
-  X ∈ E_f ha φ sf G → Y ∈ E_f ha φ sf F → G ∩ F = ∅ → X ∩ Y ∈ E_f ha φ sf (G ∪ F) :=
+  X ∈ E_f sf G → Y ∈ E_f sf F → G ∩ F = ∅ → X ∩ Y ∈ E_f sf (G ∪ F) :=
 begin      
   -- 5.1. Let G, F be some G, F ⊆ N , such that G ∩ F = ∅. Let X, Y be some
     -- X, Y ⊆ S such that X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ).
   -- intros sf G F X Y hX hY hGF,
   -- 5.2. First we note that ∀s ∈ S, ∀G, F ⊆ N (where G ∩ F = ∅),  ̃φX ∈ E(s)(G) ⇒  ̃φY ∈ E(s)(F ) ⇒  ̃φX∩Y ∈ E(s)(G ∪ F )
   have hint : ∀ s G F X Y, G ∩ F = ∅ → 
-    (tilde ha (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G →
-    (tilde ha (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s F →
-    (tilde ha (phi_X_set ha φ (X ∩ Y))) ∈ (canonical_model_CLC ha).f.E.E s (G ∪ F), from
+    (tilde (phi_X_set ha φ X)) ∈ (canonical_model_CLC ha).f.E.E s G →
+    (tilde (phi_X_set ha φ Y)) ∈ (canonical_model_CLC ha).f.E.E s F →
+    (tilde (phi_X_set ha φ (X ∩ Y))) ∈ (canonical_model_CLC ha).f.E.E s (G ∪ F), from
   begin
     -- 5.2.1. Let s be some s ∈ S. Let G, F , be some G, F ⊂ N where G ∩ F = ∅. Assume  ̃φX ∈ E(s)(G) and  ̃φY ∈ E(s)(F ).
     intros s G F X Y hGF hG hF,
     -- 5.2.2. E(s) is superadditive so: ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈ E(s)(F ) ⇒ X ∩ Y ∈ E(s)(G ∪ F )
     have hsuperadd := ((canonical_model_CLC ha).f.E.superadd) s G F,
     -- 5.2.3.  ̃φX ∩  ̃φY ∈ E(s)(G ∪ F ), from 5.2.1 & 5.2.2.
-    specialize hsuperadd (tilde ha (phi_X_set ha φ X)) (tilde ha (phi_X_set ha φ Y)) hG hF hGF,
+    specialize hsuperadd (tilde (phi_X_set ha φ X)) (tilde (phi_X_set ha φ Y)) hG hF hGF,
     -- 5.2.4.  ̃φX∩Y ∈ E(s)(G ∪ F ), from 5.2.3, because  ̃φX →  ̃φX∩Y and  ̃φY →  ̃φX∩Y .
-    have h_tilde_eq : tilde ha (phi_X_set ha φ X) ∩ tilde ha (phi_X_set ha φ Y) = tilde ha (phi_X_set ha φ (X ∩ Y)), from
+    have h_tilde_eq : tilde (phi_X_set ha φ X) ∩ tilde (phi_X_set ha φ Y) = tilde (phi_X_set ha φ (X ∩ Y)), from
     begin
       ext1 s,
       simp[tilde],
@@ -1425,7 +1562,7 @@ begin
   intros sf G F X Y hX hY hGF,
 
   -- 5.4. Case G = N or F = N :
-  have h_G_or_F_univ : ∀ X' Y', X' ∈ E_f ha φ sf univ → Y' ∈ E_f ha φ sf ∅ → (X' ∩ Y') ∈ E_f ha φ sf univ, from
+  have h_G_or_F_univ : ∀ X' Y', X' ∈ E_f sf univ → Y' ∈ E_f sf ∅ → (X' ∩ Y') ∈ E_f sf univ, from
   begin
     -- 5.4.1. Rename G, F, X&Y to G′, F ′, X′&Y ′, such that G′ = N , F ′ = ∅, X′ ∈ Ef (sf )(G′) and Y ′ ∈ Ef (sf )(F ′).
     clear hX hY,
@@ -1481,17 +1618,17 @@ end
 -- Building the coplete filtered CLC model
 ----------------------------------------------------------
  
-def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
+@[simps?] def filtered_model_CLC {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
   (φ : formCLC agents) :
   modelCLK agents := 
 { f := 
   { states := S_f ha φ,
-    hs := nonempty_S_f ha φ,
+    hs := canonical.nonempty_S_f ha φ,
     ha := ha,
     E := 
     
 -- ∀u∈Sc if [u]=[s] then [φ ]c ∈Ec(u)(G) G̸=N
-    { E          := E_f ha φ,
+    { E          := E_f,
       liveness   := Ef_liveness ha φ,
       safety     := Ef_safety ha φ,
       N_max      := Ef_nmax ha φ,
@@ -1628,14 +1765,19 @@ lemma subformula.mem_cl {agents : Type} [ha : nonempty agents] [hN : fintype age
   {φ ψ : formCLC agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
+-- lemma E_contains {agents : Type} [ha : nonempty agents] [hN : fintype agents] 
+--   {s : (canonical_model_CLC ha).f.states} {X : set (canonical_model_CLC ha).f.states} {G : set agents} :
+--   X ∈ (canonical_model_CLC ha).f.to_frameCL.E.E s G := sorry
+
 lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   (χ : formCLC agents) (sf : (S_f ha χ)) (φ) (hχ : subformula φ χ) :
   (s_entails_CLC (@filtered_model_CLC agents hN ha χ) sf φ) ↔ (φ ∈ sf) :=
 begin
-  have hs := s_f_to_s ha χ sf,
-  cases hs with s hs,
   -- This proof is by induction on φ.
-  induction' φ fixing ha hN s φ sf with n φ ψ _ _ φ ψ _ _,
+  induction' φ fixing ha hN φ with n φ ψ _ _ φ ψ _ _, -- sf needs to vary for the modal operators
+  all_goals
+  { have hs := s_f_to_s ha χ sf,
+    cases hs with s hs, },
 
   { -- case bot
     simp [s_entails_CLC, s_entails_CLC.aux],
@@ -1650,8 +1792,8 @@ begin
   { -- case and
     have hφ := subformula.trans (subformula.and_left _ _) hχ,
     have hψ := subformula.trans (subformula.and_right _ _) hχ,
-    specialize ih_φ @hs hφ,
-    specialize ih_ψ @hs hψ,
+    specialize ih_φ _ sf hφ,
+    specialize ih_ψ _ sf hψ,
     unfold s_entails_CLC s_entails_CLC.aux at *,
     rw [ih_φ, ih_ψ, hs, hs, hs],
     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
@@ -1666,8 +1808,8 @@ begin
   { -- case imp
     have hφ := subformula.trans (subformula.imp_left _ _) hχ,
     have hψ := subformula.trans (subformula.imp_right _ _) hχ,
-    specialize ih_φ @hs hφ,
-    specialize ih_ψ @hs hψ,
+    specialize ih_φ _ sf hφ,
+    specialize ih_ψ _ sf hψ,
     unfold s_entails_CLC s_entails_CLC.aux at *,
     rw [ih_φ, ih_ψ, hs, hs, hs],
     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
@@ -1680,57 +1822,77 @@ begin
       exact max_ax_contains_by_set_proof_2h s.2 hφ h likemp, }, },
 
   { -- case [G] ψ
-    have hE : (filtered_model_CLC χ).f.E.E = E_f ha χ, from rfl,
+    -- have hE : (filtered_model_CLC χ).f.E.E = E_f, from rfl,
     have hφ := subformula.trans (subformula.effectivity _ _) hχ,
-    specialize ih @hs hφ,
+    let ih := λ sf, ih _ sf hφ,
     cases em (G = univ) with hG hG,
     { -- case [G]ψ, where G = N :
       have h1 : {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G ↔ 
-        ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde ha (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
+        ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
       begin
-        simp [hE, E_f, hG],
+        simp [E_f, hG] { eta := ff },
         split,
         repeat { intro h, apply h, },
       end,
 
-      have h2 : (∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde ha (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ)) ↔
-        ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde ha (phi_X_set ha χ ({sf | φ ∈ sf})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
+      have h2 : (∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde φ ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ)) ↔
+        ([univ] φ) ∈ sf, from 
       begin
-        simp[tilde],
+        clear h1,
         split,
-        intro h, 
-        cases h with t h,
-        apply exists.intro t,
-        cases h with h ht,
-        split, 
-        exact h,
-        sorry,
-        sorry,
+        { intro h,
+          cases h with t h,
+          rw E_s_contains_tilde_iff_E_in_s χ φ t univ at *,
+          cases h with heq h,
+          apply (heq ([univ] φ)).mpr,
+          split,
+          { exact h, },
+          { simp [hG] at hχ,
+            exact subformula.mem_cl hχ, }, },
+        { intro h,
+          apply exists.intro s,
+          split,
+          { simp at hs,
+            exact @hs, },
+          { simp [@hs] at h,
+            rw E_s_contains_tilde_iff_E_in_s χ φ s univ at *,
+            exact h.left, }, },
       end,
+
       calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
           -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
           ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
             by unfold s_entails_CLC s_entails_CLC.aux at *
           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
-      ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde ha (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
+      ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
           h1
-      ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde ha (phi_X_set ha χ ({sf | φ ∈ sf} : set (S_f ha χ))) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
-          by rw ih
-      ... ↔ ([G] φ) ∈ sf : sorry,
-    
-      -- M f , sf ⊨ ψ ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
+          -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), , by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
+      ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | φ ∈ sf} : set (S_f ha χ))) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
+          by simp only [ih]
+          -- ↔ ∃t ∈ S, sf = tf and  ̃ψ ∈ E(t)(N ), by Lemma 6.
+      ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde φ ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
+          by rw tilde_ax_iff χ (phi_X_contains_iff_psi χ φ (subformula.mem_cl hφ))
+          -- ↔ ∃t ∈ S, sf = tf and [N ]ψ ∈ E(t)(N ), by Lemma 7.
+          -- ↔ [N ]ψ ∈ sf , by definition Sf .
+      ... ↔ ([univ] φ) ∈ sf : 
+          h2
+      ... ↔ ([G] φ) ∈ sf : 
+          by rw hG, },
+  { /- -- M f , sf ⊨ ψ ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
       unfold s_entails_CLC s_entails_CLC.aux at *,
       -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
-      simp [hE, E_f, hG] at *,
+      simp [E_f, hG] at *,
+      refine (set.mem_set_of.trans _),
       -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), , by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
       simp [@hs] at ih,
       -- ↔ ∃t ∈ S, sf = tf and  ̃ψ ∈ E(t)(N ), by Lemma 6.
       -- ↔ ∃t ∈ S, sf = tf and [N ]ψ ∈ E(t)(N ), by Lemma 7.
       rw @hs,
       -- ↔ [N ]ψ ∈ sf , by definition Sf .
+      -/
       sorry,
     },
-    { --  case [G]ψ, where G ̸ = N :
+    /- { --  case [G]ψ, where G ̸ = N :
       -- M f , sf ⊨ ψ
       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(G), by definition ⊨
       -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(G), by definition E.
@@ -1739,8 +1901,8 @@ begin
       -- ↔ ∀t ∈ S, sf = tf ⇒  ̃ψ ∈ E(t)(G), by Lemma 6.
       -- ↔ ∀t ∈ S, sf = tf ⇒ [G]ψ ∈ t, by Lemma 7.
       -- ↔ [G]ψ ∈ sf , by definition Sf .
-      sorry,
-    },
+    --  sorry,
+    }, -/
   },
 
   
@@ -1750,7 +1912,7 @@ begin
   --   {t : (@filtered_model_CLC agents hN ha χ).f.states | {φ : formCLC agents| ((K' i φ) : formCLC agents) ∈ s} = {φ | (K' i φ) ∈ t}},
   --     from rfl,
     have hφ := subformula.trans (subformula.knows _ _) hχ,
-    specialize ih @hs hφ,
+    have ih := λ sf, ih _ sf hφ,
     unfold s_entails_CLC s_entails_CLC.aux at *,
     simp [hs, hφ.mem_cl, hχ.mem_cl, and_true] at *,
     split,
@@ -1778,6 +1940,176 @@ begin
       exact max_ax_contains_by_set_proof t.2 hKt axCLC.T, }, },
   repeat {sorry, },
 end
+
+-- lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+--   (χ : formCLC agents) (sf : (S_f ha χ)) (φ) (hχ : subformula φ χ) :
+--   (s_entails_CLC (@filtered_model_CLC agents hN ha χ) sf φ) ↔ (φ ∈ sf) :=
+-- begin
+--   have hs := s_f_to_s ha χ sf,
+--   cases hs with s hs,
+--   -- This proof is by induction on φ.
+--   induction' φ fixing ha hN s φ sf with n φ ψ _ _ φ ψ _ _,
+
+--   { -- case bot
+--     simp [s_entails_CLC, s_entails_CLC.aux],
+--     apply s_f_n_contains,
+--     exact @hs, 
+--     apply or.intro_left,
+--     exact @bot_not_mem_of_ax_consistent (formCLC agents) _ s.1 s.2.1, },
+
+--   { -- case var
+--     simpa [s_entails_CLC, s_entails_CLC.aux], },
+
+--   { -- case and
+--     have hφ := subformula.trans (subformula.and_left _ _) hχ,
+--     have hψ := subformula.trans (subformula.and_right _ _) hχ,
+--     specialize ih_φ @hs hφ,
+--     specialize ih_ψ @hs hψ,
+--     unfold s_entails_CLC s_entails_CLC.aux at *,
+--     rw [ih_φ, ih_ψ, hs, hs, hs],
+--     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
+--     split,
+--     { rintro ⟨hφs, hψs⟩,
+--       apply max_ax_contains_by_set_proof_2h s.2 hφs hψs axCLC.Prop4 },
+--     { intro hφψs,
+--       split,
+--       { apply max_ax_contains_by_set_proof s.2 hφψs axCLC.Prop5 },
+--       { apply max_ax_contains_by_set_proof s.2 hφψs axCLC.Prop6 } } },
+
+--   { -- case imp
+--     have hφ := subformula.trans (subformula.imp_left _ _) hχ,
+--     have hψ := subformula.trans (subformula.imp_right _ _) hχ,
+--     specialize ih_φ @hs hφ,
+--     specialize ih_ψ @hs hψ,
+--     unfold s_entails_CLC s_entails_CLC.aux at *,
+--     rw [ih_φ, ih_ψ, hs, hs, hs],
+--     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
+--     split,
+
+--     { intro h,
+--       exact max_ax_contains_imp_by_proof s.2 h, },
+
+--     { intros h hφ,
+--       exact max_ax_contains_by_set_proof_2h s.2 hφ h likemp, }, },
+
+--   { -- case [G] ψ
+--     have hE : (filtered_model_CLC χ).f.E.E = E_f ha χ, from rfl,
+--     have hφ := subformula.trans (subformula.effectivity _ _) hχ,
+--     specialize ih @hs hφ,
+--     cases em (G = univ) with hG hG,
+--     { -- case [G]ψ, where G = N :
+--       have h1 : {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G ↔ 
+--         ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
+--       begin
+--         simp [hE, E_f, hG],
+--         split,
+--         repeat { intro h, apply h, },
+--       end,
+
+--       have h2 : (∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ)) ↔
+--         ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | φ ∈ sf})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
+--       begin
+--         clear h1,
+--         unfold tilde,
+--         split,
+--         intro h, 
+--         cases h with t h,
+--         apply exists.intro t,
+--         cases h with h ht,
+--         split, 
+--         exact h,
+--         -- unfold phi_X_set phi_X_finset phi_X_list at *,
+--         simp [←ih, ht],
+--         have ht : tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) = tilde (phi_X_set ha χ ({sf | φ ∈ sf})), from
+--         begin
+--           simp [tilde],
+--           have hs : {sf : S_f ha χ | s_entails_CLC (filtered_model_CLC χ) sf φ} = {sf : S_f ha χ | φ ∈ sf}, from
+--           begin
+--             ext1,
+--             simp,
+            
+
+
+--           end,
+
+
+--         end,
+        
+--         sorry,
+--         sorry,
+--       end,
+--       calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
+--           -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
+--           ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
+--             by unfold s_entails_CLC s_entails_CLC.aux at *
+--           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
+--       ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
+--           h1
+--           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
+--       ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | φ ∈ sf} : set (S_f ha χ))) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
+--           by rw ih
+--       ... ↔ ([G] φ) ∈ sf : sorry,
+    
+--       -- M f , sf ⊨ ψ ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
+--       unfold s_entails_CLC s_entails_CLC.aux at *,
+--       -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
+--       simp [hE, E_f, hG] at *,
+--       -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), , by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
+--       simp [@hs] at ih,
+--       -- ↔ ∃t ∈ S, sf = tf and  ̃ψ ∈ E(t)(N ), by Lemma 6.
+--       -- ↔ ∃t ∈ S, sf = tf and [N ]ψ ∈ E(t)(N ), by Lemma 7.
+--       rw @hs,
+--       -- ↔ [N ]ψ ∈ sf , by definition Sf .
+--       sorry,
+--     },
+--     { --  case [G]ψ, where G ̸ = N :
+--       -- M f , sf ⊨ ψ
+--       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(G), by definition ⊨
+--       -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(G), by definition E.
+--       -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,ψ∈sf } ∈ E(t)(G), by the inductive
+--       -- hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
+--       -- ↔ ∀t ∈ S, sf = tf ⇒  ̃ψ ∈ E(t)(G), by Lemma 6.
+--       -- ↔ ∀t ∈ S, sf = tf ⇒ [G]ψ ∈ t, by Lemma 7.
+--       -- ↔ [G]ψ ∈ sf , by definition Sf .
+--       sorry,
+--     },
+--   },
+
+  
+--   -- case K
+--   { 
+--     -- have hK : (filtered_model_CLC χ).f.rel = λ i : agents, λ s : (@filtered_model_CLC agents hN ha χ).f.states, 
+--   --   {t : (@filtered_model_CLC agents hN ha χ).f.states | {φ : formCLC agents| ((K' i φ) : formCLC agents) ∈ s} = {φ | (K' i φ) ∈ t}},
+--   --     from rfl,
+--     have hφ := subformula.trans (subformula.knows _ _) hχ,
+--     specialize ih @hs hφ,
+--     unfold s_entails_CLC s_entails_CLC.aux at *,
+--     simp [hs, hφ.mem_cl, hχ.mem_cl, and_true] at *,
+--     split,
+--     -- ⇒
+--     { intro h,
+--       specialize h sf,
+--       rw ih at h,
+--       have hφ : φ ∈ s, 
+--       { apply h,
+--         apply (filtered_model_CLC χ).f.rfl, },
+--       sorry,
+
+--     },
+--     { intros h t ht,
+--       -- specialize h sf,
+--       -- rw ih,
+--       -- intros t ht,
+--       have hKt: (k a φ) ∈ t, from
+--       begin 
+--         simp[set.ext_iff] at ht,
+--         specialize ht φ,
+--         simp[←ht],
+--         exact h,
+--       end,
+--       exact max_ax_contains_by_set_proof t.2 hKt axCLC.T, }, },
+--   repeat {sorry, },
+-- end
 
 
 ----------------------------------------------------------

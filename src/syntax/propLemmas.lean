@@ -868,6 +868,22 @@ begin
     exact likemp, }
 end
 
+lemma demorgans'''' {form : Type} [ft : formula form] {φ ψ : form} : 
+ax (¬' (φ →' ψ) →' (φ ∧' ¬' ψ)) :=
+begin
+  refine contrapos.mp _,
+  apply cut,
+  apply iff_l,
+  apply demorgans''',
+  apply @cut _ _ _ (φ →' ψ),
+  refine imp_switch _,
+  apply cut1,
+  exact likemp,
+  exact dne,
+  exact dni,
+end
+
+
 -- finite disjunction of formulas
 def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
   | list.nil   := ft.bot
