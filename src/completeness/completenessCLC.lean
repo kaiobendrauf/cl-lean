@@ -1827,45 +1827,17 @@ begin
     let ih := λ sf, ih _ sf hφ,
     cases em (G = univ) with hG hG,
     { -- case [G]ψ, where G = N :
-      have h1 : {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G ↔ 
-        ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ), from
-      begin
-        simp [E_f, hG] { eta := ff },
-        split,
-        repeat { intro h, apply h, },
-      end,
-
-      have h2 : (∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde φ ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ)) ↔
-        ([univ] φ) ∈ sf, from 
-      begin
-        clear h1,
-        split,
-        { intro h,
-          cases h with t h,
-          rw E_s_contains_tilde_iff_E_in_s χ φ t univ at *,
-          cases h with heq h,
-          apply (heq ([univ] φ)).mpr,
-          split,
-          { exact h, },
-          { simp [hG] at hχ,
-            exact subformula.mem_cl hχ, }, },
-        { intro h,
-          apply exists.intro s,
-          split,
-          { simp at hs,
-            exact @hs, },
-          { simp [@hs] at h,
-            rw E_s_contains_tilde_iff_E_in_s χ φ s univ at *,
-            exact h.left, }, },
-      end,
-
       calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
           -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
           ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
             by unfold s_entails_CLC s_entails_CLC.aux at *
           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
       ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
-          h1
+          begin
+            simp [E_f, hG] { eta := ff },
+            split,
+            repeat { intro h, apply h, },
+          end
           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), , by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
       ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set ha χ ({sf | φ ∈ sf} : set (S_f ha χ))) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (univ) :
           by simp only [ih]
@@ -1874,37 +1846,60 @@ begin
           by rw tilde_ax_iff χ (phi_X_contains_iff_psi χ φ (subformula.mem_cl hφ))
           -- ↔ ∃t ∈ S, sf = tf and [N ]ψ ∈ E(t)(N ), by Lemma 7.
           -- ↔ [N ]ψ ∈ sf , by definition Sf .
-      ... ↔ ([univ] φ) ∈ sf : 
-          h2
       ... ↔ ([G] φ) ∈ sf : 
-          by rw hG, },
-  { /- -- M f , sf ⊨ ψ ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
-      unfold s_entails_CLC s_entails_CLC.aux at *,
-      -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
-      simp [E_f, hG] at *,
-      refine (set.mem_set_of.trans _),
-      -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ E(t)(N ), , by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
-      simp [@hs] at ih,
-      -- ↔ ∃t ∈ S, sf = tf and  ̃ψ ∈ E(t)(N ), by Lemma 6.
-      -- ↔ ∃t ∈ S, sf = tf and [N ]ψ ∈ E(t)(N ), by Lemma 7.
-      rw @hs,
-      -- ↔ [N ]ψ ∈ sf , by definition Sf .
-      -/
-      sorry,
-    },
-    /- { --  case [G]ψ, where G ̸ = N :
-      -- M f , sf ⊨ ψ
-      -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(G), by definition ⊨
-      -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(G), by definition E.
-      -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,ψ∈sf } ∈ E(t)(G), by the inductive
-      -- hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
-      -- ↔ ∀t ∈ S, sf = tf ⇒  ̃ψ ∈ E(t)(G), by Lemma 6.
-      -- ↔ ∀t ∈ S, sf = tf ⇒ [G]ψ ∈ t, by Lemma 7.
-      -- ↔ [G]ψ ∈ sf , by definition Sf .
-    --  sorry,
-    }, -/
-  },
-
+          begin
+            rw hG,
+            split,
+            { intro h,
+              cases h with t h,
+              rw E_s_contains_tilde_iff_E_in_s χ φ t univ at *,
+              cases h with heq h,
+              apply (heq ([univ] φ)).mpr,
+              split,
+              { exact h, },
+              { simp [hG] at hχ,
+                exact subformula.mem_cl hχ, }, },
+            { intro h,
+              apply exists.intro s,
+              split,
+              { simp at hs,
+                exact @hs, },
+              { simp [@hs] at h,
+                rw E_s_contains_tilde_iff_E_in_s χ φ s univ at *,
+                exact h.left, }, },
+          end, },
+    { calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
+          -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(G), by definition ⊨
+          ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
+            by unfold s_entails_CLC s_entails_CLC.aux at *
+          -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(G), by definition E.
+      ... ↔ ∀ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) → tilde (phi_X_set ha χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (G) :
+          begin
+            simp [E_f, hG] { eta := ff },
+            split,
+            repeat { intro h, apply h, }
+          end
+          -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,ψ∈sf } ∈ E(t)(G), by the inductive hypothesis: ∀sf ∈ Sf , M f , sf ⊨ ψ iff ψ ∈ sf .
+      ... ↔ ∀ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) → tilde (phi_X_set ha χ ({sf | φ ∈ sf})) ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (G) :
+          by simp only [ih]
+          -- ↔ ∀t ∈ S, sf = tf ⇒  ̃ψ ∈ E(t)(G), by Lemma 6.
+      ... ↔ ∀ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) → tilde φ ∈ (canonical_model_CLC ha).f.to_frameCL.E.E t (G) :
+          by rw tilde_ax_iff χ (phi_X_contains_iff_psi χ φ (subformula.mem_cl hφ))
+          -- ↔ ∀t ∈ S, sf = tf ⇒ [G]ψ ∈ t, by Lemma 7.
+          -- ↔ [G]ψ ∈ sf , by definition Sf .
+      ... ↔ ([G] φ) ∈ sf : 
+          begin
+            split,
+            { intro h,
+              specialize h s @hs,
+              rw E_s_contains_tilde_iff_E_in_s χ φ s G at h,
+              simp only [@hs, subformula.mem_cl hχ, and_true],
+              exact h, },
+            { intros h t ht,
+              rw E_s_contains_tilde_iff_E_in_s χ φ t G,
+              apply and.elim_left,
+              exact (ht _).mp h, },
+          end, }, },
   
   -- case K
   { 
