@@ -71,7 +71,7 @@ class Kformula (agents : out_param Type) (form : Type) [formula form] :=
 (K : ∀ φ ψ i, ax ((knows i (φ →' ψ)) →' ((knows i φ) →' (knows i ψ))))
 (T : ∀ φ i, ax ((knows i φ) →' φ))
 (Four : ∀ φ i, ax ((knows i φ) →' (knows i (knows i φ))))
-(Five : ∀ φ i, ax ((¬' (knows i (φ))) →' (¬' (knows i (knows i φ)))))
+(Five : ∀ φ i, ax ((¬' (knows i (φ))) →' ((knows i (¬' (knows i φ))))))
 (RN: ∀ φ i, ax φ → ax (knows i φ))
 
 def K    {agents : Type} {form : Type} [ft : formula form] [kf : Kformula agents form] := kf.K

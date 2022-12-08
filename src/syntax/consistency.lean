@@ -345,6 +345,59 @@ begin
     exact hfcs, },
 end
 
+-- Exercise 1 from class notes
+lemma ex1help {form : Type} [ft : formula form] {Γ : set form} {φ : form} {ψs ψs' : list (form)} :
+  (∀ ψ ∈ ψs, ψ ∈ Γ) → ax (finite_conjunction ψs →' φ) → (∀ ψ ∈ ψs', ψ ∈ (insert φ Γ)) 
+  → ∃ ψs'' : list (form), (∀ ψ ∈ ψs'', ψ ∈ Γ) ∧ ax (finite_conjunction ψs'' →' finite_conjunction ψs') :=
+begin
+intros h1 h2 h3, induction ψs',
+existsi (list.nil : list (form)),
+split,
+intros ψ h4, exact false.elim h4,
+exact iden,
+simp at *, cases h3 with h3 h4,
+cases ψs'_ih h4 with ψs'' ψs'_ih,
+cases ψs'_ih with ih1 ih2,
+cases h3, 
+existsi (ψs'' ++ ψs : list (form)),
+split,
+simp at *, intros ψ h2,
+cases h2 with h2 h5,
+exact ih1 ψ h2,
+exact h1 ψ h5,
+subst h3, 
+apply cut (mp _ _ (p6 _ _) fin_conj_append') 
+  (cut (mp _ _ (p5 _ _) and_switch') (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) h2) ih2))),
+exact Γ,
+existsi (ψs'_hd::ψs'' : list (form)),
+split, simp at *, split, exact h3, exact ih1,
+exact imp_and_imp ih2,
+end
+
+
+lemma exercise1 {form : Type} [ft : formula form] {Γ : set form} {φ : form} {ψs : list (form)} :
+  max_ax_consistent Γ → (∀ ψ ∈ ψs, ψ ∈ Γ) → ax (finite_conjunction ψs →' φ) → φ ∈ Γ :=
+begin
+  intros h1 h2 h3, 
+  by_contradiction h4, 
+  cases h1 with h1 h5, 
+  specialize h5 (Γ ∪ {φ}), 
+  simp at h5,
+  specialize h5 (set.ssubset_insert h4), 
+  unfold ax_consistent at h5,
+  push_neg at h5,
+  cases h5 with L' h5,
+  cases h5 with h5 h6,
+  rw finite_ax_consistent at h6, 
+  rw not_not at h6,
+  have h7 := ex1help h2 h3 h5,
+  cases h7 with L'' h7,
+  cases h7 with h7 h8,
+  apply h1 L'' h7,
+  exact cut h8 h6,
+end
+
+
 /-- Let `c` be a nonempty chain of sets and `s` a finite set, such that each
 element of `s` is in some set of `c`. Then there is a `t ∈ c` that contains the
 entirety of `s`.
@@ -390,7 +443,7 @@ begin
   ext; simp
 end
 
-lemma lindenbaum {form : Type} [ft : formula form] (Γ : set form) (hax : ax_consistent Γ) :
+lemma lindenbaum {form : Type} [ft : formula form] {Γ : set form} (hax : ax_consistent Γ) :
   ∃ Γ', max_ax_consistent Γ' ∧ Γ ⊆ Γ' :=
 begin
   -- By Zorn's lemma, it suffices to show that the union of a chain of consistent sets of formulas
@@ -417,7 +470,7 @@ begin
   apply mp,
   exact h4,
   exact prtrue, exact ft,},
-  have h2 := lindenbaum (∅ : set form) h1, 
+  have h2 := lindenbaum h1, 
   cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : set form), apply h2
 end
 
@@ -505,7 +558,7 @@ lemma false_of_always_false {form : Type} [ft : formula form] (φ : form)
 begin
   let Γ := {φ},
   by_cases hφ : ax_consistent Γ,
-  { obtain ⟨Γ', hΓ', sub⟩ := lindenbaum Γ hφ,
+  { obtain ⟨Γ', hΓ', sub⟩ := lindenbaum hφ,
     have := h Γ' hΓ',
     rw mem_max_consistent_iff_proves Γ' φ hΓ' at this,
     have := sub (set.mem_singleton φ),

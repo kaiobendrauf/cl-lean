@@ -154,6 +154,6 @@ ax_consistent_singleton.mpr (mt (mp _ _ dne) h)
 -- and `simp` can simplify the conditions slightly.
 lemma exists_max_ax_consistent_neg_mem {form : Type} [ft : formula form] {φ : form} (hφ : ¬ ax φ) :
   ∃ (Γ : set form), max_ax_consistent Γ ∧ ¬' φ ∈ Γ :=
-by simpa using lindenbaum _ (comphelper hφ)
+by simpa using lindenbaum (comphelper hφ)
 
 -- lemma conj_contains

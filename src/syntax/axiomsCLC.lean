@@ -43,7 +43,7 @@ inductive axCLC {agents  : Type} : formCLC agents → Prop
 | K     {φ ψ} {i}              : axCLC ((k i (φ ~> ψ)) ~> ((k i φ) ~> (k i ψ)))
 | T     {φ} {i}                : axCLC ((k i φ) ~> φ)
 | Four  {φ} {i}                : axCLC ((k i φ) ~> (k i (k i φ)))
-| Five  {φ} {i}                : axCLC ((¬(k i (φ))) ~> (¬(k i (k i φ))))
+| Five  {φ} {i}                : axCLC ((¬(k i (φ))) ~> ((k i (¬ (k i φ)))))
 | C     {φ} {G}                : axCLC ((c G φ) ~> (e G (φ & (c G φ))))
 | RN    {φ} {i}
         (h: axCLC φ)           : axCLC (k i φ)
