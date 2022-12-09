@@ -1,21 +1,4 @@
--- import syntax.CLLemmas
-import syntax.consistency
-
-open set
-
--- ⊢ ((¬ φ) → (¬ (K i φ)))
-def n_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] 
-  [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
-  {φ : form} {i : agents} : 
-  ax ((¬' φ) →' (¬' (K' i φ))) :=
-begin
-  apply by_contra_ax,
-  apply imp_switch,
-  apply cut,
-  apply kf.T,
-  rw ft.notdef,
-  exact likemp,
-end
+import syntax.CLKLemmas
 
 -- ⊢ 
 -- def n_inp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
@@ -28,41 +11,40 @@ end
 -- end
 
 def c_imp_kc {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] 
-  [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
+  [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 
   ax ((C' G φ) →' (K' i (C' G φ))) :=
 begin
-  sorry,
-  
+  apply cut, apply C,
+  apply cut, apply iff_l, apply E,
+  apply cut, apply @finite_conj_forall_imp _ _ _ _ (K' i (φ ∧' (C' G φ))),
+  simp,
+  apply exists.intro i,
+  simp [hi],
+  apply mp,
+  apply K,
+  apply RN,
+  exact p6 _ _,
 end
 
 def c_imp_k {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] 
-  [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
+  [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 
   ax ((C' G φ) →' (K' i φ)) :=
 begin
-  sorry,
-  
+  apply cut, apply C,
+  apply cut, apply iff_l, apply E,
+  apply cut, apply @finite_conj_forall_imp _ _ _ _ (K' i (φ ∧' (C' G φ))),
+  simp,
+  apply exists.intro i,
+  simp [hi],
+  apply mp,
+  apply K,
+  apply RN,
+  exact p5 _ _,
 end
 
 def c_imp {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] 
-  [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
+  [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G) : 
   ax ((C' G φ) →' φ) := cut (c_imp_k hi) (T φ i)
-
-lemma knows_conjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] 
-  {i : agents} {φs : list (form)} :
-  ax ((finite_conjunction (list.map (K' i) φs)) →' (K' i (finite_conjunction φs))) :=
-begin
-induction φs,
-{ apply mp,
-  exact p1 _ _,
-  apply RN,
-  exact prtrue, },
-{ apply cut,
-  { apply imp_and_imp,
-    exact φs_ih, },
-  { exact (mp _ _ double_imp (cut2 (p6 _ _) (cut (p5 _ _) 
-    (cut (mp _ _ (K _ _ _) ((RN _ _ )(p4 _ _))) (K _ _ _))))), },
-},
-end

@@ -46,15 +46,15 @@ class formula_ax (form : Type) [ft : formula form] :=
 (p7 : ∀ φ ψ : form, ax (((¬' φ) →' (¬' ψ)) →' (ψ →' φ)))
 (mp : ∀ φ ψ : form, ax (φ →' ψ) → ax φ → ax ψ)
 
-def ax  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.ax
-def p1  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p1
-def p2  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p2
-def p3  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p3
-def p4  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p4
-def p5  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p5
-def p6  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p6
-def p7  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.p7
-def mp  {form : Type} [ft : formula form] [ft : formula_ax form] := ft.mp
+def ax  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.ax
+def p1  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p1
+def p2  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p2
+def p3  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p3
+def p4  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p4
+def p5  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p5
+def p6  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p6
+def p7  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.p7
+def mp  {form : Type} [ft : formula form] [fax : formula_ax form] := fax.mp
 
 
 class CLformula (agents : out_param Type) (form : Type) [formula form] [formula_ax form] :=
@@ -66,12 +66,12 @@ class CLformula (agents : out_param Type) (form : Type) [formula form] [formula_
 (S : ∀ φ ψ G F, G ∩ F = ∅ → ax (((eff G φ) ∧' (eff F ψ)) →' (eff (G ∪ F) (φ ∧' ψ))))
 (Eq : ∀ φ ψ G, ax (φ ↔' ψ) → ax ((eff G φ) ↔' (eff G ψ)))
 
-def Bot {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.Bot
-def Top {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.Top
-def N   {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.N
-def M   {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.M
-def S   {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.S
-def Eq  {agents : Type} {form : Type} [ft : formula form] [ft : formula_ax form] [clf : CLformula agents form] := clf.Eq
+def Bot {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.Bot
+def Top {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.Top
+def N   {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.N
+def M   {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.M
+def S   {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.S
+def Eq  {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] := clf.Eq
 
 notation `[` G `]'` : 80 φ := CLformula.eff G φ
 
@@ -88,12 +88,12 @@ class Kformula (agents : out_param Type) [hN : fintype agents] (form : Type) [fo
               (finite_conjunction (list.map (λ i, knows i φ) 
               (finset.to_list (finite.to_finset (finite.of_fintype G)))))))
 
-def K    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.K
-def T    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.T
-def Four {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.Four
-def Five {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.Five
-def RN   {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.RN
-def E    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [ft : formula_ax form] [kf : Kformula agents form] := kf.E
+def K    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.K
+def T    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.T
+def Four {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.Four
+def Five {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.Five
+def RN   {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.RN
+def E    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.E
 
 notation `K'` : 80         := Kformula.knows
 notation `E'` : 80         := Kformula.everyone_knows

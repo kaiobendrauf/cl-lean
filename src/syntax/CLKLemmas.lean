@@ -1,0 +1,58 @@
+import syntax.consistency
+
+-- ⊢ ((¬ φ) → (¬ (K i φ)))
+def n_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form]
+  {φ : form} {i : agents} : 
+  ax ((¬' φ) →' (¬' (K' i φ))) :=
+begin
+  apply by_contra_ax,
+  apply imp_switch,
+  apply cut,
+  apply kf.T,
+  rw ft.notdef,
+  exact likemp,
+end
+
+lemma knows_conjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] 
+  {i : agents} {φs : list (form)} :
+  ax ((finite_conjunction (list.map (K' i) φs)) →' (K' i (finite_conjunction φs))) :=
+begin
+induction φs,
+{ apply mp,
+  exact p1 _ _,
+  apply RN,
+  exact prtrue, },
+{ apply cut,
+  { apply imp_and_imp,
+    exact φs_ih, },
+  { exact (mp _ _ double_imp (cut2 (p6 _ _) (cut (p5 _ _) 
+    (cut (mp _ _ (K _ _ _) ((RN _ _ )(p4 _ _))) (K _ _ _))))), },
+},
+end
+
+lemma everyone_empty {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] {φ : form} :
+  ax (E' ∅ φ) :=
+begin
+  apply mp,
+  apply iff_r,
+  apply E,
+  simp,
+  exact prtrue,
+end
+
+lemma everyone_knows_true {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {G : set (agents)} (h : ax φ) :
+  ax (E' G φ) :=
+begin
+  apply mp,
+  apply iff_r,
+  apply E,
+  apply finite_conj_forall_iff.mp,
+  simp,
+  intros i hi,
+  apply RN,
+  exact h,
+end
