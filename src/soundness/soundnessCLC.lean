@@ -10,7 +10,50 @@ open set list
 
 ---------------------- Soundness ----------------------
 
-theorem soundnessCLC {agents: Type} (φ : formCLC agents) : 
+lemma soundness_E_helper_l {agents: Type} [hN : fintype agents] {φ : formCLC agents}
+  {m : modelCLK agents} {s : m.f.to_frameCL.states} {G : set agents} {is : list agents} (hG : ∀ i ∈ is, i ∈ G) 
+  (h : (∀ i, i ∈ G → ∀ (t : m.f.to_frameCL.states), t ∈ m.f.rel i s → s_entails_CLC.aux m φ t)) : 
+  s_entails_CLC.aux m (finite_conjunction (map (λ (i : agents), k i φ) is)) s  := 
+begin
+  induction is with i is ih,
+  { simp [finite_conjunction],
+    have : s_entails_CLC.aux m (¬ ⊥) s, from by simp [s_entails_CLC.aux],
+    exact this, },
+  { simp [finite_conjunction],
+    have : s_entails_CLC.aux m (k i φ & finite_conjunction (map (λ (i : agents), k i φ) is)) s, from
+    begin
+      simp at hG,
+      unfold s_entails_CLC.aux,
+      exact and.intro (λ t ht, h i hG.left t ht) (ih hG.right),
+    end,
+    exact this, },
+end
+
+lemma soundness_E_helper_r {agents: Type} [hN : fintype agents] {φ : formCLC agents}
+  {m : modelCLK agents} {s t : m.f.to_frameCL.states} {G : set agents} {i : agents}  {is : list agents}
+  (hi : i ∈ G) (hG : ∀ i, i ∈ is ↔ i ∈ G) (ht : t ∈ m.f.rel i s)
+  (h : s_entails_CLC.aux m (finite_conjunction (map (λ (i : agents), k i φ) is)) s): 
+  s_entails_CLC.aux m φ t := 
+begin
+  induction' is with j is ih,
+  { have := (hG i).mpr hi,
+    exact false.rec (s_entails_CLC.aux m φ t) this, },
+  { simp [finite_conjunction] at h,
+    have h : s_entails_CLC.aux m (k j φ & finite_conjunction (map (λ (i : agents), k i φ) is)) s, 
+      from h,
+    simp [s_entails_CLC.aux] at h,
+    cases ((hG i).mpr hi) with hi' hi',
+    { rw ←hi' at *,
+      apply h.left,
+      exact ht, },
+    { apply @ih hN φ m s t {x | x ∈ is} i,
+      exact hi',
+      exact ht,
+      simp,
+      exact h.right, }, },
+end
+
+theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
   axCLC φ → global_valid φ :=
 begin
   intro h,
@@ -145,6 +188,16 @@ begin
     intros u hu,
     apply ht1,
     exact m.f.trans _ _ _ _ (m.f.sym _ _ _ ht) hu, },
+
+  -- E 
+  { unfold s_entails_CLC.aux,
+    intros m s,
+    split, 
+    { apply soundness_E_helper_l,
+      simp, },
+    { intros h i hi t ht,
+      apply soundness_E_helper_r hi _ ht h,
+      simp, }, },
   
   -- C
   { unfold s_entails_CLC.aux,
@@ -192,7 +245,7 @@ begin
         specialize ih m s hs i his.left t hC,
         exact ih.left, },
       { simp[C_path] at *,
-        specialize ih_is h ih m u,
+        specialize @ih_is hN _ _ _ h ih m u,
         apply ih_is,
         { apply and.elim_right,
           apply ih m s hs i his.left u hC.left, },

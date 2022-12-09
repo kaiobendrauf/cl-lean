@@ -14,6 +14,18 @@ variables {agents : Type}
 
 ---------------------- Proof System ----------------------
 
+instance formulaCLC {agents : Type} : formula (formCL agents) :=
+{ bot := ⊥,
+  and := formCL.and,
+  imp := formCL.imp,
+  not := λ φ, ¬ φ,
+  iff := λ φ ψ, φ ↔ ψ,
+  top := ⊤,
+  notdef := by simp,
+  iffdef := by simp,
+  topdef := by simp
+}
+
 -- Proof system for coalition logic
 inductive axCL : formCL agents → Prop 
 -- (Prop) Propositional tautologies
@@ -44,18 +56,8 @@ inductive axCL : formCL agents → Prop
         (h : axCL (φ ↔ ψ))    : axCL (([G] φ) ↔ ([G] ψ))
 
 
-instance formulaCL: formula (formCL agents) :=
-{ bot := formCL.bot,
-  and := λ φ ψ, φ & ψ,
-  imp := formCL.imp,
-  not := λ φ, ¬ φ,
-  iff := λ φ ψ, φ ↔ ψ,
-  top := ⊤,
-  notdef := by simp,
-  iffdef := by simp,
-  topdef := by simp,
-
-  ax := axCL,
+instance formula_axCL: formula_ax (formCL agents) :=
+{ ax := axCL,
   p1 := @axCL.Prop1 agents,
   p2 := @axCL.Prop2 agents,
   p3 := @axCL.Prop3 agents,
@@ -67,7 +69,6 @@ instance formulaCL: formula (formCL agents) :=
 
 
 instance CLformulaCL: CLformula agents (formCL agents) :=
-
 { eff := λ G φ, [G] φ,
   Bot := @axCL.Bot agents,
   Top := @axCL.Top agents,

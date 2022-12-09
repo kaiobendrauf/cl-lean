@@ -13,8 +13,6 @@ variable {agents : Type}
 namespace canonical
 
 
-
-
 def canonical_model_CL (ha : nonempty agents) : modelCL agents :=
 { f := canonicalCL agents (formCL agents) ha (nprfalseCL ha),
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
@@ -46,7 +44,7 @@ begin
 
   { -- case bot
     simp [s_entails_CL],
-    exact @bot_not_mem_of_ax_consistent (formCL agents) formulaCL s.1 s.2.1, },
+    exact @bot_not_mem_of_ax_consistent (formCL agents) _ _ s.1 s.2.1, },
 
   { -- case var
     simpa, },
@@ -90,7 +88,7 @@ begin
 
     { -- ⊢ [N]φ ↔ ¬[∅]¬φ
       have hempty : axCL (([univ]φ) ↔ ¬([∅](¬φ))), from 
-        @univ_iff_empty agents (formCL agents) _ _ _,
+        @univ_iff_empty agents (formCL agents) _ _ _ _,
       simp [hG] at *, clear hG,
 
       split,
@@ -164,7 +162,7 @@ begin
         have himp : axCL (ψ ~> φ), from ax_imp_from_ex hψih,
         -- ⊢ [G]ψ → [G]φ, from himp, by the derived monoticity rule
         have hGimp : axCL (([G] ψ) ~> ([G] φ)), from 
-          @derived_monoticity_rule agents (formCL agents) formulaCL CLformulaCL _ _ _ himp,
+          @derived_monoticity_rule agents (formCL agents) _ _ _ _ _ _ himp,
         -- [G]φ ∈ s, from hGimp and hGψ
         exact max_ax_contains_by_set_proof s.2 hGψ hGimp, },
       -- [G]φ ∈ s ⇒ M, s ⊨ [G]φ, when G ⊂ N

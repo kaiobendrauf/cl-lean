@@ -26,7 +26,7 @@ ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_right A B) h)
 ----------------------------------------------------------
 namespace canonical
 
-@[simps?] def canonicalCL (agents : Type) (form : Type) [ft : formula form] [clf : CLformula agents form] 
+@[simps?] def canonicalCL (agents : Type) (form : Type) [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] 
   (ha : nonempty agents) (hnpr : ¬ ax  ft.bot) : frameCL agents := 
 { -- S is the set of all maximal CL-consistent set of formulas
   states := {Γ : (set (form)) // (max_ax_consistent Γ)},
@@ -276,7 +276,7 @@ namespace canonical
 
 
 
--- def filtered_model_CL  (agents : Type) (form : Type) [ft : formula form] [clf : CLformula agents form]
+-- def filtered_model_CL  (agents : Type) (form : Type) [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form]
 --   (ha : nonempty agents) (φ : form) (canonical : modelCL agents) (cl : form → set (form)): 
 --   modelCL agents :=
 -- { states := 
@@ -289,7 +289,7 @@ namespace canonical
 -- }
 
 @[simps?] def canonical_CLK {agents : Type} [hN : fintype agents] (ha : nonempty agents) 
-  (form : Type) [ft : formula form] [clf : CLformula agents form] [kf: Kformula agents form]
+  (form : Type) [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] [kf: Kformula agents form]
   (hnpr : ¬ ax  ft.bot) : frameCLK agents :=
 { rel := λ i s, {t | {φ | K' (i) (φ) ∈ s.1} = {φ | K' (i) (φ) ∈ t.1}},
   rfl := by simp,

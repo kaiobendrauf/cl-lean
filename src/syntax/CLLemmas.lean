@@ -3,7 +3,7 @@ import syntax.propLemmas
 open set
 
 -- ⊢ [G] (φ ∧ ψ) → [G] (ψ ∧ φ)
-def ef_and_switch {agents : Type} {form : Type} [ft : formula form] [clf : CLformula agents form]
+def ef_and_switch {agents : Type} {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form]
   {φ ψ : form} {G : set agents} : ax (([G]' (φ ∧' ψ)) →' ([G]' (ψ ∧' φ))) :=
 begin
   have hiff : ax ((φ ∧' ψ) ↔' (ψ ∧' φ)), from and_switch,
@@ -13,7 +13,7 @@ end
 
 -- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
 def derived_monoticity_rule {agents : Type} {form : Type} 
-  [ft : formula form] [clf : CLformula agents form] {φ ψ : form} {G : set agents} : 
+  [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] {φ ψ : form} {G : set agents} : 
   ax (φ →' ψ) → ax (([G]' φ) →' ([G]' ψ)) :=
 begin
   -- Let ⊢ φ → ψ
@@ -40,7 +40,7 @@ end
 
 -- ⊢ [N] φ ↔ ⊢ ¬ [∅] ¬φ
 def univ_iff_empty {agents : Type} {form : Type} 
-  [ft : formula form] [clf : CLformula agents form] {φ : form} : 
+  [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] {φ : form} : 
   ax (([(univ : set agents)]' φ) ↔' (¬' ([(∅ : set agents)]' (¬' φ)))) :=
   -- ⇒
 begin

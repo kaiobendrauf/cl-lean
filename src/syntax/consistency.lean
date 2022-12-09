@@ -17,18 +17,18 @@ variables {agents : Type}
 ---------------------- Consistency ----------------------
 
 -- finite conjunction of formulas
-def finite_conjunction {form : Type} [ft : formula form] : (list form) → form
-  | list.nil   := ft.top
-  | (f :: fs)  := f ∧' (finite_conjunction fs)  
+-- def finite_conjunction {form : Type} [ft : formula form] [fax : formula_ax form] : (list form) → form
+--   | list.nil   := ft.top
+--   | (f :: fs)  := f ∧' (finite_conjunction fs)  
 
-@[simp] lemma finite_conjunction_nil {form : Type} [ft : formula form] :
+@[simp] lemma finite_conjunction_nil {form : Type} [ft : formula form] [fax : formula_ax form] :
   finite_conjunction (list.nil : list form) = ft.top := rfl
 
-@[simp] lemma finite_conjunction_cons {form : Type} [ft : formula form] (f) (fs : list form) :
+@[simp] lemma finite_conjunction_cons {form : Type} [ft : formula form] [fax : formula_ax form] (f) (fs : list form) :
   finite_conjunction (f :: fs) = f ∧' finite_conjunction fs := rfl
 
 -- a few helper lemmas about finite conjunctions
-lemma fin_conj_simp {form : Type} [ft : formula form] : 
+lemma fin_conj_simp {form : Type} [ft : formula form] [fax : formula_ax form] : 
   ∀ ψ : form,  ax (¬' (finite_conjunction ((ψ :: (¬' ψ :: list.nil))))) :=
 begin
   intro ψ,
@@ -39,7 +39,7 @@ begin
   exact phi_and_true,
 end
 
-lemma imp_conj_imp_imp {form : Type} [ft : formula form] 
+lemma imp_conj_imp_imp {form : Type} [ft : formula form] [fax : formula_ax form] 
   {Γ : set form} {φ ψ χ : form} {L : list (form)}
   (h_and_right_imp : (∀ φ ψ χ : form,  ax ((φ ∧' ψ) →' χ) ↔  ax (ψ →' (φ →' χ)))) : 
   ax ((finite_conjunction (φ ::L)) →' ψ) ↔  ax ((finite_conjunction L) →' (φ →' ψ)) :=
@@ -49,7 +49,7 @@ begin
   intro h, dsimp [finite_conjunction], rw h_and_right_imp, exact h
 end
 
-lemma fin_conj_s_imp {form : Type} [ft : formula form] 
+lemma fin_conj_s_imp {form : Type} [ft : formula form] [fax : formula_ax form] 
   {Γ : set form} {φ b : form } {L : list form} :
   ax ((finite_conjunction (φ :: L)) →'  (φ →' b)) →  ax ((finite_conjunction L) →' (φ →' b)) :=
 begin
@@ -61,7 +61,7 @@ begin
   exact and_right_imp,
 end
 
-lemma fin_conj_append {form : Type} [ft : formula form] {Γ : set form} {L L' : list (form)} :
+lemma fin_conj_append {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} {L L' : list (form)} :
   ax (((finite_conjunction L') ∧' (finite_conjunction L)) ↔' (finite_conjunction (L' ++ L))) :=
 begin
   induction L', rw finite_conjunction,
@@ -75,7 +75,7 @@ begin
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) L'_ih)) (mp _ _ (p6 _ _) and_commute')))
 end 
 
-lemma fin_conj_append' {form : Type} [ft : formula form] {Γ : set form} {L L' : list (form)} :
+lemma fin_conj_append' {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} {L L' : list (form)} :
   ax ((((finite_conjunction L') ∧' (finite_conjunction L)) →' (finite_conjunction (L' ++ L))) ∧'
   ((finite_conjunction (L' ++ L)) →' ((finite_conjunction L') ∧' (finite_conjunction L)))) :=
 begin
@@ -89,7 +89,7 @@ begin
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) L'_ih)) (mp _ _ (p6 _ _) and_commute')))
 end 
 
-lemma fin_conj_repeat_helper {form : Type} [ft : formula form] {φ : form} {fs : list form} :
+lemma fin_conj_repeat_helper {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {fs : list form} :
   (∀ ψ ∈ fs, ψ = φ) →  ax (φ →'  (finite_conjunction fs)) :=
 begin
   intros h1, induction fs,
@@ -101,7 +101,7 @@ begin
   exact cut (mp _ _ double_imp (p4 _ _)) (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (fs_ih h2))),
 end
 
-lemma fin_conj_repeat {form : Type} [ft : formula form] {φ : form} {fs : list form}
+lemma fin_conj_repeat {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {fs : list form}
   (hnpr : ¬ ( ax ft.bot)) :
   (∀ ψ ∈ fs, ψ = ¬' φ) →  ax (¬' (finite_conjunction fs)) →  ax φ :=
 begin
@@ -122,7 +122,7 @@ begin
   apply contrapos.mpr (cut ((demorgans.mp) (mp _ _ (mp _ _ (p6 _ _) (h6)) h2)) dne),
 end
 
-lemma listempty {form : Type} [ft : formula form] {fs : list form} {Γ : set form} :
+lemma listempty {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} {Γ : set form} :
   (∀ φ ∈ fs, φ ∈ Γ) → Γ = ∅ → fs = list.nil := 
 begin
   intros h1 h2,
@@ -133,7 +133,7 @@ begin
   exact absurd (h1 φ h5) (set.eq_empty_iff_forall_not_mem.mp h2 φ)
 end
 
-lemma finite_conj_forall_iff {form : Type} [ft : formula form] {fs : list form} : 
+lemma finite_conj_forall_iff {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} : 
   (∀ x ∈ fs, ax x) ↔ ax (finite_conjunction fs) :=
 begin
   induction fs,
@@ -159,7 +159,7 @@ begin
         exact hx, }, }, },
 end
 
-lemma finite_conj_forall_imp {form : Type} [ft : formula form] {fs : list form} : 
+lemma finite_conj_forall_imp {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} : 
   (∀ x ∈ fs, ax ((finite_conjunction fs) →' x)) :=
 begin
   induction fs,
@@ -177,26 +177,26 @@ begin
 end
 
 -- Consistency for a finite set of formulas L
-def finite_ax_consistent {form : Type} [ft : formula form] (fs : list (form)) : Prop := 
+def finite_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (fs : list (form)) : Prop := 
 ¬  ax ((finite_conjunction fs) →' ft.bot)
 
 
 -- Consistency for an arbitrary set of formulas Γ
-def ax_consistent {form : Type} [ft : formula form] (Γ : set form) : Prop :=
+def ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set form) : Prop :=
 ∀ fs : list (form), (∀ ψ ∈ fs, ψ ∈ Γ) → (finite_ax_consistent fs)
 
 
 -- Γ is maximally ax-consistent
-def max_ax_consistent {form : Type} [ft : formula form] (Γ : set form) : Prop := 
+def max_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set form) : Prop := 
 (ax_consistent Γ) ∧ (∀ Γ', Γ ⊂ Γ' → ¬ (ax_consistent Γ'))
 
 
-lemma max_imp_ax {form : Type} [ft : formula form] {Γ : set form} : 
+lemma max_imp_ax {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} : 
   max_ax_consistent Γ → ax_consistent Γ :=
 λ h1, h1.left
 
 -- -- Lemma 5 from class notes
-lemma five_helper {form : Type} [ft : formula form] :
+lemma five_helper {form : Type} [ft : formula form] [fax : formula_ax form] :
   ∀ Γ : set form, ∀ φ : form, ∀ L : list (form), ∀ b : form, 
   (∀ ψ ∈ L, ψ ∈ Γ ∨ ψ = φ) →  ax ((finite_conjunction L) →' b) → ∃ L',
   (∀ ψ ∈ L', ψ ∈ Γ) ∧  ax ((finite_conjunction L') →' (φ →' b)) :=
@@ -241,7 +241,7 @@ begin
 end
 
 
-lemma five {form : Type} [ft : formula form] : 
+lemma five {form : Type} [ft : formula form] [fax : formula_ax form] : 
   ∀ Γ : set form, ∀ φ : form, ¬ ax_consistent (Γ ∪ {φ}) → ∃ L' : list form,
   (∀ ψ ∈ L', ψ ∈ Γ) ∧  ax ((finite_conjunction L') →' (¬' φ)) :=
 begin
@@ -267,7 +267,7 @@ begin
 end
 
 -- Lemma 6 from class notes
-lemma max_ax_contains_phi_or_neg  {form : Type} [ft : formula form] (Γ : set form) :
+lemma max_ax_contains_phi_or_neg  {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set form) :
   max_ax_consistent Γ → ∀ φ : form, φ ∈ Γ ∨ (¬' φ) ∈ Γ :=
 begin
   intros h1 φ, rw or_iff_not_and_not, by_contradiction h2,
@@ -300,7 +300,7 @@ begin
   exact h5,
 end
 
-lemma max_ax_contains_phi_xor_neg {form : Type} [ft : formula form] 
+lemma max_ax_contains_phi_xor_neg {form : Type} [ft : formula form] [fax : formula_ax form] 
   (Γ : set form) (h : ax_consistent Γ) :
   max_ax_consistent Γ ↔ ∀ φ, (φ ∈ Γ ∨ (¬' φ) ∈ Γ) ∧ ¬(φ ∈ Γ ∧ (¬' φ) ∈ Γ) :=
 begin 
@@ -346,7 +346,7 @@ begin
 end
 
 -- Exercise 1 from class notes
-lemma ex1help {form : Type} [ft : formula form] {Γ : set form} {φ : form} {ψs ψs' : list (form)} :
+lemma ex1help {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} {φ : form} {ψs ψs' : list (form)} :
   (∀ ψ ∈ ψs, ψ ∈ Γ) → ax (finite_conjunction ψs →' φ) → (∀ ψ ∈ ψs', ψ ∈ (insert φ Γ)) 
   → ∃ ψs'' : list (form), (∀ ψ ∈ ψs'', ψ ∈ Γ) ∧ ax (finite_conjunction ψs'' →' finite_conjunction ψs') :=
 begin
@@ -375,7 +375,7 @@ exact imp_and_imp ih2,
 end
 
 
-lemma exercise1 {form : Type} [ft : formula form] {Γ : set form} {φ : form} {ψs : list (form)} :
+lemma exercise1 {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} {φ : form} {ψs : list (form)} :
   max_ax_consistent Γ → (∀ ψ ∈ ψs, ψ ∈ Γ) → ax (finite_conjunction ψs →' φ) → φ ∈ Γ :=
 begin
   intros h1 h2 h3, 
@@ -424,7 +424,7 @@ begin
 end
 
 /-- The union of a chain of consistent sets is consistent. -/
-lemma ax_consistent_sUnion_chain {form : Type} [ft : formula form]
+lemma ax_consistent_sUnion_chain {form : Type} [ft : formula form] [fax : formula_ax form]
   {c : set (set form)} (c_cons : ∀ Γ ∈ c, ax_consistent Γ) (c_chain : is_chain (⊆) c)
   (Γ : set form) (hΓ : Γ ∈ c) :
   ax_consistent (⋃₀ c) :=
@@ -443,7 +443,7 @@ begin
   ext; simp
 end
 
-lemma lindenbaum {form : Type} [ft : formula form] {Γ : set form} (hax : ax_consistent Γ) :
+lemma lindenbaum {form : Type} [ft : formula form] [fax : formula_ax form] {Γ : set form} (hax : ax_consistent Γ) :
   ∃ Γ', max_ax_consistent Γ' ∧ Γ ⊆ Γ' :=
 begin
   -- By Zorn's lemma, it suffices to show that the union of a chain of consistent sets of formulas
@@ -459,7 +459,7 @@ end
 
 
 -- -- Corollary 8 from class notes
-lemma max_ax_exists {form : Type} [ft : formula form] (hnprfalseCL : ¬  ax ft.bot) : 
+lemma max_ax_exists {form : Type} [ft : formula form] [fax : formula_ax form] (hnprfalseCL : ¬  ax ft.bot) : 
   ∃ Γ : set form, max_ax_consistent Γ :=
 begin
   have h1 : ax_consistent ∅,
@@ -469,15 +469,15 @@ begin
   apply hnprfalseCL, 
   apply mp,
   exact h4,
-  exact prtrue, exact ft,},
+  exact prtrue, exact ft, exact fax, },
   have h2 := lindenbaum h1, 
   cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : set form), apply h2
 end
 
-def set_proves {form : Type} [ft : formula form] (Γ : set (form)) (φ : form) :=
+def set_proves {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set (form)) (φ : form) :=
 ∃ (fs : list (form)), (∀ x ∈ fs, x ∈ Γ) ∧  ax ((finite_conjunction fs) →' φ)
 
-lemma not_ax_consistent_of_proves_bot {form : Type} [ft : formula form] (Γ : set form)
+lemma not_ax_consistent_of_proves_bot {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set form)
   (h : set_proves Γ ft.bot) : ¬ (ax_consistent Γ) :=
 begin
   intro hf,
@@ -489,7 +489,7 @@ begin
   exact h_right,
 end
 
-lemma bot_not_mem_of_ax_consistent {form : Type} [ft : formula form] (Γ : set (form))
+lemma bot_not_mem_of_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set (form))
   (hΓ : ax_consistent Γ) : (ft.bot) ∉ Γ :=
 begin
   intro hf,
@@ -508,14 +508,14 @@ begin
   exact (not_ax_consistent_of_proves_bot Γ hbot_proves_bot) hΓ,
 end
 
-lemma proves_of_mem {form : Type} [ft : formula form] (Γ : set (form)) (φ : form)
+lemma proves_of_mem {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set (form)) (φ : form)
   (h : φ ∈ Γ) : set_proves Γ φ :=
 ⟨list.cons φ list.nil,
   by simpa using h,
   have  ax ((φ ∧' ft.top) →' φ), from p5 _ _,
   by simpa [finite_conjunction]⟩
 
-lemma mem_max_consistent_iff_proves {form : Type} [ft : formula form] (Γ : set (form)) (φ : form)
+lemma mem_max_consistent_iff_proves {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set (form)) (φ : form)
    (hΓ : max_ax_consistent Γ) : set_proves Γ φ ↔ φ ∈ Γ :=
 ⟨begin
   intro h,
@@ -544,15 +544,15 @@ lemma mem_max_consistent_iff_proves {form : Type} [ft : formula form] (Γ : set 
  end,
  proves_of_mem Γ φ⟩
 
-lemma always_true_of_true {form : Type} [ft : formula form] (φ : form) (h :  ax φ)
+lemma always_true_of_true {form : Type} [ft : formula form] [fax : formula_ax form] (φ : form) (h :  ax φ)
   (Γ : set (form)) : set_proves Γ φ :=
 ⟨list.nil, by rintro x ⟨⟩, mp _ _ (p1 _ _) h⟩
 
-lemma always_true_of_true_imp {form : Type} [ft : formula form] (φ : form)
+lemma always_true_of_true_imp {form : Type} [ft : formula form] [fax : formula_ax form] (φ : form)
   (Γ : set (form)) : ax φ → set_proves Γ φ :=
   λ h, always_true_of_true φ h Γ
 
-lemma false_of_always_false {form : Type} [ft : formula form] (φ : form)
+lemma false_of_always_false {form : Type} [ft : formula form] [fax : formula_ax form] (φ : form)
   (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent Γ), ¬ set_proves Γ φ) :
    ax (¬' φ) :=
 begin
@@ -585,7 +585,7 @@ begin
           apply remove_and_imp pf, } }, }, },
 end
 
-lemma false_of_always_false' {form : Type} [ft : formula form] (φ : form)
+lemma false_of_always_false' {form : Type} [ft : formula form] [fax : formula_ax form] (φ : form)
   (h : ∀ (Γ : set (form)) (hΓ : max_ax_consistent Γ), φ ∉ Γ) :
    ax (φ ↔' ft.bot) :=
 begin
@@ -604,7 +604,7 @@ begin
   { exact explosion, },
 end
 
-lemma max_ax_contains_by_set_proof {form : Type} [ft : formula form] {φ ψ : form} {Γ : set form}
+lemma max_ax_contains_by_set_proof {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hproves :  ax (φ →' ψ)) : ψ ∈ Γ :=
 begin
   rw ←(mem_max_consistent_iff_proves Γ ψ hΓ),
@@ -618,7 +618,7 @@ begin
     exact hproves, },
 end 
 
-lemma max_ax_contains_by_set_proof_2h {form : Type} [ft : formula form] {φ ψ χ : form} {Γ : set form}
+lemma max_ax_contains_by_set_proof_2h {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ χ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ) (hproves :  ax (φ →' (ψ →' χ))) : χ ∈ Γ :=
 begin
   rw ←(mem_max_consistent_iff_proves Γ χ hΓ),
@@ -635,7 +635,7 @@ begin
     exact hproves, },
 end 
 
-lemma max_ax_contains_by_empty_proof {form : Type} [ft : formula form] {φ : form} {Γ : set form}
+lemma max_ax_contains_by_empty_proof {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hproves :  ax (φ)) : φ ∈ Γ :=
 begin
   rw ←(mem_max_consistent_iff_proves Γ φ hΓ),
@@ -650,7 +650,7 @@ begin
     exact hproves, },
 end 
 
-lemma max_ax_contains_imp_by_proof {form : Type} [ft : formula form] {φ ψ : form} {Γ : set form}
+lemma max_ax_contains_imp_by_proof {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (himp : φ ∈ Γ → ψ ∈ Γ) : (φ →' ψ) ∈ Γ :=
 begin
   cases (max_ax_contains_phi_or_neg Γ hΓ φ),
@@ -665,7 +665,7 @@ begin
     exact explosion, },
 end 
 
-lemma set_empty_iff_false {form : Type} [ft : formula form] {φ : form} 
+lemma set_empty_iff_false {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} 
   (hempty : {Γ : {Γ : set form | max_ax_consistent Γ }| φ ∈ Γ.val} ⊆ ∅) :  ax (φ ↔' ft.bot) :=
 begin
   refine false_of_always_false' φ (λ Γ hΓ h, hempty _),
@@ -673,7 +673,7 @@ begin
     { exact h },
 end
 
-lemma ax_neg_containts_pr_false {form : Type} [ft : formula form] {φ : form} {Γ : set form}
+lemma ax_neg_containts_pr_false {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hax :  ax (¬' φ)) : false :=
 begin
   have hbot : (ft.bot) ∈ Γ, from
@@ -681,7 +681,7 @@ begin
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
 end
 
-lemma contra_containts_pr_false {form : Type} [ft : formula form] {φ : form} {Γ : set form}
+lemma contra_containts_pr_false {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hnin : (¬' φ) ∈ Γ) : false :=
 begin
   have hbot : (ft.bot) ∈ Γ, from
@@ -689,7 +689,7 @@ begin
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot,
 end
 
-lemma ex_empty_proves_false {form : Type} [ft : formula form] {φ ψ χ : form} {Γ : set form}
+lemma ex_empty_proves_false {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ χ : form} {Γ : set form}
   (hΓ : max_ax_consistent Γ) (hempty : {Γ : {Γ : set form | max_ax_consistent Γ }| ψ ∈ Γ.val} ⊆ ∅) 
   (hin : φ ∈ Γ) (hiff :  ax (ψ ↔' ft.bot) →  ax (φ ↔' χ)) (hax :  ax (¬' χ)) : false :=
 begin
@@ -710,7 +710,7 @@ begin
   exact ax_neg_containts_pr_false hΓ h hax,
 end
 
-lemma not_in_from_notin {form : Type} [ft : formula form] {φ : form} {Γ : set form} 
+lemma not_in_from_notin {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {Γ : set form} 
   (hΓ : max_ax_consistent Γ) (h : φ ∉ Γ) : ((formula.not) φ ∈ Γ ) :=
 begin
   cases ((max_ax_contains_phi_xor_neg Γ hΓ.1).mp hΓ φ).left,
@@ -718,14 +718,14 @@ begin
   exact h_1,
 end
 
-lemma in_from_not_notin {form : Type} [ft : formula form] {φ : form} {Γ : set form} 
+lemma in_from_not_notin {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {Γ : set form} 
   (hΓ : max_ax_consistent Γ) (h : φ ∈ Γ) : ((formula.not) φ ∉ Γ ) :=
 begin
   by_contradiction hf,
   exact contra_containts_pr_false hΓ h hf,
 end
 
-lemma complement_from_contra {form : Type} [ft : formula form] {φ : form} :
+lemma complement_from_contra {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} :
   {Γ : {Γ : set form | max_ax_consistent Γ }| (¬' φ) ∈ Γ.val} = 
   {Γ : {Γ : set form | max_ax_consistent Γ }| φ ∈ Γ.val}ᶜ :=
 begin
@@ -743,7 +743,7 @@ begin
     apply not_in_from_notin Γ.2 h, },
 end
 
-lemma ax_imp_from_ex {form : Type} [ft : formula form] {φ ψ : form}
+lemma ax_imp_from_ex {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form}
   (h : ∀ (Γ : {Γ : set form | max_ax_consistent Γ }), ψ ∈ Γ.val → φ ∈ Γ.val) :
   ax (ψ →' φ) :=
 begin
