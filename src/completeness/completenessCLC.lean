@@ -915,6 +915,16 @@ begin
   simpa,
 end
 
+lemma ax_phi_s_f_imp_phi_X_set_of_mem' {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ : formCLC agents} {sf} {X : set _} (h : sf ∈ X) :
+  ax (phi_s_f φ (sf) →' phi_X_set φ X) :=
+begin
+  simp [phi_X_set],
+  apply @imp_finite_disjunction (formCLC agents) formulaCLC (phi_s_f φ (sf)),
+  apply phi_X_list_contains φ,
+  simpa,
+end
+
 
 -- Main Lemmas
 ----------------------------------------------------------
@@ -1770,25 +1780,189 @@ h.cl_subset (cl_contains_phi φ)
 
 
 
+-- 2. CGψ ∈ sf ⇒ ∀sn ∈ S that are reachable from sf by some path sf ∼f i1 sf1 ∼fi2 ... ∼f in sfn, 
+      -- where {i1, i2..in} ⊆ G, then ψ ∈ sfn and CGψ ∈ sfn
+lemma truth_C_helper {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {ψ : formCLC agents} {s} {ss} {G : set (agents)} {is : list (agents)} 
+  (hG : ∀ i, i ∈ is → i ∈ G) (hC : (C G ψ) ∈ s) :
+  ∀ t : (canonical_model_CLC agents).f.to_frameCL.states, (C_path is ss s t) → (ψ ∈ t ∧ (C G ψ) ∈ t):=
+begin
+    -- This proof is by induction on the length of the path.
+    induction' is with i is ih,
+    { simp [C_path], },
+    cases ss with t ss,
+    -- 2.1. Base case: length = 0
+    { -- 2.1.1. Assume CGψ ∈ sf
+      -- 2.1.2. ⊢ (CGψ) → ψ, by Axiom C and T.
+      intros t ht,
+      -- apply @ih ha hN,
+      -- { exact hC, },
+      -- { intros j hj,
+      --   apply hG j,
+      --   exact list.mem_cons_of_mem i hj, },
+      -- -- exact ht,
+      -- specialize @ih i hN ψ _ _ G hC hG.right u,
+      unfold C_path at ht,
+      dsimp at ht,
+      simp[ext_iff] at ht,
+      have hi := hG i,
+      simp at hi,
+      have hkt : K i (C G ψ) ∈ t, from
+      begin
+        apply (ht _).mp,
+        apply max_ax_contains_by_set_proof s.2 hC,
+        exact @c_imp_kc (agents) (formCLC agents) _ _ _ _ ψ G i hi,
+      end,
+      have hct : (C G ψ) ∈ t, from by apply max_ax_contains_by_set_proof t.2 hkt axCLC.T,
+      have ht : ψ ∈ t, 
+        from by apply max_ax_contains_by_set_proof t.2 hct (@c_imp (agents) (formCLC agents) _ _ _ _ ψ G i hi),
+      exact and.intro ht hct,
+    },
+    { -- 2.2. Inductive step: length (n) = m + 1
+      -- 2.2.1. Inductive Hypothesis: ∀sf m′ ∈ Sf if there exists some path sf ∼fi1 sf1 ∼fi2 ... ∼f im′ sfm′ , 
+        --  where {i1, i2..im′ } ⊆ G and m′ ≤ m then ψ ∈ sfm′ and CGψ ∈ sfm′ .
+      -- 2.2.2. Assume CGψ ∈ sf .
+      intros u hu,
+      simp [C_path] at *,
+      cases hu with hst htu,
+      dsimp at hst,
+      simp[ext_iff] at hst,
+      have hkt : K i (C G ψ) ∈ t, from
+      begin
+        apply (hst _).mp,
+        apply max_ax_contains_by_set_proof s.2 hC,
+        exact @c_imp_kc (agents) (formCLC agents) _ _ _ _ ψ G i hG.left,
+      end,
+      have hct : (C G ψ) ∈ t, from by apply max_ax_contains_by_set_proof t.2 hkt axCLC.T,
+      -- 2.2.3. ψ ∈ sfm and CGψ ∈ sfm, from 2.2.1.
+      -- specialize @ih i hN ψ _ (t :: ss) G hC hG.right u,
+      -- specialize @ih_s ψ t G hC i is hG.left hG.right ih u,
+      exact @ih i hN ψ t (ss) G hct hG.right u htu,
+      -- 2.2.4. Kim+1 CGψ ∈ sfm, by Axiom C, from 2.2.3.
+      -- 2.2.5. Kim+1 CGψ ∈ sfm+1, by definition ∼f (given that sfm ∼im+1sfm+1), from 2.2.4.
+      -- 2.2.6. CGψ ∈ sfm+1, by Axiom T, from 6.2.6.
+      -- 2.2.7. ψ ∈ sfm+1, by Axioms C & T, from 6.2.7.
+    },
+end
 
+-- 2. CGψ ∈ sf ⇒ ∀sn ∈ S that are reachable from sf by some path sf ∼f i1 sf1 ∼fi2 ... ∼f in sfn, 
+--       where {i1, i2..in} ⊆ G, then ψ ∈ sfn and CGψ ∈ sfn
+lemma truth_C_helper' {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} {sf: S_f φ} {sfs : list (S_f φ)} {G : set (agents)} {is : list (agents)} 
+  (hG : ∀ i, i ∈ is → i ∈ G) (hC : (C G ψ) ∈ sf) 
+  (hcl : ψ ∈ cl φ) (hcl' : C G ψ ∈ cl φ) (hcl'' : ∀ i ∈ G, (K i (C G ψ)) ∈ cl φ) :
+  ∀ tf : (S_f φ), (@C_path agents (filtered_model_CLC φ) is sfs sf tf) → (ψ ∈ tf ∧ (C G ψ) ∈ tf):=
+begin
+    -- This proof is by induction on the length of the path.
+    obtain ⟨s, hs⟩ := s_f_to_s φ sf,
+    induction' is with i is ih,
+    { simp [C_path], },
+    { simp only [list.mem_cons_iff, forall_eq_or_imp] at hG,
+      -- simp [hs, ht, hcl, hcl'] at *, 
+      cases sfs with tf sfs,
+      { intros tf htf,
+        obtain ⟨t, ht⟩ := @s_f_to_s agents ha hN φ tf,unfold C_path at htf,
+        dsimp at htf,
+        simp[ext_iff] at htf,
+        -- specialize htf ψ,
+        specialize hcl'' i hG.left,
+        -- specialize htf _ (hcl'' i hG.left),
+        -- simp [hcl''] at htf,
+        have hkt : K i (C G ψ) ∈ tf, from
+        begin
+          -- specialize htf _ (hcl'' i hG.left),
+          apply (htf _ ).mp,
+          simp [hs, ht, hcl, hcl'] at *,
+          split,
+          apply max_ax_contains_by_set_proof s.2 hC,
+          exact @c_imp_kc (agents) (formCLC agents) _ _ _ _ ψ G i hG.left,
+          exact hcl'',
+        end,
+        simp [hs, ht, hcl, hcl'] at *,
+        have hct : (C G ψ) ∈ t, from by apply max_ax_contains_by_set_proof t.2 hkt.left axCLC.T,
+        have ht : ψ ∈ t, 
+          from by apply max_ax_contains_by_set_proof t.2 hct (@c_imp (agents) (formCLC agents) _ _ _ _ ψ G i hG.left),
+        exact and.intro ht hct, },
+      { -- 2.2. Inductive step: length (n) = m + 1
+        -- 2.2.1. Inductive Hypothesis: ∀sf m′ ∈ Sf if there exists some path sf ∼fi1 sf1 ∼fi2 ... ∼f im′ sfm′ , 
+          --  where {i1, i2..im′ } ⊆ G and m′ ≤ m then ψ ∈ sfm′ and CGψ ∈ sfm′ .
+        -- 2.2.2. Assume CGψ ∈ sf .
+        intros uf huf,
+        obtain ⟨t, ht⟩ := @s_f_to_s agents ha hN φ tf,
+        obtain ⟨u, hu⟩ := @s_f_to_s agents ha hN φ uf,
+        simp only [C_path] at *,
+        cases huf with hst htu,
+        dsimp at hst,
+        simp[ext_iff] at hst,
+        have hkt : K' i (C G ψ) ∈ tf, from
+        begin
+          apply (hst _ ).mp,
+          simp [hs, ht, hcl, hcl'] at *,
+          split,
+          apply max_ax_contains_by_set_proof s.2 hC,
+          exact @c_imp_kc (agents) (formCLC agents) _ _ _ _ ψ G i hG.left,
+          exact hcl'' i hG.left,
+        end,
+        simp [hs, ht, hcl, hcl'] at hkt,
+        have hct : (C G ψ) ∈ tf, from 
+        begin
+          simp [hs, ht, hcl, hcl'] at *,
+          apply max_ax_contains_by_set_proof t.2 hkt.left axCLC.T,
+        end,
+        -- 2.2.3. ψ ∈ sfm and CGψ ∈ sfm, from 2.2.1.
+        -- specialize @ih i hN ψ _ (t :: ss) G hC hG.right u,
+        -- specialize @ih_s ψ t G hC i is hG.left hG.right ih u,
+        apply @ih ha,
+        -- apply ih hct hG.right uf htu,
+        exact hct,
+        repeat { assumption, },
+        exact hG.right,
 
--- lemma knows_conjunction {agents : Type} {form : Type} [ft : formula form] [kf : Kformula agents form] 
---   {φ : form} {i : agents} (φs : list (formCLC agents)):
---   ax ((finite_conjunction (list.map (k i) φs)) →' (k i (finite_conjunction φs))) :=
--- begin
--- induction φs,
--- { simp,
---   apply axCLC.MP,
---   exact axCLC.Prop1,
---   apply axCLC.RN,
---   exact @prtrue (formCLC agents) _, },
--- { apply @cut (formCLC agents),
---   { apply imp_and_imp,
---     exact φs_ih, },
---   { exact (mp _ _ double_imp (cut2 (p6 _ _) (cut (p5 _ _) 
---     (cut (mp _ _ axCLC.K (axCLC.RN axCLC.Prop4)) axCLC.K)))), },
--- },
--- end
+        -- exact @ih ha hN _ _ _ _ _ _ _ _ _ i hN ψ tf (sfs) G hct hG.right uf htu,
+        -- 2.2.4. Kim+1 CGψ ∈ sfm, by Axiom C, from 2.2.3.
+        -- 2.2.5. Kim+1 CGψ ∈ sfm+1, by definition ∼f (given that sfm ∼im+1sfm+1), from 2.2.4.
+        -- 2.2.6. CGψ ∈ sfm+1, by Axiom T, from 6.2.6.
+        -- 2.2.7. ψ ∈ sfm+1, by Axioms C & T, from 6.2.7.
+    }, },
+end
+
+lemma truth_C_helper'' {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ : formCLC agents} {sf: S_f φ} {G : set (agents)} 
+  (hcl : ψ ∈ cl φ) (hcl' : C G ψ ∈ cl φ) (hcl'' : ∀ i ∈ G, (K i (C G ψ)) ∈ cl φ)
+  (h : ∀ tf : (S_f φ), (∃ is sfs, (∀ i, i ∈ is → i ∈ G) ∧ 
+  @C_path agents (filtered_model_CLC φ) is sfs sf tf) → (ψ ∈ tf ∧ (C G ψ) ∈ tf)) :
+  (C G ψ) ∈ sf :=
+begin
+    -- 3.1. Assume ∀sfn ∈ Sf if there exists some path sf ∼fi1 sf1 ∼fi2 ... ∼fin sfn,where {i1, i2..in} ⊆ G then ψ ∈ sfn
+    -- 3.2. let Σ be the set of all tf ∈ Sf, 
+      -- such that for every state tfn if that tf n is reachable from tf through some path tf ∼f i1 tf 1 ∼fi2 ... ∼fin tf n,
+      -- where {i1, i2..in} ⊆ G, then ψ ∈ tf .
+    let Γ := {sf : S_f φ | ∀ tf : (S_f φ), (∃ is sfs, (∀ i, i ∈ is → i ∈ G) ∧ 
+      @C_path agents (filtered_model_CLC φ) is sfs sf tf) → (ψ ∈ tf ∧ (C G ψ) ∈ tf)},
+    -- 3.3. sf ∈ Σ, from 2.3.1 and 2.3.2.
+    have hsfΓ : sf ∈ Γ, from h,
+    -- 3.4. ⊢ φsf→ φΣ , by propositional logic, from 2.3.3.
+    have hax1 : axCLC ((phi_s_f φ sf) ~> (phi_X_set φ Γ)), from ax_phi_s_f_imp_phi_X_set_of_mem' hsfΓ,
+    -- 3.5. ⊢ φΣ → EGψ, by propositional logic, because all t ∈ Σ, ψ ∈ t.
+    -- 3.6. ⊢ φΣ → EGφΣ , from 2.3.2.
+    -- 3.7. ⊢ φsf → CGψ, by Axiom RC, from 2.3.4, 2.3.5 & 2.3.6.
+    have hψΓ : (∃ i, i ∈ G) → ∀ sf ∈ Γ, ψ ∈ sf, from
+    begin
+      intros hi sf hsf,
+      cases hi with i hi,
+      simp [Γ] at hsf,
+      apply and.elim_left,
+      apply hsf sf (i :: list.nil) (by simp [hi]) (list.nil),
+      unfold C_path,
+      exact rfl,
+    end,
+    have hax2 : axCLC ((phi_X_set φ Γ) ~> E G (ψ & (phi_X_set φ Γ))), from sorry,
+    -- 3.8. CGψ ∈ sf , from 2.3.7.
+    obtain ⟨s, hs⟩ := s_f_to_s φ sf,
+    simp [hs, hcl'],
+    -- apply max_ax_contains_by_set_proof s.2 (phi_s_f_in_s ), --(by @cut (formCLC agents) _ _ _ _ hax1 hax2),
+    sorry,
+end
 
 lemma truth_lemma_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   (χ : formCLC agents) (sf : (S_f χ)) (φ) (hχ : subformula φ χ) :
@@ -2054,7 +2228,19 @@ begin
   { sorry, },
 
   -- case C
-  { sorry, },
+  { have hφ := subformula.trans (subformula.common_know _ _) hχ,
+    let ih := λ sf, ih _ sf hφ,
+    unfold s_entails_CLC s_entails_CLC.aux at *,
+
+    -- 2. CGψ ∈ sf ⇒ ∀sn ∈ S that are reachable from sf by some path sf ∼f i1 sf1 ∼fi2 ... ∼f in sfn, 
+      -- where {i1, i2..in} ⊆ G, then ψ ∈ sfn and CGψ ∈ sfn
+    -- have hcpath := truth_C_helper',
+    -- 3. (∀sn ∈ S that are reachable from sf by some path sf ∼fi1 sf1 ∼fi2 ... ∼finsfn, where {i1, i2..in} ⊆ G, then ψ ∈ sfn) ⇒ CGψ ∈ sf .
+    -- 4. CGψ ∈ sf ⇔ ∀sn ∈ S if sf n is reachable from sf by some path sf ∼fi1 sf1 ∼fi2 ... ∼fin sf n, 
+      -- where {i1, i2..in} ⊆ G, then ψ ∈ sfn, from 2 & 3.
+    -- 5. CGψ ∈ sf ⇔ ∀sn ∈ S if sfn is reachable from sf by some path sf ∼fi1 sf1 ∼fi2 ... ∼f in sfn, where {i1, i2..in} ⊆ G, then M f , sfn ⊨ ψ, from 1 & 4.
+    -- 6. CGψ ∈ sf ⇔ M f , sf ⊨ CGψ, by definition ⊨, from 5.
+    sorry, },
 end
 
 ----------------------------------------------------------

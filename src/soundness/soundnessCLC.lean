@@ -140,8 +140,11 @@ begin
 
   -- Five
   { unfold s_entails_CLC.aux,
-    intros m s h1 h2,
-    exact h1 (h2 s (m.f.rfl i s)), },
+    intros m s h1 t ht ht1,
+    apply h1,
+    intros u hu,
+    apply ht1,
+    exact m.f.trans _ _ _ _ (m.f.sym _ _ _ ht) hu, },
   
   -- C
   { unfold s_entails_CLC.aux,
@@ -183,8 +186,7 @@ begin
     induction' is with i is ih_is,
     { by_contradiction,
       exact C_path_nil hC, },
-    {
-      simp[s_entails_CLC.aux, C_path] at *,
+    { simp[s_entails_CLC.aux, C_path] at *,
       cases ss with u ss,
       { simp[C_path] at *,
         specialize ih m s hs i his.left t hC,
@@ -195,10 +197,7 @@ begin
         { apply and.elim_right,
           apply ih m s hs i his.left u hC.left, },
           exact his.right,
-          exact hC.right,
-      },
-    },
-  }, 
+          exact hC.right, }, }, }, 
 end
 
 inductive single : Type
