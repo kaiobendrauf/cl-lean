@@ -1,5 +1,5 @@
 import soundness.soundnessCL
-import completeness.canonicalCL
+import completeness.canonical
 import syntax.axiomsCL
 import syntax.consistency_lemmas
 import tactic.induction
