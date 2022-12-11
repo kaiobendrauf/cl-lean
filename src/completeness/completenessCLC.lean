@@ -152,34 +152,27 @@ begin
     from by apply max_ax_contains_by_set_proof s.2 hs1 (p5 _ _),
   have hs3 : ∃ uf ∈ Γ, phi_s_f φ uf ∈ s, from phi_X_set_exists hs2,
   cases hs3 with tf hs3, cases hs3 with htf hs3,
-  -- There exists some i ∈ G, such that ((phi_s_f φ tf) ∧ (k i ¬ (phi_X_set φ Γ))) is consistent
-  have hs4 : ¬' (e G (phi_X_set φ Γ)) ∈ s, from by apply max_ax_contains_by_set_proof s.2 hs1 (p6 _ _),
-  have hs5 : ∃ i ∈ G, (¬ k i (phi_X_set φ Γ)) ∈ s, from not_everyone_knows_consistent hs4,
+  -- There exists some i ∈ G, such that ((phi_s_f φ tf) ∧ (¬ k i (phi_X_set φ Γ))) is consistent
+  have hs4 : ¬' (e G (phi_X_set φ Γ)) ∈ s, 
+    from by apply max_ax_contains_by_set_proof s.2 hs1 (p6 _ _),
+  have hs5 : ∃ i ∈ G, (¬ k i (phi_X_set φ Γ)) ∈ s, 
+    from not_everyone_knows_consistent hs4,
   cases hs5 with i hs5, cases hs5 with hi hs5,
-  have hs6 : ((phi_s_f φ tf) & (¬ (k i (phi_X_set φ Γ)))) ∈ s, 
-    from by apply max_ax_contains_by_set_proof_2h s.2 hs3 hs5 axCLC.Prop4,
 
-  have hs6 : @ax_consistent (formCLC agents) _ _ 
-    {((phi_s_f φ tf) ∧' (K' i (¬' (phi_X_set φ Γ))))}, from 
+  -- ((phi_s_f φ tf) ∧ (¬ k i ¬ (phi_X_set φ Γᶜ))) is consistent
+  have hs6 : (¬ (k i (¬ (phi_X_set φ Γᶜ)))) ∈ s, from
   begin
-    intros fs hfs,
-    unfold finite_ax_consistent,
-    induction fs with f fs ih,
-    { simp,
-      exact consistent_of_not_ax h, },
-    { simp at *,
-      rw hfs.left at *,
-      intro hf,
-      sorry,
-    }
-
+    apply max_ax_contains_by_set_proof s.2 hs5,
+    apply @nk_imp_nk _ hN,
+    apply (phi_X_set_disjunct_of_disjuncts φ _ _).mpr,
+    rw (compl_union_self Γ),
+    apply univ_disjunct_provability,
+    exact canonical.nonempty_S_f φ,
   end,
 
-  -- ((phi_s_f φ tf) ∧ (k i (phi_X_set φ Γᶜ))) is consistent
+  -- ((phi_s_f φ tf) ∧ (V_{sf ∈ Γᶜ} ¬ k i ¬ (phi_s_f φ sf))) is consistent
 
-  -- ((phi_s_f φ tf) ∧ (V_{sf ∈ Γᶜ} k i (phi_s_f φ sf))) is consistent
-
-  -- There exists some uf ∈ Γᶜ, such that ((phi_s_f φ tf) ∧ (k i (phi_s_f φ uf))) is consistent
+  -- There exists some uf ∈ Γᶜ, such that ((phi_s_f φ tf) ∧ (¬ k i ¬ (phi_s_f φ uf))) is consistent
 
   -- tf ~a uf, 
     -- Suppose that Γ ∧ Kˆa∆ is consistent. Suppose that it is not the case that Γ ∼ca ∆. Therefore, there is a formula φ such that

@@ -18,6 +18,16 @@ begin
   exact likemp,
 end
 
+lemma nk_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] 
+  {i : agents} {φ ψ : form} (h : ax (ψ →' φ)) :
+  ax ((¬' (K' i φ)) →' (¬' (K' i ψ))) :=
+begin
+  apply contrapos.mpr,
+  apply MP' (RN _ _ h),
+  apply K,
+end
+
 lemma knows_conjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
   [fax : formula_ax form] [kf : Kformula agents form] 
   {i : agents} {φs : list (form)} :
@@ -32,7 +42,25 @@ induction φs,
   { apply imp_and_imp,
     exact φs_ih, },
   { exact (mp _ _ double_imp (cut2 (p6 _ _) (cut (p5 _ _) 
-    (cut (mp _ _ (K _ _ _) ((RN _ _ )(p4 _ _))) (K _ _ _))))), },
+    (cut (mp _ _ (K _ _ _) ((RN _ _ )(p4 _ _))) (K _ _ _))))), }, },
+end
+
+lemma nk_disjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] 
+  {i : agents} {φs : list (form)} :
+  ax ((¬' (K' i (¬' (finite_disjunction φs)))) →' 
+    (finite_disjunction (list.map (λ φ, ¬' (K' i (¬' φ))) φs))) :=
+begin
+induction φs with φ φs ih,
+{ simp [finite_disjunction],
+  apply MP' (RN _ _ (not_bot)),
+  exact contra_explosion, },
+{ simp [finite_disjunction],
+  apply cut,
+  apply nk_imp_nk (iff_r demorgans''''),
+  sorry,
+  
+  
 },
 end
 
