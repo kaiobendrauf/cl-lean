@@ -1,4 +1,8 @@
 import syntax.consistency
+import data.set.finite
+import data.fintype.basic
+import data.set.basic 
+open set
 
 -- ⊢ ((¬ φ) → (¬ (K i φ)))
 def n_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
@@ -43,7 +47,7 @@ begin
   exact prtrue,
 end
 
-lemma everyone_knows_true {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+lemma everyone_knows_pr {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
   [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {G : set (agents)} (h : ax φ) :
   ax (E' G φ) :=
 begin
@@ -56,3 +60,36 @@ begin
   apply RN,
   exact h,
 end
+
+lemma everyone_knows_imp_knows {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G) :
+  ax ((E' G φ) →' (K' i φ)) :=
+begin
+  apply cut,
+  apply iff_l,
+  apply E,
+  apply finite_conj_imp,
+  simp,
+  apply exists.intro i,
+  exact and.intro hi rfl,
+end
+
+lemma K_everyone {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] {φ ψ : form} {G : set (agents)} :
+  ax ((E' G (φ →' ψ)) →' ((E' G φ) →' (E' G ψ))) :=
+begin
+  apply cut, apply iff_l, apply E,
+  apply imp_switch,
+  apply cut, apply iff_l, apply E,
+  apply @cut1 _ _ _ _ _ _ _ _ (iff_r (E ψ G)),
+  induction (finset.to_list (finite.to_finset (finite.of_fintype G))),
+  { simp,
+    exact prtrue, },
+  { simp,
+    apply imp_and_and_and_imp,
+    apply and_ax _ ih,
+    apply cut2,
+    apply K,
+    exact likemp, },
+end
+

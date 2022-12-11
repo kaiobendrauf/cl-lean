@@ -1,15 +1,5 @@
 import syntax.CLKLemmas
 
--- ⊢ 
--- def n_inp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] [clf : CLformula agents form] [kf : Kformula agents form] [cf : Cformula agents form]
---   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 
---   -- ax (¬' K' i (C' G φ)  →' ¬' C' G φ
---   ax ((¬' (K' i (C' G φ))) →' (¬' (C' G φ))) :=
--- begin
---   rw contrapos, 
-  
--- end
-
 def c_imp_kc {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] [fax : formula_ax form] 
   [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 

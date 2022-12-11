@@ -69,7 +69,6 @@ begin
   exact iff_iden',
 end
 
-
 lemma prtrue {form : Type} [ft : formula form] [fax : formula_ax form] : 
 -- ⊢ ⊤
   ax (ft.top) := 
@@ -77,7 +76,6 @@ begin
   rw ft.topdef,
   exact iden,
 end
-
 
 lemma not_bot {form : Type} [ft : formula form] [fax : formula_ax form] : 
 -- ⊢ ⊤
@@ -92,8 +90,6 @@ lemma topnotbot {form : Type} [ft : formula form] [fax : formula_ax form] :
   ft.top = ¬' ft.bot :=
 by simp[formula.notdef, ft.topdef]
 
-
-
 lemma cut {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒  ⊢ (ψ → χ) ⇒  ⊢ (φ → χ)
  ax (φ →' ψ) → ax (ψ →' χ) → ax (φ →' χ) :=
@@ -107,7 +103,6 @@ begin
   exact h2,
   exact h1,
 end 
-
 
 lemma hs1 {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ χ : form} : 
 -- ⊢ (ψ → χ) → ((φ → ψ) → (φ → χ))
@@ -275,6 +270,38 @@ begin
   intro h,
   exact (mp _ _ double_imp (cut (cut (p5 _ _) (mp _ _ (p5 _ _) h)) 
     (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h)) (p4 _ _))))
+end
+
+lemma imp_and_and_and_imp {form : Type} [ft : formula form] [fax : formula_ax form] {a b c d e f : form} : 
+-- ⊢ (φ → ψ →) ∧ (χ → θ)⇒ ⊢ (φ ∧ χ) → (ψ ∧ θ) → (φ ∧ χ)
+  ax (((a →' b →' c) ∧' (d →' e →' f))) → ax (((a ∧' d) →' (b ∧' e) →' (c ∧' f))) :=
+begin
+  intro h,
+  apply cut,
+  apply imp_and_and_imp,
+  apply h,
+  apply mp, 
+  apply double_imp,
+  apply cut2,
+  apply p5,
+  apply cut,
+  apply p6,
+  apply imp_shift.mp,
+  apply imp_switch,
+  apply mp, 
+  apply double_imp,
+  apply cut2,
+  apply p5,
+  apply cut, 
+  apply p6,
+  apply imp_shift.mp,
+  apply cut1,
+  apply likemp,
+  apply imp_switch,
+  apply imp_shift.mp,
+  apply cut1,
+  apply likemp,
+  exact p4 _ _,
 end
 
 lemma not_contra_equiv_true {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} : 
@@ -869,18 +896,27 @@ begin
 end
 
 lemma demorgans'''' {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form} : 
-ax (¬' (φ →' ψ) →' (φ ∧' ¬' ψ)) :=
+ax (¬' (φ →' ψ) ↔' (φ ∧' ¬' ψ)) :=
 begin
-  refine contrapos.mp _,
-  apply cut,
-  apply iff_l,
-  apply demorgans''',
-  apply @cut _ _ _ _ (φ →' ψ),
-  refine imp_switch _,
-  apply cut1,
-  exact likemp,
-  exact dne,
-  exact dni,
+  apply ax_iff_intro,
+  { apply contrapos.mp,
+    apply cut (iff_l demorgans'''),
+    apply @cut _ _ _ _ (φ →' ψ),
+    refine imp_switch _,
+    apply cut1,
+    exact likemp,
+    exact dne,
+    exact dni, },
+  { apply @cut _ _ _ _ ((φ→' ψ) →' ⊥'),
+    { apply imp_switch,
+      refine imp_imp_iff_imp.mp _,
+      apply imp_switch,
+      apply cut (p5 _ _),
+      apply cut1 likemp,
+      apply cut2 (p6 _ _),
+      exact contra_explosion, },
+    { rw ft.notdef,
+      exact iden, }, },
 end
 
 

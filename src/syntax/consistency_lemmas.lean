@@ -1,58 +1,6 @@
 import syntax.consistency
 import tactic.induction
 
--- -- Motivation: easier to prove Lean's `and` than in `ax`
--- @[simp] lemma ax_and {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form} :
---   ax (φ ∧' ψ) ↔ ax φ ∧ ax ψ :=
--- ⟨λ h, ⟨mp _ _ (p5 _ _) h, mp _ _ (p6 _ _) h⟩,
---  λ ⟨h1, h2⟩, mp _ _ (mp _ _ (p4 _ _) h1) h2⟩
-
--- -- Motivation: corresponds to Lean's `iff.intro`
--- @[simp] lemma ax_iff_intro {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form}
---   (h1 : ax (φ →' ψ)) (h2 : ax (ψ →' φ)) : ax (φ ↔' ψ) :=
--- begin
---   simp only [ft.iffdef, ax_and],
---   exact ⟨h1, h2⟩
--- end
-
--- -- Motivation: corresponds more or less to Lean's `imp_congr`
--- @[simp] lemma ax_imp_congr_left {form : Type} [ft : formula form] [fax : formula_ax form] {φ φ' ψ : form}
---   (hl : ax (φ ↔' φ')) : ax ((φ →' ψ) ↔' (φ' →' ψ)) :=
--- ax_iff_intro
---   (mp _ _ (imp_switch hs1) (iff_r hl))
---   (mp _ _ (imp_switch hs1) (iff_l hl))
-
--- /-- `φ` is provable iff `ψ` is, if it's provable `φ` and `ψ` are equivalent.
-
--- If we have the deduction theorem, the converse is also true: formulas are provably equivalent iff
--- their provability is equivalent. -/
--- -- Motivation: allows rewriting after proving equivalence
--- lemma ax_iff_mp {form : Type} [ft : formula form] [fax : formula_ax form] {φ ψ : form} (hiff : ax (φ ↔' ψ)) :
---   ax φ ↔ ax ψ :=
--- ⟨mp _ _ (iff_l hiff), mp _ _ (iff_r hiff)⟩
-
--- -- Motivation: for simplication in combination with `ax_iff_mp`
--- @[simp] lemma ax_and_top_iff {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} :
---   ax ((φ ∧' ⊤') ↔' φ) :=
--- by simpa [ft.topdef, ft.notdef] using @phi_and_true _ _ φ
-
--- -- Motivation: for simplication in combination with `ax_iff_mp`
--- @[simp] lemma ax_top_imp_iff {form : Type} [ft : formula form] [fax : formula_ax form] (φ : form) :
---   ax ((⊤' →' φ) ↔' φ) :=
--- ax_iff_intro
---   (combS combI (combK prtrue)) -- λ h, h prtrue
---   (p1 _ _)
-
--- -- Motivation: useful simplification lemma
--- @[simp] lemma ax_top_imp {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} :
---   ax (⊤' →' φ) ↔ ax φ :=
--- ax_iff_mp (ax_top_imp_iff φ)
-
--- -- Motivation: corresponds to Lean's `false.elim`
--- @[simp] lemma ax_bot_elim {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} :
---   ax (⊥' →' φ) :=
--- (ax_iff_mp (ax_imp_congr_left contra_equiv_false)).mp (p5 _ _)
-
 -- Motivation: a lot of places assume `¬ ax ⊥'` so it's worth trying to reduce these assumptions.
 lemma ax_consistent.not_ax_bot {form : Type} [ft : formula form] [fax : formula_ax form] {s : set form}
   (h : ax_consistent s) : ¬ ax (⊥' : form) :=
@@ -156,4 +104,3 @@ lemma exists_max_ax_consistent_neg_mem {form : Type} [ft : formula form] [fax : 
   ∃ (Γ : set form), max_ax_consistent Γ ∧ ¬' φ ∈ Γ :=
 by simpa using lindenbaum (comphelper hφ)
 
--- lemma conj_contains

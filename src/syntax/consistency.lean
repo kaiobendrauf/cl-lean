@@ -176,6 +176,38 @@ begin
         exact fs_ih x hx, }, }, },
 end
 
+lemma finite_conj_imp {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} 
+  {φ : form} (h : φ ∈ fs): 
+  ax ((finite_conjunction fs) →' φ) :=
+begin
+  induction fs with f fs ih,
+  { simp at h,
+    exact false.rec _ h, },
+  { unfold finite_conjunction, 
+    cases h,
+    { simp [h] at *,
+      exact p5 _ _, },
+    { apply cut,
+      { exact p6 _ _, },
+      { exact ih h, }, }, },
+end
+
+-- lemma finite_conj_like_mp {form : Type} [ft : formula form] [fax : formula_ax form] 
+--   {fs : list form} {φ ψ : form} : 
+--   ax ((finite_conjunction fs) →' φ) :=
+-- begin
+--   induction fs with f fs ih,
+--   { simp at h,
+--     exact false.rec _ h, },
+--   { unfold finite_conjunction, 
+--     cases h,
+--     { simp [h] at *,
+--       exact p5 _ _, },
+--     { apply cut,
+--       { exact p6 _ _, },
+--       { exact ih h, }, }, },
+-- end
+
 -- Consistency for a finite set of formulas L
 def finite_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (fs : list (form)) : Prop := 
 ¬  ax ((finite_conjunction fs) →' ft.bot)
@@ -475,7 +507,7 @@ begin
 end
 
 def set_proves {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set (form)) (φ : form) :=
-∃ (fs : list (form)), (∀ x ∈ fs, x ∈ Γ) ∧  ax ((finite_conjunction fs) →' φ)
+∃ (fs : list (form)), (∀ x ∈ fs, x ∈ Γ) ∧ ax ((finite_conjunction fs) →' φ)
 
 lemma not_ax_consistent_of_proves_bot {form : Type} [ft : formula form] [fax : formula_ax form] (Γ : set form)
   (h : set_proves Γ ft.bot) : ¬ (ax_consistent Γ) :=

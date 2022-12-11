@@ -1,4 +1,5 @@
 import syntax.axiomsCLC
+import syntax.consistency_lemmas
 
 local attribute [instance] classical.prop_decidable
 
@@ -234,7 +235,6 @@ inductive subformula {agents : Type} : formCLC agents → formCLC agents → Pro
 | everyone_knows (G) (φ) : subformula φ (e G φ)
 | common_know (G) (φ) : subformula φ (c G φ)
 
-
 lemma subformula.cl_subset_and_left {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   {φ ψ : formCLC agents} : cl φ ⊆ cl (φ & ψ) :=
 begin
@@ -342,4 +342,5 @@ end
 lemma subformula.mem_cl {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   {φ ψ : formCLC agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
+
 
