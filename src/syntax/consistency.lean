@@ -192,22 +192,6 @@ begin
       { exact ih h, }, }, },
 end
 
--- lemma finite_conj_like_mp {form : Type} [ft : formula form] [fax : formula_ax form] 
---   {fs : list form} {φ ψ : form} : 
---   ax ((finite_conjunction fs) →' φ) :=
--- begin
---   induction fs with f fs ih,
---   { simp at h,
---     exact false.rec _ h, },
---   { unfold finite_conjunction, 
---     cases h,
---     { simp [h] at *,
---       exact p5 _ _, },
---     { apply cut,
---       { exact p6 _ _, },
---       { exact ih h, }, }, },
--- end
-
 -- Consistency for a finite set of formulas L
 def finite_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (fs : list (form)) : Prop := 
 ¬  ax ((finite_conjunction fs) →' ft.bot)

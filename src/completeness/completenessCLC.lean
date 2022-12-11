@@ -141,31 +141,56 @@ begin
   -- By contradiction assume (¬ ((phi_X_set φ Γ) → e G (phi_X_set φ Γ))) is consistent
   by_contradiction,
   have := comphelper h,
-  obtain ⟨t', hexn, htn⟩ := exists_max_ax_consistent_neg_mem h,
-  let t : (canonical_model_CLC agents).f.states := ⟨t', hexn⟩,
-  have htn : ¬' (phi_X_set φ Γ~>e G (phi_X_set φ Γ)) ∈ t, from by apply htn,
+  obtain ⟨s', hexn, htn⟩ := exists_max_ax_consistent_neg_mem h,
+  let s : (canonical_model_CLC agents).f.states := ⟨s', hexn⟩,
+  have hsn : ¬' (phi_X_set φ Γ~>e G (phi_X_set φ Γ)) ∈ s, from by apply htn,
   -- ((phi_X_set φ Γ) ∧ ¬ (e G (phi_X_set φ Γ))) is consistent
-  have ht1 : phi_X_set φ Γ ∧' ¬' (e G (phi_X_set φ Γ)) ∈ t, 
-    from by apply max_ax_contains_by_set_proof t.2 htn (iff_l demorgans''''),
-  -- There exists some uf ∈ Sf, such that ((phi_s_f φ uf) ∧ ¬ (e G (phi_X_set φ Γ))) is consistent
-  have ht2 : phi_X_set φ Γ ∈ t, 
-    from by apply max_ax_contains_by_set_proof t.2 ht1 (p5 _ _),
-  have ht3 : ∃ uf ∈ Γ, phi_s_f φ uf ∈ t, from phi_X_set_exists ht2,
-  -- There exists some i ∈ G, such that ((phi_s_f φ uf) ∧ (k i ¬ (phi_X_set φ Γ))) is consistent
-  have ht4 : ¬' (e G (phi_X_set φ Γ)) ∈ t, from by apply max_ax_contains_by_set_proof t.2 ht1 (p6 _ _),
-  have ht5 : ∃ i ∈ G, (¬ k i (phi_X_set φ Γ)) ∈ t, from not_everyone_knows_consistent ht4,
-  -- have ht6 : ∃ uf, ∃ i ∈ G, @ax_consistent (formulaCLC agents) _ _ 
-  --   {((phi_s_f φ uf) ∧' (K' i (¬' (phi_X_set φ Γ))))}, from sorry,
+  have hs1 : phi_X_set φ Γ ∧' ¬' (e G (phi_X_set φ Γ)) ∈ s, 
+    from by apply max_ax_contains_by_set_proof s.2 htn (iff_l demorgans''''),
+  -- There exists some tf ∈ Sf, such that ((phi_s_f φ tf) ∧ ¬ (e G (phi_X_set φ Γ))) is consistent
+  have hs2 : phi_X_set φ Γ ∈ s, 
+    from by apply max_ax_contains_by_set_proof s.2 hs1 (p5 _ _),
+  have hs3 : ∃ uf ∈ Γ, phi_s_f φ uf ∈ s, from phi_X_set_exists hs2,
+  cases hs3 with tf hs3, cases hs3 with htf hs3,
+  -- There exists some i ∈ G, such that ((phi_s_f φ tf) ∧ (k i ¬ (phi_X_set φ Γ))) is consistent
+  have hs4 : ¬' (e G (phi_X_set φ Γ)) ∈ s, from by apply max_ax_contains_by_set_proof s.2 hs1 (p6 _ _),
+  have hs5 : ∃ i ∈ G, (¬ k i (phi_X_set φ Γ)) ∈ s, from not_everyone_knows_consistent hs4,
+  cases hs5 with i hs5, cases hs5 with hi hs5,
+  have hs6 : ((phi_s_f φ tf) & (¬ (k i (phi_X_set φ Γ)))) ∈ s, 
+    from by apply max_ax_contains_by_set_proof_2h s.2 hs3 hs5 axCLC.Prop4,
 
-  -- ((phi_s_f φ uf) ∧ (k i (phi_X_set φ Γᶜ))) is consistent
+  have hs6 : @ax_consistent (formCLC agents) _ _ 
+    {((phi_s_f φ tf) ∧' (K' i (¬' (phi_X_set φ Γ))))}, from 
+  begin
+    intros fs hfs,
+    unfold finite_ax_consistent,
+    induction fs with f fs ih,
+    { simp,
+      exact consistent_of_not_ax h, },
+    { simp at *,
+      rw hfs.left at *,
+      intro hf,
+      sorry,
+    }
 
-  -- ((phi_s_f φ uf) ∧ (V_{sf ∈ Γᶜ} k i (phi_s_f φ sf))) is consistent
+  end,
 
-  -- There exists some vf ∈ Γᶜ, such that ((phi_s_f φ uf) ∧ (k i (phi_s_f φ vf))) is consistent
+  -- ((phi_s_f φ tf) ∧ (k i (phi_X_set φ Γᶜ))) is consistent
 
-  -- uf ~a vf, because {K a φ | K a φ ∈ uf} ⊆ vf
+  -- ((phi_s_f φ tf) ∧ (V_{sf ∈ Γᶜ} k i (phi_s_f φ sf))) is consistent
 
-  -- Contradiction becasue uf ∈ Γ and vf ∉ Γ,
+  -- There exists some uf ∈ Γᶜ, such that ((phi_s_f φ tf) ∧ (k i (phi_s_f φ uf))) is consistent
+
+  -- tf ~a uf, 
+    -- Suppose that Γ ∧ Kˆa∆ is consistent. Suppose that it is not the case that Γ ∼ca ∆. Therefore, there is a formula φ such that
+    --   a) Kaφ∈Γ but Kaφ̸∈∆, or
+    --   b) Kaφ̸∈Γ but Kaφ∈∆. We proceed by these cases
+    --   a) By 2 of this lemma and the fact that Φ is closed under single negations, ¬Kaφ ∈ ∆. However, by positive introspection Γ ⊢ KaKaφ. Note that KaKaφ∧Kˆa¬Kaφ is inconsistent. However ⊢ Kˆa∆ → Kˆa¬Kaφ. Therefore Γ ∧ Kˆa∆ is inconsistent, contradicting our initial assump- tion.
+    --   b) By 2 of this lemma and the fact that Φ is closed under single nega- tions, ¬Kaφ ∈ Γ. However, ⊢ Kˆa∆ → KˆaKaφ and ⊢ KˆaKaφ → Kaφ. Therefore Γ ∧ Kˆa∆ is inconsistent, contradicting our initial assump-
+    --   tion. 
+    --   In both cases we are led to a contradiction. Therefore Γ ∼ca ∆.
+
+  -- Contradiction because there is a path tf ~i uf ~cG vf such that φ ∉ vf, but tf ∈ Γ,
 
   sorry,
 end
