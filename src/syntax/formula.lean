@@ -27,12 +27,12 @@ infix    `∨'` : 80         := λ φ ψ, (¬' φ) →' ψ
 
 -- finite conjunction of formulas
 def finite_conjunction {form : Type} [ft : formula form] : (list form) → form
-  | list.nil   := ft.top
+  | list.nil   := ⊤'
   | (f :: fs)  := f ∧' (finite_conjunction fs) 
 
 -- finite disjunction of formulas
 def finite_disjunction {form : Type} [ft : formula form] : (list form) → form
-  | list.nil   := ft.bot
+  | list.nil   := ⊥'
   | (f :: fs)  := f ∨' (finite_disjunction fs)
 
 class formula_ax (form : Type) [ft : formula form] :=
@@ -84,16 +84,14 @@ class Kformula (agents : out_param Type) [hN : fintype agents] (form : Type) [fo
 (Four : ∀ φ i, ax ((knows i φ) →' (knows i (knows i φ))))
 (Five : ∀ φ i, ax ((¬' (knows i (φ))) →' (knows i (¬' (knows i φ)))))
 (RN : ∀ φ i, ax φ → ax (knows i φ))
-(E : ∀ φ G, ax ((everyone_knows G φ) ↔' 
-              (finite_conjunction (list.map (λ i, knows i φ) 
-              (finset.to_list (finite.to_finset (finite.of_fintype G)))))))
+(edef : everyone_knows = λ G φ, (finite_conjunction (list.map (λ i, knows i φ) (finset.to_list (finite.to_finset (finite.of_fintype G))))))
 
 def K    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.K
 def T    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.T
 def Four {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.Four
 def Five {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.Five
 def RN   {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.RN
-def E    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.E
+-- def E    {agents : Type} {form : Type} [hN : fintype agents] [ft : formula form] [fax : formula_ax form] [kf : Kformula agents form] := kf.E
 
 notation `K'` : 80         := Kformula.knows
 notation `E'` : 80         := Kformula.everyone_knows

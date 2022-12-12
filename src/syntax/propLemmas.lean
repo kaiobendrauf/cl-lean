@@ -1141,3 +1141,42 @@ begin
     exact p4 _ _, }
 end
 
+lemma demorans_fin_dis {form : Type} [ft : formula form] [fax : formula_ax form] 
+  {φs : list (form)} :
+  ax ((¬' (finite_disjunction φs)) ↔' ((finite_conjunction (list.map (¬') φs)))) :=
+begin
+  induction φs with φ φs ih,
+  { simp [finite_disjunction, finite_conjunction, ft.topdef, ft.notdef], },
+  { simp [finite_disjunction, finite_conjunction],
+    apply iff_cut demorgans'''',
+    apply ax_iff_intro,
+    { apply imp_and_and_imp,
+      apply ax_and.mpr,
+      exact and.intro iden (iff_l ih), },
+    { apply imp_and_and_imp,
+      apply ax_and.mpr,
+      exact and.intro iden (iff_r ih), }, },
+end
+
+lemma demorans_fin_con {form : Type} [ft : formula form] [fax : formula_ax form] 
+  {φs : list (form)} :
+  ax ((¬' (finite_conjunction φs)) ↔' ((finite_disjunction (list.map (¬') φs)))) :=
+begin
+  induction φs with φ φs ih,
+  { have hdne := @dne form ft fax ⊥',
+    have hdni := @dni form ft fax ⊥',
+    simp [finite_disjunction, finite_conjunction],
+    simp only [ft.topdef, ft.notdef] at *,
+    apply ax_iff_intro hdne hdni, },
+  { simp [finite_disjunction, finite_conjunction],
+    apply iff_cut demorgans''',
+    apply ax_iff_intro,
+    { apply cut2 dne,
+      apply imp_switch,
+      apply cut1 likemp,
+      exact iff_l ih, },
+    { apply cut2 dni,
+      apply imp_switch,
+      apply cut1 likemp,
+      exact iff_r ih, }, },
+end

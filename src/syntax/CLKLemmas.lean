@@ -51,26 +51,24 @@ lemma nk_disjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : f
   ax ((¬' (K' i (¬' (finite_disjunction φs)))) →' 
     (finite_disjunction (list.map (λ φ, ¬' (K' i (¬' φ))) φs))) :=
 begin
-induction φs with φ φs ih,
-{ simp [finite_disjunction],
-  apply MP' (RN _ _ (not_bot)),
-  exact contra_explosion, },
-{ simp [finite_disjunction],
+  apply cut (nk_imp_nk (iff_r demorans_fin_dis)),
   apply cut,
-  apply nk_imp_nk (iff_r demorgans''''),
-  sorry,
-  
-  
-},
+  apply contrapos.mpr,
+  apply knows_conjunction,
+  apply cut,
+  apply iff_l,
+  apply demorans_fin_con,
+  have heq : list.map ¬' (list.map (K' i) (list.map ¬' φs)) = 
+    list.map (λ (φ : form), ¬' (K' i (¬' φ))) φs, from by simp,
+  rw heq,
+  exact iden,
 end
 
 lemma everyone_empty {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
   [fax : formula_ax form] [kf : Kformula agents form] {φ : form} :
   ax (E' ∅ φ) :=
 begin
-  apply mp,
-  apply iff_r,
-  apply E,
+  rw kf.edef,
   simp,
   exact prtrue,
 end
@@ -79,9 +77,7 @@ lemma everyone_knows_pr {agents : Type} [hN : fintype agents] {form : Type} [ft 
   [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {G : set (agents)} (h : ax φ) :
   ax (E' G φ) :=
 begin
-  apply mp,
-  apply iff_r,
-  apply E,
+  rw kf.edef,
   apply finite_conj_forall_iff.mp,
   simp,
   intros i hi,
@@ -93,9 +89,7 @@ lemma everyone_knows_imp_knows {agents : Type} [hN : fintype agents] {form : Typ
   [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G) :
   ax ((E' G φ) →' (K' i φ)) :=
 begin
-  apply cut,
-  apply iff_l,
-  apply E,
+  rw kf.edef,
   apply finite_conj_imp,
   simp,
   apply exists.intro i,
@@ -106,10 +100,9 @@ lemma K_everyone {agents : Type} [hN : fintype agents] {form : Type} [ft : formu
   [fax : formula_ax form] [kf : Kformula agents form] {φ ψ : form} {G : set (agents)} :
   ax ((E' G (φ →' ψ)) →' ((E' G φ) →' (E' G ψ))) :=
 begin
-  apply cut, apply iff_l, apply E,
+  rw kf.edef,
   apply imp_switch,
-  apply cut, apply iff_l, apply E,
-  apply @cut1 _ _ _ _ _ _ _ _ (iff_r (E ψ G)),
+  simp,
   induction (finset.to_list (finite.to_finset (finite.of_fintype G))),
   { simp,
     exact prtrue, },

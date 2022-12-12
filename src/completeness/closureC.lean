@@ -19,10 +19,6 @@ noncomputable def cl_C {agents : Type} [hN : fintype agents] (G : set (agents)) 
   finset (formCLC agents) :=
 finset.image (λ i, k (i) (c G φ)) (to_finset G) ∪ finset.image (λ i, (¬ k (i) (c G φ))) (to_finset G)
 
-noncomputable def cl_E {agents : Type} [hN : fintype agents] (G : set (agents)) (φ : formCLC agents) : 
-  finset (formCLC agents) := 
-finset.image (λ i, k i φ) (to_finset G) ∪ finset.image (λ i, (¬ (k i φ))) (to_finset G)
-
 noncomputable def cl {agents : Type} [hN : fintype agents] : 
   formCLC agents → finset (formCLC agents)
 |  bot          := {bot, ¬ bot}
@@ -33,7 +29,6 @@ noncomputable def cl {agents : Type} [hN : fintype agents] :
                     (ite (G = ∅) (finset.empty : finset (formCLC agents)) 
                          ({(c (G) ([G] φ)), ¬(c (G) ([G] φ))} ∪ cl_C G ([G] φ)))
 | (k i φ)       := cl φ ∪ {(k i φ), ¬ (k i φ)}
-| (e G φ)       := cl φ ∪ {(e G φ), ¬ (e G φ)} ∪ (cl_E G φ)
 | (c G φ)       := cl φ ∪ {(c G φ), ¬ (c G φ)} ∪ cl_C G φ
 
 lemma cl_contains_phi {agents : Type} [hN : fintype agents] (φ : formCLC agents) :
@@ -182,30 +177,6 @@ begin
       exact hψ.1,
       exact hψ.2, },
     cases hx,
-    { apply exists.intro ((e φ_G (φ_φ))),
-      simp[hx],
-      exact @iff_dni (formCLC agents) _ _ _, },
-    { unfold cl_E at *,
-      simp at hx,
-      cases hx,
-      { cases hx with i hi,
-        apply exists.intro (¬ k i φ_φ),
-        simp[hi.left, ←hi.right],
-        exact @iff_iden' (formCLC agents) _ _ _, },
-      { cases hx with i hi,
-        apply exists.intro (k i φ_φ),
-        simp[hi.left, ←hi.right],
-        exact @iff_dni (formCLC agents) _ _ _, }, }, },
-  { cases hx,
-    { specialize φ_ih hx,
-      cases φ_ih with ψ hψ,
-      apply exists.intro ψ,
-      split,
-      apply finset.mem_union_left,
-      apply finset.mem_union_left,
-      exact hψ.1,
-      exact hψ.2, },
-    cases hx,
     { apply exists.intro ((c φ_G (φ_φ))),
       simp[hx],
       exact @iff_dni (formCLC agents) _ _ _, },
@@ -232,7 +203,6 @@ inductive subformula {agents : Type} : formCLC agents → formCLC agents → Pro
 | imp_right (φ ψ) : subformula ψ (φ ~> ψ)
 | effectivity (G) (φ) : subformula φ ([G] φ)
 | knows (i) (φ) : subformula φ (k i φ)
-| everyone_knows (G) (φ) : subformula φ (e G φ)
 | common_know (G) (φ) : subformula φ (c G φ)
 
 lemma subformula.cl_subset_and_left {agents : Type} [ha : nonempty agents] [hN : fintype agents]
@@ -301,17 +271,6 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset_everyone_knows {agents : Type} [ha : nonempty agents] [hN : fintype agents]
-  {φ : formCLC agents} {G : set (agents)} : cl φ ⊆ cl (e G φ) :=
-begin
-  intros x h,
-  induction φ,
-  repeat
-  { simp [cl] at *,
-    repeat {cases h, simp [h],},
-    {simp [h], }, },
-end
-
 lemma subformula.cl_subset_common_know {agents : Type} [ha : nonempty agents] [hN : fintype agents]
   {φ : formCLC agents} {G : set (agents)} : cl φ ⊆ cl (c G φ) :=
 begin
@@ -335,7 +294,6 @@ begin
   { exact subformula.cl_subset_imp_right, },
   { exact subformula.cl_subset_effectivity, },
   { exact subformula.cl_subset_knows, },
-  { exact subformula.cl_subset_everyone_knows, },
   { exact subformula.cl_subset_common_know, },
 end
 

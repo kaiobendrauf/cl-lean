@@ -222,9 +222,24 @@ begin
     apply max_ax_contains_by_set_proof_2h s.2 _ _ (axCLC.Prop4),
     exact not_in_from_notin s.2 hfa.left,
     exact ih hfa.right, },
-
-
 end
+
+lemma nk_phi_X_list_exists {agents : Type} [hN : fintype agents] [ha : nonempty agents] 
+  {φ : formCLC agents} {i : agents} {X : list (S_f φ)} {s : (canonical_model_CLC agents).f.states} 
+  (hfa : ∀ x, x ∈ X → ¬' (K' i (¬'(phi_s_f φ x))) ∉ s) : 
+  (¬' (finite_disjunction (list.map (λ (φ : formCLC agents), ¬' (K' i (¬' φ))) (phi_X_list φ X)))) ∈ s :=
+begin
+  induction X with x X ih,
+  { simp only [phi_X_list, finite_disjunction],
+    apply max_ax_contains_by_empty_proof s.2 not_bot, },
+  { simp only [phi_X_list, finite_disjunction] at *,
+    simp at hfa,
+    apply max_ax_contains_by_set_proof s.2 _ (iff_r demorgans''''),
+    apply max_ax_contains_by_set_proof_2h s.2 _ _ (axCLC.Prop4),
+    exact not_in_from_notin s.2 hfa.left,
+    exact ih hfa.right, },
+end
+
 
 -- phi X (given a finset)
 ----------------------------------------------------------

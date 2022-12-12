@@ -14,18 +14,6 @@ Copyright (c) 2021 Paula Neeley. All rights reserved.
 Author: Paula Neeley
 -/
 
-instance formulaCLC {agents : Type} : formula (formCLC agents) :=
-{ bot := ⊥,
-  and := formCLC.and,
-  imp := formCLC.imp,
-  not := λ φ, ¬ φ,
-  iff := λ φ ψ, φ <~> ψ,
-  top := ⊤,
-  notdef := by simp,
-  iffdef := by simp,
-  topdef := by simp
-}
-
 inductive axCLC {agents  : Type} [hN : fintype agents] : formCLC agents → Prop 
 -- (Prop) Propositional tautologiess
 | Prop1 {φ ψ}                 : axCLC (φ ~> (ψ ~> φ))
@@ -58,9 +46,6 @@ inductive axCLC {agents  : Type} [hN : fintype agents] : formCLC agents → Prop
 | T     {φ} {i}                : axCLC ((k i φ) ~> φ)
 | Four  {φ} {i}                : axCLC ((k i φ) ~> (k i (k i φ)))
 | Five  {φ} {i}                : axCLC ((¬(k i (φ))) ~> ((k i (¬ (k i φ)))))
-| E     {φ} {G}                : axCLC ((e G φ) <~> 
-                                  (finite_conjunction (list.map (λ i, k i φ) 
-                                  (finset.to_list (finite.to_finset (finite.of_fintype G))))))
 | C     {φ} {G}                : axCLC ((c G φ) ~> (e G (φ & (c G φ))))
 | RN    {φ} {i}
         (h: axCLC φ)           : axCLC (k i φ)
@@ -88,15 +73,15 @@ instance CLformulaCLC {agents : Type} [hN : fintype agents] : CLformula agents (
   S   := @axCLC.S   agents hN,
   Eq  := @axCLC.Eq agents hN, }
 
-instance KformulaCLC {agents : Type} [hN : fintype agents] : Kformula agents (formCLC agents) :=
+noncomputable instance KformulaCLC {agents : Type} [hN : fintype agents] : Kformula agents (formCLC agents) :=
 { knows := formCLC.K,
-  everyone_knows := formCLC.E,
+  everyone_knows := λ G φ, e G φ,
   K := @axCLC.K agents hN,
   T := @axCLC.T agents hN,
   Four := @axCLC.Four agents hN,
   Five := @axCLC.Five agents hN,
   RN := @axCLC.RN agents hN, 
-  E := @axCLC.E agents hN, }
+  edef := by simp, }
 
 instance CformulaCLC {agents : Type} [hN : fintype agents] : Cformula agents (formCLC agents) :=
 { common_know := formCLC.C,

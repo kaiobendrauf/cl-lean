@@ -6,7 +6,7 @@ def c_imp_kc {agents : Type} [hN : fintype agents] {form : Type} [ft : formula f
   ax ((C' G φ) →' (K' i (C' G φ))) :=
 begin
   apply cut, apply C,
-  apply cut, apply iff_l, apply E,
+  rw kf.edef,
   apply cut, apply @finite_conj_forall_imp _ _ _ _ (K' i (φ ∧' (C' G φ))),
   simp,
   apply exists.intro i,
@@ -23,7 +23,7 @@ def c_imp_k {agents : Type} [hN : fintype agents] {form : Type} [ft : formula fo
   ax ((C' G φ) →' (K' i φ)) :=
 begin
   apply cut, apply C,
-  apply cut, apply iff_l, apply E,
+  rw kf.edef,
   apply cut, apply @finite_conj_forall_imp _ _ _ _ (K' i (φ ∧' (C' G φ))),
   simp,
   apply exists.intro i,

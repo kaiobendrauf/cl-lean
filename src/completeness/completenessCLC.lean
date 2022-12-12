@@ -1,5 +1,5 @@
 import completeness.filtered_modelC
-import syntax.CLClemmas
+import syntax.CLCLemmas
 
 
 local attribute [instance] classical.prop_decidable
@@ -124,7 +124,6 @@ begin
   simp at hfa,
   apply in_from_not_notin s.2 h,
   apply max_ax_contains_by_set_proof s.2 _ dni,
-  apply max_ax_contains_by_set_proof s.2 _ (iff_r axCLC.E),
   apply not_everyone_knows_consistent_list,
   intros i hi,
   apply hfa,
@@ -171,21 +170,60 @@ begin
   end,
 
   -- ((phi_s_f φ tf) ∧ (V_{sf ∈ Γᶜ} ¬ k i ¬ (phi_s_f φ sf))) is consistent
+  unfold phi_X_set phi_X_finset at hs6,
+  have hs7 : _ ∈ s, 
+    from by apply max_ax_contains_by_set_proof s.2 hs6 (by apply @nk_disjunction _ hN),
 
   -- There exists some uf ∈ Γᶜ, such that ((phi_s_f φ tf) ∧ (¬ k i ¬ (phi_s_f φ uf))) is consistent
-
-  -- tf ~a uf, 
-    -- Suppose that Γ ∧ Kˆa∆ is consistent. Suppose that it is not the case that Γ ∼ca ∆. Therefore, there is a formula φ such that
-    --   a) Kaφ∈Γ but Kaφ̸∈∆, or
-    --   b) Kaφ̸∈Γ but Kaφ∈∆. We proceed by these cases
-    --   a) By 2 of this lemma and the fact that Φ is closed under single negations, ¬Kaφ ∈ ∆. However, by positive introspection Γ ⊢ KaKaφ. Note that KaKaφ∧Kˆa¬Kaφ is inconsistent. However ⊢ Kˆa∆ → Kˆa¬Kaφ. Therefore Γ ∧ Kˆa∆ is inconsistent, contradicting our initial assump- tion.
-    --   b) By 2 of this lemma and the fact that Φ is closed under single nega- tions, ¬Kaφ ∈ Γ. However, ⊢ Kˆa∆ → KˆaKaφ and ⊢ KˆaKaφ → Kaφ. Therefore Γ ∧ Kˆa∆ is inconsistent, contradicting our initial assump-
-    --   tion. 
-    --   In both cases we are led to a contradiction. Therefore Γ ∼ca ∆.
+  have hs8 : ∃ uf ∈ Γᶜ, (¬' (K' i (¬' (phi_s_f φ uf)))) ∈ s, from
+    begin
+      by_contradiction hfa,
+      simp only [exists_prop, not_exists, not_and] at hfa,
+      apply in_from_not_notin s.2 hs7,
+      apply @nk_phi_X_list_exists agents hN ha φ i _ s _,
+      intros sf hsf,
+      apply hfa,
+      simp [finite.mem_to_finset] at hsf,
+      exact hsf,
+    end,
+  cases hs8 with uf hs8, cases hs8 with huf hs8,
+  simp [hΓ] at huf htf,
+  cases huf with vf huf, cases huf with is huf, cases huf with his huf, cases huf with sfs hvf, cases sfs with sfs hsfs,
+  
+  -- tf ~a uf,
+  have htu : uf ∈ (filtered_model_CLC φ).f.rel i tf, from
+  begin
+    simp,
+    ext1,
+    split,
+    { intro hxtf,
+      by_contradiction hxuf,
+      simp at hxtf hxuf,
+      have haxknuf : ax (K' i x→' ¬' (phi_s_f φ uf)), from sorry,
+      have hs9 : (¬' (K' i (K' i (x)))) ∈ s, 
+        from by apply max_ax_contains_by_set_proof s.2 hs8 (nk_imp_nk haxknuf),
+      have hs10 : ((K' i (K' i (x)))) ∈ s, 
+        from sorry,
+      sorry,
+    },
+    { have haxknuf : ax ((¬' (K' i x)) →' ¬' (phi_s_f φ uf)), from sorry,
+      have hs9 : (¬' (K' i ¬ (K' i (x)))) ∈ s, 
+        from by apply max_ax_contains_by_set_proof s.2 hs8 (nk_imp_nk haxknuf),
+      have hs10 : ((K' i (x))) ∈ s, 
+        from sorry,
+      have hs11 : ((¬' (K' i (x)))) ∈ s, 
+        from sorry,
+      sorry,
+    },
+  end,
 
   -- Contradiction because there is a path tf ~i uf ~cG vf such that φ ∉ vf, but tf ∈ Γ,
-
-  sorry,
+  apply hvf,
+  apply htf _ (i :: is) _ (uf :: sfs),
+  { simp only [C_path],
+    exact and.intro htu hsfs, },
+  { simp, 
+    exact and.intro hi his, },
 end
 
 
@@ -281,21 +319,21 @@ begin
     cases hs with s hs, },
 
   { -- case bot
-    simp [s_entails_CLC, s_entails_CLC.aux],
+    simp [s_entails_CLC],
     apply s_f_n_contains,
     exact @hs, 
     apply or.intro_left,
     exact @bot_not_mem_of_ax_consistent (formCLC agents) _ _ s.1 s.2.1, },
 
   { -- case var
-    simpa [s_entails_CLC, s_entails_CLC.aux], },
+    simpa [s_entails_CLC], },
 
   { -- case and
     have hφ := subformula.trans (subformula.and_left _ _) hχ,
     have hψ := subformula.trans (subformula.and_right _ _) hχ,
     specialize ih_φ _ sf hφ,
     specialize ih_ψ _ sf hψ,
-    unfold s_entails_CLC s_entails_CLC.aux at *,
+    unfold s_entails_CLC at *,
     rw [ih_φ, ih_ψ, hs, hs, hs],
     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
     split,
@@ -311,7 +349,7 @@ begin
     have hψ := subformula.trans (subformula.imp_right _ _) hχ,
     specialize ih_φ _ sf hφ,
     specialize ih_ψ _ sf hψ,
-    unfold s_entails_CLC s_entails_CLC.aux at *,
+    unfold s_entails_CLC at *,
     rw [ih_φ, ih_ψ, hs, hs, hs],
     simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
     split,
@@ -330,8 +368,8 @@ begin
     { -- case [G]ψ, where G = N :
       calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
           -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(N ), by definition ⊨
-          ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
-            by unfold s_entails_CLC s_entails_CLC.aux at *
+          ↔ {t | s_entails_CLC (filtered_model_CLC χ) t φ} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
+            by unfold s_entails_CLC at *
           -- ↔ ∃t ∈ S, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(N ), by definition E.
       ... ↔ ∃ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) ∧ tilde (phi_X_set χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC agents).f.to_frameCL.E.E t (univ) :
           begin
@@ -371,8 +409,8 @@ begin
           end, },
     { calc s_entails_CLC (filtered_model_CLC χ) sf ([G]φ) 
           -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ E(sf )(G), by definition ⊨
-          ↔ {t | s_entails_CLC.aux (filtered_model_CLC χ) φ t} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
-            by unfold s_entails_CLC s_entails_CLC.aux at *
+          ↔ {t | s_entails_CLC (filtered_model_CLC χ) t φ} ∈ (filtered_model_CLC χ).f.to_frameCL.E.E sf G : 
+            by unfold s_entails_CLC at *
           -- ↔ ∀t ∈ S, sf = tf ⇒  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ E(t)(G), by definition E.
       ... ↔ ∀ t, (∀ x, x ∈ sf ↔ x ∈ t ∧ x ∈ cl χ) → tilde (phi_X_set χ ({sf | s_entails_CLC (filtered_model_CLC χ) sf φ})) ∈ (canonical_model_CLC agents).f.to_frameCL.E.E t (G) :
           begin
@@ -409,14 +447,14 @@ begin
   --     from rfl,
     have hφ := subformula.trans (subformula.knows _ _) hχ,
     let ih := λ sf, ih _ sf hφ,
-    -- unfold s_entails_CLC s_entails_CLC.aux at *
+    -- unfold s_entails_CLC at *
     split,
     { -- ⇒
       simp only [@hs, hφ.mem_cl, hχ.mem_cl, and_true],
       -- 1. Let M f , sf ⊨ Kiψ
       intro h,
       -- 2. ∀tf ∈ Sf , sf ∼fi tf ⇒ M f , tf ⊨ ψ, by the definition of ⊨, from 1.
-      unfold s_entails_CLC s_entails_CLC.aux at h ih,
+      unfold s_entails_CLC at h ih,
       -- 3. ∀tf ∈ Sf , sf ∼fi tf ⇒ ψ ∈ tf , by the induction hypothesis, from 2.
       simp only [ih] at h,
       -- 4. Assume by contradiction that ¬Kiψ ∈ s.
@@ -507,7 +545,7 @@ begin
       intro h,
       -- 2. Consider any tf ∈ Sf , such that sf ∼f i tf .
       -- 3. {χ | Kiχ ∈ sf } = {χ | Kiχ ∈ tf }, by definition ∼f i , from 2.
-      unfold s_entails_CLC s_entails_CLC.aux at *,
+      unfold s_entails_CLC at *,
       dsimp,
       intros tf htf,
       obtain ⟨t, ht⟩ := s_f_to_s χ tf,
@@ -529,26 +567,11 @@ begin
       simp only [ih],
       -- 8. M f , sf ⊨ Kiψ, by the definition of ⊨, from 7.
       exact hφt, }, },
-  
-  -- case E
-  { have hφ := subformula.trans (subformula.everyone_knows _ _) hχ,
-    let ih := λ sf, ih _ sf hφ,
-    unfold s_entails_CLC s_entails_CLC.aux at *,
-    dsimp,
-    split,
-    { intro h,
-      sorry,
-    },
-    { intro h,
-      sorry,
-    },
-
-  },
 
   -- case C
   { have hφ := subformula.trans (subformula.common_know _ _) hχ,
     let ih := λ sf, ih _ sf hφ,
-    unfold s_entails_CLC s_entails_CLC.aux at *,
+    unfold s_entails_CLC at *,
     simp [ih],
     have hcl : φ ∈ cl χ, from subformula.mem_cl hφ,
     have hcl' : c G φ ∈ cl χ, from subformula.mem_cl hχ,

@@ -1,5 +1,8 @@
 import data.fintype.basic
 import data.finset.basic
+import syntax.formula
+
+open set
 
 inductive formCLC (agents  : Type) /- [fintype agents] -/ : Type
 -- φ := ⊥ | p | φ → φ| φ ∧ φ | [G]φ
@@ -9,7 +12,7 @@ inductive formCLC (agents  : Type) /- [fintype agents] -/ : Type
   | imp  (φ ψ : formCLC)                : formCLC
   | eff  (G: set agents) (φ : formCLC)  : formCLC
   | K    (a: agents)     (φ : formCLC)  : formCLC
-  | E    (G: set agents) (φ : formCLC)  : formCLC
+  -- | E    (G: set agents) (φ : formCLC)  : formCLC
   | C    (G: set agents) (φ : formCLC)  : formCLC
 
 
@@ -22,15 +25,21 @@ notation `[` G `]`:90 φ := formCLC.eff G φ
 notation `⊤`:80         := ¬ (formCLC.bot)
 notation φ `∨` ψ        := ¬ (( ¬ φ) & (¬ ψ))
 notation φ `<~>` ψ        := (φ ~> ψ) & (ψ ~> φ)
-notation `k`           := formCLC.K
-notation `e`           := formCLC.E
-notation `c`           := formCLC.C 
 
+instance formulaCLC {agents : Type} : formula (formCLC agents) :=
+{ bot := ⊥,
+  and := formCLC.and,
+  imp := formCLC.imp,
+  not := λ φ, ¬ φ,
+  iff := λ φ ψ, φ <~> ψ,
+  top := ⊤,
+  notdef := by simp,
+  iffdef := by simp,
+  topdef := by simp
+}
 
--- def everyone_knows {agents: Type}: 
--- list agents → formCLC agents → formCLC agents
--- | list.nil  _ := (⊤)
--- | (i :: is) φ := (K' i φ) & everyone_knows is φ
+notation `k` := formCLC.K
+notation `e` := λ G φ, (finite_conjunction (list.map (λ i, k i φ) 
+                       (finset.to_list (finite.to_finset (finite.of_fintype G)))))
+notation `c` := formCLC.C 
 
-
--- notation `E'`        := everyone_knows

@@ -30,40 +30,54 @@ begin
     exact hC, },
 end
 
-@[simp]
-protected def formCLC.sizeof' (agents : Type) [agents_inst : has_sizeof agents] : formCLC agents → ℕ
-| bot := 1
-| (var n) := 1 + sizeof n
-| (imp φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
-| (and φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
-| ([G] φ) := 1 + sizeof G + formCLC.sizeof' φ
-| (k i φ) := 1 + sizeof i + formCLC.sizeof' φ
-| (e i φ) := 1 + sizeof i + formCLC.sizeof' φ + 1 -- Make recursion from E' to K' possible
-| (c i φ) := 1 + sizeof i + formCLC.sizeof' φ
+-- @[simp]
+-- protected def formCLC.sizeof' (agents : Type) [agents_inst : has_sizeof agents] : formCLC agents → ℕ
+-- | bot := 1
+-- | (var n) := 1 + sizeof n
+-- | (imp φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
+-- | (and φ ψ) := 1 + formCLC.sizeof' φ + formCLC.sizeof' ψ
+-- | ([G] φ) := 1 + sizeof G + formCLC.sizeof' φ
+-- | (k i φ) := 1 + sizeof i + formCLC.sizeof' φ
+-- | (e i φ) := 1 + sizeof i + formCLC.sizeof' φ + 1 -- Make recursion from E' to K' possible
+-- | (c i φ) := 1 + sizeof i + formCLC.sizeof' φ
 
-def formCLC.has_sizeof' {agents} : has_sizeof (formCLC agents) := ⟨formCLC.sizeof' _⟩
-local attribute [instance] formCLC.has_sizeof'
+-- def formCLC.has_sizeof' {agents} : has_sizeof (formCLC agents) := ⟨formCLC.sizeof' _⟩
+-- local attribute [instance] formCLC.has_sizeof'
 
 -- Definition of semantic entailment
 -- Order of arguments is swapped to help the equation compiler find the recursive parameter
-def s_entails_CLC.aux {agents : Type}  : Π (m : modelCLK agents), formCLC agents → m.f.states → Prop
-  | m bot       s := false
-  | m (var n)   s := s ∈ m.v n
-  | m (imp φ ψ) s := (s_entails_CLC.aux m φ s) → (s_entails_CLC.aux m ψ s)
-  | m (and φ ψ) s := (s_entails_CLC.aux m φ s) ∧ (s_entails_CLC.aux m ψ s)
-  | m ([G] φ)   s := {t : m.f.states | s_entails_CLC.aux m φ t} ∈ m.f.E.E (s) (G)
-  | m (k i φ)   s := ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC.aux m φ t
-  | m (e G φ)   s := ∀ i ∈ G, (s_entails_CLC.aux m (k i φ) s)
-  | m (c G φ)   s := ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → 
-                        s_entails_CLC.aux m φ t
+def s_entails_CLC {agents : Type}  : Π (m : modelCLK agents), m.f.states → formCLC agents → Prop
+  | m s bot       := false
+  | m s (var n)   := s ∈ m.v n
+  | m s (imp φ ψ) := (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
+  | m s (and φ ψ) := (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
+  | m s ([G] φ)   := {t : m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
+  | m s (k i φ)   := ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
+  -- | m (e G φ)   s := ∀ i ∈ G, (s_entails_CLC.aux m (k i φ) s)
+  | m s (c G φ)   := ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → 
+                        s_entails_CLC m t φ
   -- | m (c G φ)   s := ∀ t : m.f.states, (relation.trans_gen (disjunct_rel G) s t) → s_entails_CLC.aux m φ t
 
--- Definition of semantic entailment
-def s_entails_CLC {agents : Type} (m : modelCLK agents) (s : m.f.states) (φ : formCLC agents) : Prop :=
-s_entails_CLC.aux m φ s
+-- -- Definition of semantic entailment
+-- def s_entails_CLC {agents : Type} (m : modelCLK agents) (s : m.f.states) (φ : formCLC agents) : Prop :=
+-- s_entails_CLC.aux m φ s
 
 -- def tilde (m: modelCLC agents) (φ : formCLC agents)  :=
 -- {t: m.f.states | s_entails m t φ}
+lemma s_entails_CLC_conjunction {agents : Type} {m : modelCLK agents} {s : m.f.states} 
+  {φs : list (formCLC agents)} : 
+  s_entails_CLC m s (finite_conjunction φs) ↔ ∀ φ ∈ φs, s_entails_CLC m s φ :=
+begin
+  induction φs with φ φs ih,
+  { simp [finite_conjunction],
+    show s_entails_CLC m s ⊤,
+    simp [s_entails_CLC], },
+  { unfold finite_conjunction,
+    show s_entails_CLC m s (φ & finite_conjunction φs) ↔ _,
+    simp [s_entails_CLC],
+    intros h,
+    exact ih, },
+end
 
 variables {agents : Type}
 
@@ -103,7 +117,7 @@ lemma not_s_entails_imp (m : modelCLK agents) : ∀ s φ,
   (¬ (s_entails_CLC m s φ)) ↔ (s_entails_CLC m s (¬ φ)) :=
 begin
   intros s φ,
-  unfold s_entails_CLC s_entails_CLC.aux,
+  unfold s_entails_CLC,
   refl
 end
 
