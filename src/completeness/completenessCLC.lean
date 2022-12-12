@@ -1,5 +1,5 @@
 import completeness.filtered_modelC
-import syntax.CLClemmas
+import syntax.CLCLemmas
 
 
 local attribute [instance] classical.prop_decidable
