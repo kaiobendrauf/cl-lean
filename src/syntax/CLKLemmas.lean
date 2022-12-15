@@ -6,8 +6,7 @@ open set
 
 -- ⊢ ((¬ φ) → (¬ (K i φ)))
 def n_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
-  [fax : formula_ax form] [kf : Kformula agents form]
-  {φ : form} {i : agents} : 
+  [fax : formula_ax form] [kf : Kformula agents form] {φ : form} {i : agents} : 
   ax ((¬' φ) →' (¬' (K' i φ))) :=
 begin
   apply by_contra_ax,
@@ -19,13 +18,21 @@ begin
 end
 
 lemma nk_imp_nk {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
-  [fax : formula_ax form] [kf : Kformula agents form] 
-  {i : agents} {φ ψ : form} (h : ax (ψ →' φ)) :
+  [fax : formula_ax form] [kf : Kformula agents form] {i : agents} {φ ψ : form} (h : ax (ψ →' φ)) :
   ax ((¬' (K' i φ)) →' (¬' (K' i ψ))) :=
 begin
   apply contrapos.mpr,
   apply MP' (RN _ _ h),
   apply K,
+end
+
+lemma nnk_imp_k {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 
+  [fax : formula_ax form] [kf : Kformula agents form] {i : agents} {φ : form} :
+  ax ((¬' (K' i (¬' (K' i (φ))))) →' (K' i (φ))) :=
+begin
+  apply contrapos.mp,
+  apply cut (Five _ _),
+  exact dni,
 end
 
 lemma knows_conjunction {agents : Type} [hN : fintype agents] {form : Type} [ft : formula form] 

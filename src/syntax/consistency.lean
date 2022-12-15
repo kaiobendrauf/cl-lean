@@ -89,7 +89,8 @@ begin
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) L'_ih)) (mp _ _ (p6 _ _) and_commute')))
 end 
 
-lemma fin_conj_repeat_helper {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {fs : list form} :
+lemma fin_conj_repeat_helper {form : Type} [ft : formula form] [fax : formula_ax form] 
+  {φ : form} {fs : list form} :
   (∀ ψ ∈ fs, ψ = φ) →  ax (φ →'  (finite_conjunction fs)) :=
 begin
   intros h1, induction fs,
@@ -101,8 +102,8 @@ begin
   exact cut (mp _ _ double_imp (p4 _ _)) (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (fs_ih h2))),
 end
 
-lemma fin_conj_repeat {form : Type} [ft : formula form] [fax : formula_ax form] {φ : form} {fs : list form}
-  (hnpr : ¬ ( ax ft.bot)) :
+lemma fin_conj_repeat {form : Type} [ft : formula form] [fax : formula_ax form] 
+  {φ : form} {fs : list form} (hnpr : ¬ ( ax ft.bot)) :
   (∀ ψ ∈ fs, ψ = ¬' φ) →  ax (¬' (finite_conjunction fs)) →  ax φ :=
 begin
   intros h1 h2, induction fs,
@@ -177,20 +178,12 @@ begin
 end
 
 lemma finite_conj_imp {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} 
-  {φ : form} (h : φ ∈ fs): 
-  ax ((finite_conjunction fs) →' φ) :=
-begin
-  induction fs with f fs ih,
-  { simp at h,
-    exact false.rec _ h, },
-  { unfold finite_conjunction, 
-    cases h,
-    { simp [h] at *,
-      exact p5 _ _, },
-    { apply cut,
-      { exact p6 _ _, },
-      { exact ih h, }, }, },
-end
+  {φ : form} (h : φ ∈ fs) : 
+  ax ((finite_conjunction fs) →' φ) := finite_conj_forall_imp φ h
+
+lemma noin_imp_nfin_con {form : Type} [ft : formula form] [fax : formula_ax form] {fs : list form} 
+  {φ : form} (h : φ ∈ fs) : 
+  ax ((¬' φ) →' ¬' (finite_conjunction fs)) := contrapos.mpr (finite_conj_imp h)
 
 -- Consistency for a finite set of formulas L
 def finite_ax_consistent {form : Type} [ft : formula form] [fax : formula_ax form] (fs : list (form)) : Prop := 

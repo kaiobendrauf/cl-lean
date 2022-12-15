@@ -80,13 +80,22 @@ begin
 end
 
 lemma phi_s_f_forall_imp {agents : Type} [hN : fintype agents] [ha : nonempty agents]
-  {φ : formCLC agents} (sf : S_f φ) : 
-  (∀ x ∈ sf, axCLC ((phi_s_f φ sf) ~> x)) :=
+  {φ : formCLC agents} {sf : S_f φ} : 
+  (∀ x ∈ sf, axCLC ((phi_s_f φ sf) ~> x)) := 
 begin
   unfold phi_s_f,
   intros x hx,
   have hx : x ∈ sf.1.1.to_list, from (multiset.mem_to_list x _).mpr hx,
   exact @finite_conj_forall_imp (formCLC agents) _ _ (sf.1.1).to_list x (hx),
+end
+
+lemma notin_nphi_s_f {agents : Type} [hN : fintype agents] [ha : nonempty agents]
+  {φ ψ : formCLC agents} {sf : S_f φ} (h : ψ ∈ sf): 
+  (axCLC ((¬ ψ) ~> ¬ phi_s_f φ sf)) :=
+begin
+  unfold phi_s_f,
+  apply @noin_imp_nfin_con (formCLC agents) _ _ _ ψ,
+  simp, apply h,
 end
 
 lemma phi_s_f_conj_contains_ax {agents : Type} [hN : fintype agents] [ha : nonempty agents]
@@ -110,7 +119,7 @@ lemma phi_s_f_conj_contains {agents : Type} [hN : fintype agents] [ha : nonempty
 begin
   apply @ax_iff_intro (formCLC agents),
   { apply imp_imp_and,
-    exact phi_s_f_forall_imp _ _ hψ,
+    exact phi_s_f_forall_imp _ hψ,
     exact iden, },
   { refine imp_and_r _,
     exact iden, },

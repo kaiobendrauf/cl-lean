@@ -18,7 +18,7 @@ namespace canonical
 ----------------------------------------------------------
 -- Canonical CL Model (not a valid CLC model)
 ----------------------------------------------------------
-@[simps?] def canonical_model_CLC (agents : Type) [hN : fintype agents] [ha : nonempty agents] : 
+@[simps?] noncomputable def canonical_model_CLC (agents : Type) [hN : fintype agents] [ha : nonempty agents] : 
   modelCLK agents :=
 { f := canonical_CLK ha (formCLC agents) (nprfalseCLC ha),
   -- V is as usual, such that s ∈ V (p) iff p ∈ s
@@ -232,7 +232,7 @@ end
 lemma s_f_n_contains {agents : Type} [ha : nonempty agents] [hN : fintype agents] 
   (φ ψ : formCLC agents) (sf : (S_f φ)) (s : (canonical_model_CLC agents).f.states)
   (hs : ∀ {x}, x ∈ sf ↔ x ∈ s ∧ x ∈ cl φ) :
-  (ψ ∉ s ∨ ψ ∉ cl(φ)) → ¬ ψ ∈ sf :=
+  (ψ ∉ s ∨ ψ ∉ cl(φ)) → ψ ∉ sf :=
 begin
   intro h1,
   rwa [hs, not_and_distrib]
