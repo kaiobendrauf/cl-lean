@@ -13,21 +13,21 @@ namespace canonical
 ----------------------------------------------------------
 -- Tilde
 ----------------------------------------------------------
-def tilde {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
-  set ((canonical_model_CLC agents).f.states) :=
-{s : (canonical_model_CLC agents).f.states | ψ ∈ s}
+-- def tilde {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
+--   set ((canonical_model_CLC agents).f.states) :=
+-- {s : (canonical_model_CLC agents).f.states | ψ ∈ s}
 
-lemma h_tilde_compl {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
-  tilde (¬ ψ) = (tilde ψ)ᶜ := 
-begin
-  ext,
-  simp[tilde],
-  split,
-  { intros hx hf,
-    exact contra_containts_pr_false x.2 hf hx, },
-  { intros hx,
-    exact not_in_from_notin x.2 hx, },
-end
+-- lemma h_tilde_compl {agents : Type} [hN : fintype agents] [ha : nonempty agents] (ψ : formCLC agents) : 
+--   tilde (¬ ψ) = (tilde ψ)ᶜ := 
+-- begin
+--   ext,
+--   simp[tilde],
+--   split,
+--   { intros hx hf,
+--     exact contra_containts_pr_false x.2 hf hx, },
+--   { intros hx,
+--     exact not_in_from_notin x.2 hx, },
+-- end
 
 -- phi sf
 ----------------------------------------------------------

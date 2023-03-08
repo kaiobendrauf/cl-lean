@@ -2,22 +2,24 @@
 Authors : Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
--/
-import semantics.playability
 
--- local attribute [instance] classical.prop_decidable
+This file contains the structure definitions for frames and models for CL and CLK. 
+Note that CLC uses CLK frames and models.
+-/
+
+import semantics.playability
 
 structure frameCL (agents : Type) :=
 (states : Type)
 (hs     : nonempty states)
-(ha     : nonempty agents)
-(E      : playable_effectivity_struct states ha)
+(E      : playable_effectivity_struct agents states)
 
 structure modelCL (agents : Type) :=
 (f : frameCL agents)
 (v : ℕ → set f.states)
 
-structure frameCLK (agents : Type) extends frameCL agents :=
+structure frameCLK (agents : Type)  
+  extends frameCL agents :=
 (rel   : agents → states → set states)
 (rfl   : ∀ i s, s ∈ (rel i s))
 (sym   : ∀ i s t, t ∈ (rel i s) → s ∈ (rel i t))

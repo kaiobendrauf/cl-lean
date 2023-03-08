@@ -15,7 +15,7 @@ variable {agents : Type}
 
 ---------------------- Soundness ----------------------
 
-theorem soundnessCL (φ : formCL agents) : axCL φ → global_valid φ :=
+theorem soundnessCL (φ : formCL agents) : '⊢ φ → '⊨ φ :=
 begin
   intro h,
   induction h,
@@ -46,7 +46,7 @@ begin
     by_contradiction hf,
     exact h1 hf h2, },
   -- case ⊥
-  { intros m s h1, 
+  { intros m s h1,
     exact m.f.E.liveness s h h1, },
   -- case ⊤
   { intros m s,
@@ -59,7 +59,7 @@ begin
     exact h1 h, },
   -- case M
   { intros m s,
-    apply m.f.E.monoticity s h_G _ {t | s_entails_CL m t h_φ},
+    apply m.f.E.mono s h_G _ {t | ⟨m, t⟩ '⊨ h_φ},
     intros t h1,
     exact h1.left, },
   -- case S
@@ -71,16 +71,15 @@ begin
     exact h_ih_hL m s, },
   -- case Eq
   { intros m s,
-    have heq : {t | s_entails_CL m t h_φ} = {t | s_entails_CL m t h_ψ}, from
+    have heq : {t | ⟨m, t⟩ '⊨ h_φ} = {t | ⟨m, t⟩ '⊨ h_ψ}, from
       begin
         apply set.ext,
-        intros u,
-        cases (h_ih m u),
+        intro u,
         apply iff.intro,
         { intro hu,
-          exact left hu, },
+          exact (h_ih m u).left hu, },
         { intro hu,
-          exact right hu, }
+          exact (h_ih m u).right hu, },
       end,
     apply and.intro,
     { intro h1,
@@ -113,11 +112,10 @@ begin
   exact trivial,
 end
 
-def m_ex (ha : nonempty agents) : modelCL agents  :=
+def m_ex : modelCL agents :=
 { f := 
   { states := single,
     hs := single_nonempty,
-    ha := ha,
     E  :=  
     { E := λ s G, {{single.one}},
       liveness := 
@@ -153,7 +151,7 @@ def m_ex (ha : nonempty agents) : modelCL agents  :=
           rw ←univ_single at hs,
           exact h (univ_subset_iff.mp hs),
         end,
-      monoticity :=
+      mono :=
         begin
           intros _ _ _ _ hxy hx,
           simp [←univ_single] at *,
@@ -168,12 +166,15 @@ def m_ex (ha : nonempty agents) : modelCL agents  :=
       end } },
   v := λ _, {}, }
 
--- consistency
-lemma nprfalseCL {agents : Type} (ha : nonempty agents) : ¬ @axCL agents (⊥) :=
+
+lemma nprfalseCL {agents : Type} : ¬ ('⊢ ('⊥ : formCL agents)) :=
 begin
+  -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
   apply (mt (soundnessCL (@formCL.bot agents))),
+  -- assume by contradiction : ⊨ ⊥
   intro hf,
+  -- ⊨ ⊥ only holds if no model with states exists
   simp[global_valid, valid_m, s_entails_CL] at hf,
-  apply hf (m_ex ha),
-  exact single.one,
+  -- we create an example model with a single state to prove a contradiction
+  exact hf (m_ex) single.one,
 end

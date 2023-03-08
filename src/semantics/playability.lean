@@ -1,55 +1,65 @@
 /-
-Authors: Kai Obendrauf
+Authors : Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly
+
+This file contains definitions for effectivity structures, N-maximality and regularity.
+We define structures for semi- and playable effectivity structure.
+We include a function to create a playable effectivity structure, 
+  from a semi-playable one which is regular and N-maximal.
 -/
 
 import data.set.basic
 
 open set classical
 
+----------------------------------------------------------
+-- Effectivity Structures Type
+----------------------------------------------------------
+@[simp] def effectivity_struct (agents states : Type) := 
+  states → (set agents) → (set (set (states)))
 
-def regular (agents : Type) (states : Type) (E : states → ((set agents) → (set (set (states))))) :=
-∀ s : states, ∀ G : set agents, ∀ X : set states, (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
+----------------------------------------------------------
+-- N maximality and regularity
+----------------------------------------------------------
 
-def N_max (agents : Type) (states : Type) (E : states → ((set agents) → (set (set (states))))) :=
+def N_max {agents states : Type} (E : (effectivity_struct agents states)) :=
 ∀ s : states, ∀ X : set states, (Xᶜ ∉ E (s) (∅)) → (X ∈ E (s) (univ))
 
+def regular {agents states : Type} (E : (effectivity_struct agents states)) :=
+∀ s : states, ∀ G : (set agents), ∀ X : (set states), (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
+
 ----------------------------------------------------------
--- Structures
+-- Playability Structures
 ----------------------------------------------------------
-structure playable_effectivity_struct {agents : Type} (states : Type) 
-  (ha : nonempty agents) :=
-(E : states → (set agents) → (set (set (states))))
-(liveness   : ∀ s : states, ∀ G : set agents,
-                ∅ ∉ E (s) (G))
-(safety     : ∀ s : states, ∀ G : set agents,
-                univ ∈ E (s) (G))
-(N_max      : N_max agents states E)
-(monoticity : ∀ s : states, ∀ G : set agents, ∀ X Y : set states,
+structure playable_effectivity_struct (agents states : Type) :=
+(E          : effectivity_struct agents states)
+(liveness   : ∀ s : states, ∀ G : set agents, ∅ ∉ E (s) (G))
+(safety     : ∀ s : states, ∀ G : set agents, univ ∈ E (s) (G))
+(N_max      : N_max E)
+(mono       : ∀ s : states, ∀ G : set agents, ∀ X Y : set states,
                 X ⊆ Y → X ∈ E (s) (G) → Y ∈ E (s) (G))
 (superadd   : ∀ s : states, ∀ G F : set agents, ∀ X Y : set states,
                 X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                 X ∩ Y ∈ E (s) (G ∪ F))
 
-structure semi_playable_effectivity_struct {agents : Type} (states : Type) 
-  (ha : nonempty agents) :=
-(E : states → ((set agents) → (set (set (states)))))
+structure semi_playable_effectivity_struct (agents states : Type) :=
+(E                : effectivity_struct agents states)
 (semi_liveness    : ∀ s : states, ∀ G : set agents,
                       G ⊂ univ → ∅ ∉ E (s) (G))
 (semi_safety      : ∀ s : states, ∀ G : set agents,
                       G ⊂ univ → univ ∈ E (s) (G))
-(semi_monoticity  : ∀ s : states, ∀ G : set agents, ∀ X Y : set states,
+(semi_mono        : ∀ s : states, ∀ G : set agents, ∀ X Y : set states,
                       G ⊂ univ → X ⊆ Y → X ∈ E (s) (G) → Y ∈ E (s) (G))
 (semi_superadd    : ∀ s : states, ∀ G F : set agents, ∀ X Y : set states,
                       G ∪ F ⊂ univ → X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                       X ∩ Y ∈ E (s) (G ∪ F))
 
-def nonmonotonic_core {agents : Type} {states : Type}
-  (E: states → (set agents) → (set (set (states)))) (s : states) (G: set agents) :=
+def nonmonotonic_core {agents states : Type}
+  (E: (effectivity_struct agents states)) (s : states) (G: set agents) :=
 { X ∈ E (s) (G) | ¬ ∃ Y, (Y ∈ E (s) (G) ∧ Y ⊂ X) }
 
-structure truly_playable_effectivity_func {agents : Type} {states : Type}
-  (s : states) (ha : nonempty agents) extends playable_effectivity_struct states ha :=
+structure truly_playable_effectivity_func (agents states : Type)
+  (s : states) extends playable_effectivity_struct agents states :=
 (complete_nmc: ∀ s G, ∀ X ∈ E (s) (G), ∃ Y, (Y ∈ (nonmonotonic_core E s G) ∧ Y ⊆ X))
 
 ----------------------------------------------------------
@@ -92,10 +102,10 @@ end
 ----------------------------------------------------------
 -- Playable from Semi
 ----------------------------------------------------------
-def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty agents)
-  (semi : semi_playable_effectivity_struct states ha) 
-  (hNmax : N_max agents states semi.E) (hReg : regular agents states semi.E) : 
-  playable_effectivity_struct states ha := 
+def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : nonempty agents]
+  (semi : semi_playable_effectivity_struct agents states) 
+  (hNmax : N_max semi.E) (hReg : regular semi.E) : 
+  playable_effectivity_struct agents states := 
 
 -- E(s) is live : ∅ ∉ E(s)(N)
   have hLiveness : ∀ s : states, ∀ G : set agents, ∅ ∉ semi.E (s) (G), from
@@ -141,7 +151,7 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
   -- Assume some X and some Y such that X ⊆ Y ⊆ S and X ∈ E(s)(N)
     intros s G X Y hXY hX,
     cases (ssubset_or_eq_of_subset (subset_univ G)),
-    {exact semi.semi_monoticity s G X Y h hXY hX,},
+    {exact semi.semi_mono s G X Y h hXY hX,},
 
     { rw h at *,
       -- Xᶜ ∉ E(s)(∅), from regularity : X ∈ E(s)(N) ⇒ Xᶜ ∉ E(s)(∅), and hX : Xᶜ ∈ E(s)(N)
@@ -149,9 +159,9 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
       simp[compl_univ] at hXc,
       --  Yᶜ ⊆ Xᶜ, from hXY : X ⊆ Y
       have hXYc : Yᶜ ⊆ Xᶜ, from compl_subset_compl.mpr hXY,
-      -- Yᶜ ∈ E(s)(∅) ⇒ Xᶜ ∈ E(s)(∅), from semi-playable (monoticity) and hXYc
+      -- Yᶜ ∈ E(s)(∅) ⇒ Xᶜ ∈ E(s)(∅), from semi-playable (monotonicity) and hXYc
       have hmono : Yᶜ ∈ semi.E s ∅ → Xᶜ ∈ semi.E s ∅, 
-        from semi.semi_monoticity s ∅ Yᶜ Xᶜ (empty_subset_univ ha) hXYc,
+        from semi.semi_mono s ∅ Yᶜ Xᶜ (empty_subset_univ ha) hXYc,
       -- Xᶜ ∉ E(s)(∅) ⇒ Yᶜ ∉ E(s)(∅), from the contrapositive of hmono
       have hmono' : Xᶜ ∉ semi.E s ∅ → Yᶜ ∉ semi.E s ∅, from mt hmono,
       --  Yᶜ ∉ E(s)(∅), from hXc and hmono'
@@ -165,8 +175,10 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
   have hSuperadd : ∀ s : states, ∀ G F : set agents, ∀ X Y : set states, 
         X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.E (s) (G ∪ F), from 
   
+    -- Either F ⊂ N or G ⊂ N (or both). Let F be either F or G,
+    -- such that F ⊂ N , and let G be the other set
     have hSuperadd' : ∀ s : states, ∀ G F : set agents, ∀ X Y : set states,
-      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ  → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → 
+      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → 
       X ∩ Y ∈ semi.E (s) (G ∪ F), from 
     begin
       -- Assume some G, F ⊆ N, where G ∩ F = ∅ and G ∪ F = N). Note that G = F. 
@@ -193,10 +205,10 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
 
       --  Xᶜ ∈ E(s)(F), from semi-playability : (Xᶜ ∩ Y) ∈ E(s)(F) ⇒ Xᶜ ∈ E(s)(F), and hIntXc
       have hXc : Xᶜ ∈ semi.E s F, 
-        from semi.semi_monoticity s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc,
+        from semi.semi_mono s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc,
 
       -- X ∉ E(s)(G), from regularity : Xᶜ ∈ E(s)(F) ⇒ X ∉ E(s)(G), 
-      -- and 1.5.9, given Fᶜ = G, from hint and hunion
+      -- and hXc, given Fᶜ = G, from hint and hunion
       have hX' : Xᶜᶜ ∉ semi.E s Fᶜ, 
         from hReg s F Xᶜ hXc,
       simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX', -- hX' : X ∉ semi.E s G
@@ -214,31 +226,19 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) (ha : nonempty a
     { cases (ssubset_or_eq_of_subset (subset_univ (G))),
 
       -- Case : G ⊂ N
-
       { simp[inter_comm X Y, inter_comm G F, union_comm G F] at *,
         exact hSuperadd' s F G Y X hint h h_1 hY hX, },
 
+      -- Case : F ⊂ N
       { cases (ssubset_or_eq_of_subset (subset_univ (F))),
 
         -- Case : G = N, F ⊂ N
         { exact hSuperadd' s G F X Y hint h h_2 hX hY, },
         
         -- Case : G = N, F = N (impossible)
-
         { by_contradiction,
           simp [h_1, h_2, inter_self (@univ agents)] at *,
           exact hReg s univ X hX (false.rec (Xᶜ ∈ semi.E s univᶜ) hint), }, }, },
   end,
 
   playable_effectivity_struct.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
-
--- def truly_from_playable_finite {agents : Type} {states : Type}
---   (s : states) (ha : nonempty agents)
---   (playable : playable_effectivity_func s ha) [hfin : fintype states]: 
---   truly_playable_effectivity_func s ha := 
--- { non_monotonic_core :=
---   begin
---     intros G X hX,
---     sorry,
---   end,
---   .. playable }
