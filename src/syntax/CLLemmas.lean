@@ -3,14 +3,13 @@ import syntax.propLemmas
 open set
 
 -- ⊢ [G] (φ ∧ ψ) → [G] (ψ ∧ φ)
-def ef_and_switch {agents form : Type}  
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+def ef_and_switch {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
   {φ ψ : form} {G : set agents} : ⊢' ((['G] (φ ∧' ψ)) →' (['G] (ψ ∧' φ))) :=
 iff_l ((Eq _ _ _) and_switch)
 
 -- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
-def derived_monoticity_rule {agents form : Type} {φ ψ : form} {G : set agents}
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form] : 
+def derived_monoticity_rule {agents form : Type} 
+  [pf : Pformula_ax form] [clf : CLformula agents form] {φ ψ : form} {G : set agents} :
   ⊢' (φ →' ψ) → ⊢' ((['G] φ) →' (['G] ψ)) :=
 begin
   -- Let ⊢ φ → ψ
@@ -32,9 +31,8 @@ begin
 end
 
 -- ⊢ [N] φ ↔ ⊢ ¬ [∅] ¬φ
-def univ_iff_empty {agents form : Type} {φ : form}
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form] : 
-  ⊢' ((['(univ : set agents)] φ) ↔' (¬' (['(∅ : set agents)] (¬' φ)))) :=
+def univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form] 
+  {φ : form} : ⊢' ((['(univ : set agents)] φ) ↔' (¬' (['(∅ : set agents)] (¬' φ)))) :=
   -- ⇒
 begin
   refine ax_and.mpr _, 

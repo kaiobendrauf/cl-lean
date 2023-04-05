@@ -1,21 +1,22 @@
 /-
-Copyright (c) 2021 Paula Neeley. All rights reserved.
-Authors : Paula Neeley
+Authors : Kai Obendrauf
+Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+
+This file contains the proof that CL is complete.
+Given completeness we also prove that CL does not prove ⊥, 
+  by coming up with a simple instance of a coalition model. 
 -/
 
-import syntax.syntaxCL 
-import syntax.axiomsCL 
 import semantics.semanticsCL
--- import basicmodal.semantics.definability basicmodal.syntax.syntaxlemmas
 local attribute [instance] classical.prop_decidable
 
 open set
 
-variable {agents : Type}
+----------------------------------------------------------
+-- Soundness
+----------------------------------------------------------
 
----------------------- Soundness ----------------------
-
-theorem soundnessCL (φ : formCL agents) : '⊢ φ → '⊨ φ :=
+theorem soundnessCL {agents : Type} (φ : formCL agents) : '⊢ φ → '⊨ φ :=
 begin
   intro h,
   induction h,
@@ -59,7 +60,7 @@ begin
     exact h1 h, },
   -- case M
   { intros m s,
-    apply m.f.E.mono s h_G _ {t | ⟨m, t⟩ '⊨ h_φ},
+    apply m.f.E.mono s h_G _ {t | m; t '⊨ h_φ},
     intros t h1,
     exact h1.left, },
   -- case S
@@ -71,7 +72,7 @@ begin
     exact h_ih_hL m s, },
   -- case Eq
   { intros m s,
-    have heq : {t | ⟨m, t⟩ '⊨ h_φ} = {t | ⟨m, t⟩ '⊨ h_ψ}, from
+    have heq : {t | m; t '⊨ h_φ} = {t | m; t '⊨ h_ψ}, from
       begin
         apply set.ext,
         intro u,
@@ -83,15 +84,16 @@ begin
       end,
     apply and.intro,
     { intro h1,
-      simp[s_entails_CL] at *,
-      rw ←heq,
+      simp only [s_entails_CL, ←heq] at *,
       exact h1, },
     { intro h1,
-      simp[s_entails_CL] at *,
-      rw heq,
+      simp only [s_entails_CL, heq] at *,
       exact h1, }, },
 end
 
+----------------------------------------------------------
+-- CL does not prove ⊥
+----------------------------------------------------------
 -- create an example Model
 inductive single : Type
   | one : single
@@ -105,14 +107,14 @@ begin
   simp,
 end
 
-lemma single_nonempty : nonempty single := 
+instance single_nonempty : nonempty single := 
 begin
   apply exists_true_iff_nonempty.mp,
   apply exists.intro single.one,
   exact trivial,
 end
 
-def m_ex : modelCL agents :=
+def m_ex {agents : Type} : modelCL agents :=
 { f := 
   { states := single,
     hs := single_nonempty,

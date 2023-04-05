@@ -1,21 +1,28 @@
-import syntax.syntaxCLC 
-import syntax.axiomsCLC 
-import semantics.semanticsCLC
+/-
+Authors : Kai Obendrauf
+Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+
+This file contains the proof that CLC is complete.
+Given completeness we also prove that CLC does not prove ⊥, 
+  by coming up with a simple instance of a coalition model. 
+-/
+
 import tactic.induction
-import data.set.finite
-import data.fintype.basic
+import semantics.semanticsCLC
 local attribute [instance] classical.prop_decidable
 
-open set list
+open set
+
+----------------------------------------------------------
+-- Soundness
+----------------------------------------------------------
 
 ---------------------- Soundness ----------------------
 
 theorem soundnessCLC {agents: Type} [hN : fintype agents] (φ : formCLC agents) : 
-  axCLC φ → global_valid φ :=
+  '⊢ φ → '⊨ φ :=
 begin
   intro h,
-  unfold global_valid valid_m s_entails_CLC,
-
   induction' h,
 
   -- Prop 1
@@ -69,14 +76,16 @@ begin
 
   -- M
   { intros m s,
-    apply m.f.E.monoticity s G {t: m.f.states | s_entails_CLC m t (φ & φ_1)} {t: m.f.states | s_entails_CLC m t φ},
+    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ '∧ φ_1)}
+      {t : m.f.states | m; t '⊨ φ},
     intros t h1,
     unfold s_entails_CLC at h1,
     exact h1.left, },
 
   -- S
   { intros m s h1,
-    exact m.f.E.superadd s G F {t: m.f.states | s_entails_CLC m t φ} {t: m.f.states | s_entails_CLC m t φ_1} h1.left h1.right hInt, },
+    exact m.f.E.superadd s G F {t : m.f.states | m; t '⊨ φ} 
+      {t : m.f.states | m; t '⊨ φ_1} h1.left h1.right hInt, },
 
   -- MP
   { intros m s,
@@ -85,7 +94,7 @@ begin
 
   -- Eq
   { intros m s,
-    have heq: {t: m.f.states | s_entails_CLC m t φ} = {t: m.f.states | s_entails_CLC m t φ_1},
+    have heq: {t : m.f.states | m; t '⊨ φ} = {t : m.f.states | m; t '⊨ φ_1},
     { apply set.ext,
       intros u,
       cases (ih m u),
@@ -96,12 +105,10 @@ begin
         exact right hu } },
     apply and.intro,
     { intro h1,
-      simp [s_entails_CLC] at *,
-      rw [← heq],
+      simp only [s_entails_CLC, ←heq] at *,
       exact h1, },
     { intro h1,
-      simp [s_entails_CLC] at *,
-      rw [heq],
+      simp only [s_entails_CLC, heq] at *,
       exact h1, }, },
 
   -- K
@@ -124,11 +131,11 @@ begin
     exact m.f.trans _ _ _ _ (m.f.sym _ _ _ ht) hu, },
   
   -- C
-  { unfold s_entails_CLC,
-    intros m s h,
+  { intros m s h,
     rw s_entails_CLC_conjunction,
     intros ψ hψ,
-    simp at hψ, cases hψ with i hi, cases hi with hi hψ,
+    simp only [list.mem_map, finset.mem_to_list, finite.mem_to_finset] at hψ, 
+    cases hψ with i hi, cases hi with hi hψ,
     rw [←(hψ)],
     unfold s_entails_CLC,
     intros t hts,
@@ -136,22 +143,22 @@ begin
     { apply h,
       split,
       { split,
-        { show ∀ a, a ∈ (i :: list.nil) → a ∈ G,
+        { show ∀ a, a ∈ [i] → a ∈ G,
           simp,
           exact hi, },
-        { apply exists.intro list.nil,
+        { apply exists.intro [],
           unfold C_path,
           exact hts, }, }, },
-    { { intros u hu, cases hu with js hu, cases hu with hjs hu, cases hu with us htu,
-        apply h,
-        split,
-        { split,
-          { show ∀ a, a ∈ (i :: js) → a ∈ G,
-            simp,
-            exact and.intro hi hjs, },
-          { apply exists.intro (t :: us),
-            unfold C_path,
-            exact and.intro hts htu, }, }, }, }, },
+    { intros u hu, cases hu with js hu, cases hu with hjs hu, cases hu with us htu,
+      apply h,
+      split,
+      { split,
+        { show ∀ a, a ∈ (i :: js) → a ∈ G,
+          simp,
+          exact and.intro hi hjs, },
+        { apply exists.intro (t :: us),
+          unfold C_path,
+          exact and.intro hts htu, }, }, }, },
 
   -- RN
   { intros m s t hst,
@@ -162,14 +169,14 @@ begin
     cases hC with is hC,
     cases hC with his hC,
     cases hC with ss hC,
-    simp [s_entails_CLC] at ih,
+    unfold global_valid valid_m s_entails_CLC at *,
     induction' is with i is ih_is,
     { by_contradiction,
-      exact C_path_nil hC, },
+      apply hC, },
     { have ih' := ih,
       specialize ih m s hs,
       rw s_entails_CLC_conjunction at ih,
-      specialize ih (k i (φ & φ_1)),
+      specialize ih ('K i (φ '∧ φ_1)),
       simp [s_entails_CLC] at ih,
       simp[C_path] at *,
       cases ss with u ss,
@@ -191,6 +198,10 @@ begin
           exact hC.right, }, }, }, 
 end
 
+----------------------------------------------------------
+-- CL does not prove ⊥
+----------------------------------------------------------
+-- create an example Model
 inductive single : Type
   | one: single
 
@@ -203,19 +214,26 @@ begin
   simp,
 end
 
-lemma single_nonempty : nonempty single := 
+instance single_nonempty : nonempty single := 
 begin
   apply exists_true_iff_nonempty.mp,
   apply exists.intro single.one,
   exact trivial,
 end
 
-def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK agents  :=
+instance single_finite : fintype single := 
+begin
+  refine {elems := {single.one}, complete := _},
+  intro x,
+  cases x,
+  exact finset.mem_singleton.mpr rfl,
+end
+
+def m_ex {agents : Type} [hN : fintype agents] : modelECL agents  :=
 { f := 
   { states := single,
     hs := single_nonempty,
-    ha := ha,
-    E  :=  
+    E  :=  truly_playable_from_finite
     { E := λ s G, {{single.one}},
       liveness := 
       begin 
@@ -250,14 +268,14 @@ def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK
           rw ←univ_single at hs,
           exact h (univ_subset_iff.mp hs),
         end,
-      monoticity:=
+      mono :=
         begin
           intros _ _ _ _ hxy hx,
           simp [←univ_single] at *,
           rw hx at hxy,
           exact univ_subset_iff.mp hxy,
         end,
-      superadd:=
+      superadd :=
       begin
         intros _ _ _ _ _ hX hY hGF,
         simp at *,
@@ -279,12 +297,12 @@ def m_ex {agents : Type} [hN : fintype agents] (ha : nonempty agents) : modelCLK
     end, },
   v := λ _, {}, }
 
-lemma nprfalseCLC {agents : Type} [hN : fintype agents] (ha : nonempty agents) :
+lemma nprfalseCLC {agents : Type} [hN : fintype agents] :
   ¬ (axCLC (formCLC.bot : formCLC agents )) :=
 begin
   apply (mt (soundnessCLC (@formCLC.bot agents))),
   intro hf ,
   simp[global_valid, valid_m, s_entails_CLC] at hf,
-  apply hf (m_ex ha),
+  apply hf (m_ex),
   exact single.one,
 end

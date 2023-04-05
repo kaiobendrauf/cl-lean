@@ -1,16 +1,19 @@
 /-
 Authors : Kai Obendrauf
-Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly
+Following the papers:
+  - "A Modal Logic for Coalitional Power in Games" by Mark Pauly
+  - "Coalition Logic with Individual, Distributed and Common Knowledge" by Thomas Ågotnes and Natasha Alechina
+  - "Strategic Games and Truly Playable Effectivity Functions", by Valentin Groanko, Wojciech Jamroga and Paolo Turrini
 
-This file contains definitions for effectivity structures, N-maximality and regularity.
-We define structures for semi- and playable effectivity structure.
-We include a function to create a playable effectivity structure, 
-  from a semi-playable one which is regular and N-maximal.
+This file contains definitions for effectivity structures, N-maximality, regularity.
+We define structures for truly, semi- and playable effectivity structure.
+A playable effectivity structure can be created from from a semi-playable one which is regular and N-maximal.
+A truly playable effectivity structure can be created from from a playable one with a finite domain.
 -/
 
-import data.set.basic
+import order.filter.basic
 
-open set classical
+open set
 
 ----------------------------------------------------------
 -- Effectivity Structures Type
@@ -19,7 +22,7 @@ open set classical
   states → (set agents) → (set (set (states)))
 
 ----------------------------------------------------------
--- N maximality and regularity
+-- Definitions N maximality, regularity and principal
 ----------------------------------------------------------
 
 def N_max {agents states : Type} (E : (effectivity_struct agents states)) :=
@@ -27,6 +30,10 @@ def N_max {agents states : Type} (E : (effectivity_struct agents states)) :=
 
 def regular {agents states : Type} (E : (effectivity_struct agents states)) :=
 ∀ s : states, ∀ G : (set agents), ∀ X : (set states), (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
+
+def principal {agents states : Type} (E : (effectivity_struct agents states)) 
+  (s : states) (G : set agents) :=
+∃ X : set states, ∀ Y, Y ∈ (E s G) ↔ Y ∈ filter.principal X
 
 ----------------------------------------------------------
 -- Playability Structures
@@ -54,13 +61,10 @@ structure semi_playable_effectivity_struct (agents states : Type) :=
                       G ∪ F ⊂ univ → X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                       X ∩ Y ∈ E (s) (G ∪ F))
 
-def nonmonotonic_core {agents states : Type}
-  (E: (effectivity_struct agents states)) (s : states) (G: set agents) :=
-{ X ∈ E (s) (G) | ¬ ∃ Y, (Y ∈ E (s) (G) ∧ Y ⊂ X) }
+structure truly_playable_effectivity_struct (agents states : Type) 
+  extends playable_effectivity_struct agents states :=
+(principal_E_s_empty : ∀ s, principal E s ∅)
 
-structure truly_playable_effectivity_func (agents states : Type)
-  (s : states) extends playable_effectivity_struct agents states :=
-(complete_nmc: ∀ s G, ∀ X ∈ E (s) (G), ∃ Y, (Y ∈ (nonmonotonic_core E s G) ∧ Y ⊆ X))
 
 ----------------------------------------------------------
 -- Set Helper Functions
@@ -242,3 +246,62 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : nonempty a
   end,
 
   playable_effectivity_struct.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
+
+
+----------------------------------------------------------
+-- True Playability
+----------------------------------------------------------
+lemma minimum_E_s_empty {agents states : Type} [hS : fintype states]
+  (play : playable_effectivity_struct agents states) (s : states) :
+  ∃ X : set states, X ∈ play.E (s) (∅) ∧ ∀ Y, (Y ∈ play.E (s) (∅) → X ⊆ Y) :=
+begin
+  -- E (s) (∅) is nonempty by safety
+  have hnempty : (finite.to_finset (finite.of_fintype (play.E s ∅))).nonempty, from 
+  begin
+    rw finite.to_finset.nonempty,
+    apply nonempty_def.mpr,
+    apply exists.intro univ,
+    exact play.safety s ∅, 
+  end,
+  -- E (s) (∅) has some minimal element because it it finite
+  have hminimal := 
+    finset.exists_minimal (finite.to_finset (finite.of_fintype (play.E s ∅))) hnempty,
+  cases hminimal with X hminimal,
+  cases hminimal with hX hminimal,
+  simp only [finite.mem_to_finset, lt_eq_ssubset] at hX hminimal,
+  apply exists.intro X,
+  split,
+  -- That element is in E (s) (∅)
+  { exact hX, },
+  -- There is only one minimum element
+  { -- If there were two minimal elements X and Y
+    intros Y hY,
+    -- by superadditivity (X ∩ Y) ∈ E (s)(∅), and thus X = Y.
+    cases em (X = Y),
+    { exact eq.subset h, },
+    { have hun := play.superadd s _ _ _ _ hX hY (empty_inter ∅),
+      rw empty_union at hun,
+      by_contradiction hf,
+      cases ssubset_or_eq_of_subset (inter_subset_left X Y),
+      { exact hminimal (X ∩ Y) hun h_1, },
+      { rw inter_eq_left_iff_subset at h_1,
+        exact hf h_1, }, }, },
+end
+
+@[simp] def truly_playable_from_finite {agents states : Type} [hS : fintype states]
+  (play : playable_effectivity_struct agents states) : 
+  truly_playable_effectivity_struct agents states := 
+{ principal_E_s_empty :=
+  begin
+    intro s,
+    cases (minimum_E_s_empty play s) with X hX,
+    apply exists.intro X,
+    { intro ts,
+      split,
+      { intros h t ht,
+        exact hX.right ts h ht, },
+      { intros h,
+        rw filter.mem_principal at h,
+        apply play.mono s ∅ _ _ h hX.left, }, },
+  end,
+  .. play }

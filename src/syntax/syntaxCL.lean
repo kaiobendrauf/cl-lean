@@ -3,13 +3,12 @@ Authors : Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
-This file contains the inductive type formCLC and its notation, 
+This file contains the inductive type formCL and its notation, 
 as well as the axioms for CL and instances of the differenct applicaple formula classes
 (Pformula, Pformula_ax, and CLformula) for CL.
 -/
 
 import syntax.formula
-import syntax.propLemmas
 
 open set
 
@@ -65,7 +64,7 @@ inductive axCL {agents : Type} : formCL agents → Prop
         (hL : axCL φ)         : axCL (ψ)
 -- (Eq) ⊢ φ ↔ ψ ⇒ ⊢ [G]φ ↔ [G]ψ
 | Eq    {φ ψ} {G}
-        (h : axCL (φ '↔ ψ))    : axCL (('[G] φ) '↔ ('[G] ψ))
+        (h : axCL (φ '↔ ψ))   : axCL (('[G] φ) '↔ ('[G] ψ))
 
 prefix `'⊢` : 70 := axCL
 

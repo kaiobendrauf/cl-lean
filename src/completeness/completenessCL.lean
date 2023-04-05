@@ -1,6 +1,5 @@
 import soundness.soundnessCL
 import completeness.canonical
-import syntax.axiomsCL
 import syntax.consistency_lemmas
 import tactic.induction
 
@@ -28,7 +27,7 @@ instance M_CL.f.states.set_like {agents form : Type} [ha : nonempty agents]
 ----------------------------------------------------------
 lemma truth_lemma_CL {agents : Type} [ha : nonempty agents] 
   (φ : formCL agents) (s : (M_CL agents).f.states) : 
-  (⟨(M_CL agents), s⟩ '⊨ φ) ↔ (φ ∈ s) :=
+  ((M_CL agents); s '⊨ φ) ↔ (φ ∈ s) :=
 begin
   let M := @M_CL agents ha,
   -- This proof is by induction on φ.
@@ -36,7 +35,7 @@ begin
 
   { -- case bot
     simp [s_entails_CL],
-    exact @bot_not_mem_of_ax_consistent (formCL agents) _ _ s.1 s.2.1, },
+    exact @bot_not_mem_of_ax_consistent (formCL agents) _ s.1 s.2.1, },
 
   { -- case var
     simpa, },
@@ -74,7 +73,7 @@ begin
 
     { -- ⊢ [N]φ ↔ ¬ [∅] ¬ φ
       have hempty : axCL (('[univ] φ) '↔ '¬ ('[∅]('¬ φ))), from 
-        @univ_iff_empty agents (formCL agents) _ _ _ _,
+        @univ_iff_empty agents (formCL agents) _ _ _,
       simp [hG] at *, clear hG,
 
       split,
@@ -85,7 +84,7 @@ begin
         have hnin : ('[∅] ('¬ φ)) ∉ s, from
         begin
           apply h ('¬ φ),
-          apply @eq.subset _ _ {t : (M_CL agents).f.states | ⟨M_CL agents, t⟩ '⊨ φ}ᶜ,
+          apply @eq.subset _ _ {t : (M_CL agents).f.states | (M_CL agents); t '⊨ φ}ᶜ,
           simp [ih],
           exact complement_from_contra,
         end,
@@ -146,7 +145,7 @@ begin
         have himp : axCL (ψ '→ φ), from ax_imp_from_ex hψih,
         -- ⊢ '[G]ψ → '[G]φ, from himp, by the derived monoticity rule
         have hGimp : axCL (('[G] ψ) '→ ('[G] φ)), from 
-          @derived_monoticity_rule agents (formCL agents) _ _ _ _ _ _ himp,
+          @derived_monoticity_rule agents (formCL agents) _ _ _ _ _ himp,
         -- '[G]φ ∈ s, from hGimp and hGψ
         apply max_ax_contains_by_set_proof s.2 hGψ hGimp, },
       -- '[G]φ ∈ s ⇒ M, s ⊨ '[G]φ, when G ⊂ N
@@ -181,7 +180,7 @@ begin
   intro hnax,
   -- {¬φ} is a consistent set, from hnax.
   -- With Lindenbaum’s lemma, {¬φ} can be extended into a maximally consistent set Σ.
-  obtain ⟨s, hmax, hnφ⟩ := @exists_max_ax_consistent_neg_mem (formCL agents) _ _ _ hnax,
+  obtain ⟨s, hmax, hnφ⟩ := @exists_max_ax_consistent_neg_mem (formCL agents) _ _ hnax,
   -- Take the state s ∈ SC , where s = Σ.
   simp [global_valid],
   apply exists.intro (M_CL agents),

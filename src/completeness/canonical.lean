@@ -27,37 +27,23 @@ namespace canonical
 -- Define States
 ----------------------------------------------------------
 -- S is the set of all maximal CL-consistent set of formulas
-def states (form : Type) [pf : Pformula form] [pax : Pformula_ax form] := 
+def states (form : Type) [pf : Pformula_ax form] := 
 {Γ : (set (form)) // (max_ax_consistent Γ)}
 
 /-- Allows us to write `φ ∈ s` instead of `φ ∈ s.val` -/
-instance states.set_like {form : Type} [pf : Pformula form] [pax : Pformula_ax form] :
+instance states.set_like {form : Type} [pf : Pformula_ax form] :
   set_like (states form) form :=
 { coe := λ s, s.1,
   coe_injective' := subtype.coe_injective }
 
 -- Tilde
-def tilde {form : Type} [pf : Pformula form] [pax : Pformula_ax form] 
-  (states : Type) [sl : set_like states form] (φ : form) : set states := 
+def tilde {form : Type} (states : Type) [sl : set_like states form] 
+  (φ : form) : set states := 
 {s : states | φ ∈ s}
-
-lemma h_tilde_compl {form : Type} [pf : Pformula form] [pax : Pformula_ax form] 
-  (states : Type) [sl : set_like states form] (φ : form) : 
-  tilde states (¬' φ) = (tilde states φ)ᶜ := 
-begin
-  ext s,
-  unfold tilde,
-  split,
-  { intros hx hf,
-    apply contra_containts_pr_false,
-    exact contra_containts_pr_false x.2 hf hx, },
-  { intros hx,
-    exact not_in_from_notin x.2 hx, },
-end
 
 -- States is not empty
 ----------------------------------------------------------
-lemma hs (form : Type) [pf : Pformula form] [pax : Pformula_ax form] 
+lemma hs (form : Type) [pf : Pformula_ax form] 
   (hnpr : ¬ ⊢' (⊥': form )) : nonempty (states form) :=
 begin
   -- Any consistent set Σ (eg{⊤}) can be extended to the maximally CL-consistent 
@@ -70,49 +56,48 @@ end
 -- Define E
 ----------------------------------------------------------
 def E {agents form : Type} 
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) (G : set agents) :=
 {X | ite (G = univ) 
 -- condition G = N
---  X ∈ E(s)(N) iff ∀φ˜ ⊆ Xᶜ : [∅]φ /∈ s, where φ˜ := {t ∈ S| φ ∈ t}, and Xᶜ := S\X
-(∀ φ, {t : (states form) | φ ∈ (t.val)} ⊆ Xᶜ → (['∅] φ) ∉ s.val)
+--  X ∈ E(s)(N) iff ∀φ˜ ⊆ Xᶜ : [∅]φ ∉ s, where φ˜ := {t ∈ S| φ ∈ t}
+(∀ φ, tilde (states form) φ ⊆ Xᶜ → (['∅] φ) ∉ s)
 -- condition G ≠ N
 --  When G ≠ N : X ∈ E(s)(G) iff ∃φ˜ ⊆ X : [G]φ ∈ s
-(∃ φ, {t : (states form) | φ ∈ (t.val)} ⊆ X ∧ (['G] φ) ∈ s.val)}
+(∃ φ, tilde (states form) φ ⊆ X ∧ (['G] φ) ∈ s)}
 
 -- Semi-liveness
 ----------------------------------------------------------
-lemma semi_liveness {agents form : Type} 
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+lemma semi_liveness {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : set agents} (hG : G ⊂ univ) : ∅ ∉ E (s) (G) :=
 begin
--- Let G ⊂ N. Assume towards contradiction that ∅ ∈ E(s)(G)
+  -- Let G ⊂ N. Assume towards contradiction that ∅ ∈ E(s)(G)
   unfold E,
   intros hf,
+
   --  ∃φ˜ ⊆ ∅ : [G]φ ∈ s, from hf, by definition EC
   simp [ne_of_ssubset hG] at hf,
+  cases hf with φ hφ,
 
   -- ⊢ φ ↔ ⊥, because {φ} cannot be extended into a maximally 
   -- consistent set (by hf), so {φ} must be inconsistent.
-  cases hf with φ hφ,
   have hiffbot : ⊢' (φ ↔' ⊥'), from set_empty_iff_false hφ.left,
 
   -- ⊢ [G]φ ↔ [G]⊥, from hiffbot, by axiom (Eq)
   have hiffGbot : ⊢' ((['G] φ) ↔' (['G] ⊥')), from Eq _ _ _ hiffbot,
-    -- simp at *,
 
-  -- [G]⊥ ∈ s, from 2.1.5 and 2.1.3.
-  have h : (['G] ⊥') ∈ s.1, 
-    from max_ax_contains_by_set_proof s.2 hφ.right (iff_l hiffGbot),
+  -- [G]⊥ ∈ s, from hφ and hiffGbot.
+  have h : (['G] ⊥') ∈ s, 
+    from by apply max_ax_contains_by_set_proof s.2 hφ.right (iff_l hiffGbot),
 
   -- Contradiction from axiom (⊥) : ¬[G]⊥ and h
-  apply ax_neg_containts_pr_false s.2 h (Bot _),
+  apply ax_neg_contains_pr_false s.2 h (Bot _),
 end
 
 -- Semi-safety
 ----------------------------------------------------------
 lemma semi_safety {agents form : Type} 
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : set agents} (hG : G ⊂ univ) : univ ∈ E (s) (G) :=
 begin
   -- Let G ⊂ N
@@ -122,8 +107,8 @@ begin
   clear hG',
   
   --  [G]⊤ ∈ s and ⊤˜ = S, from axiom (⊤) : [G]⊤, and definition S
-  have hT : (['G] ⊤') ∈ s.val, 
-    from max_ax_contains_taut s.2 (Top _),
+  have hT : (['G] ⊤') ∈ s, 
+    from by apply max_ax_contains_taut s.2 (Top _),
 
   --  ∃φ˜ ⊆ S : [G]φ ∈ s, where φ = ⊤ from hTop
   apply exists.intro (⊤' : form),
@@ -134,7 +119,7 @@ end
 -- Semi-monotonicity
 ----------------------------------------------------------
 lemma semi_mono {agents form : Type} 
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : set agents} {X Y : set (states form)} 
   (hG : G ⊂ univ) (hXY : X ⊆ Y) (hX : X ∈ E (s) (G)) : Y ∈ E (s) (G) :=
 begin
@@ -156,7 +141,7 @@ end
 -- Semi-superadditivity
 ----------------------------------------------------------
 lemma semi_superadd {agents form : Type} 
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G F : set agents} {X Y : set (states form)}
   (hunion : G ∪ F ⊂ univ) (hX : X ∈ E (s) (G)) (hY : Y ∈ E (s) (F)) (hintGF : G ∩ F = ∅) : 
   X ∩ Y ∈ E (s) (G ∪ F) :=
@@ -173,26 +158,28 @@ begin
 
   -- [G∪F](φ ∧ ψ) ∈ s, from hX_h.right and hY_h.right, 
   -- by axiom (S) : ([G]φ∧[F]ψ) → [G ∪ F](φ ∧ ψ)
-  have hand : ((['G] φ) ∧' (['F] ψ)) ∈ s.1, 
-    from max_ax_contains_by_set_proof_2h s.2 hX_h.right hY_h.right (p4 _ _),
-  have hunionand : ((['(G ∪ F)] (φ ∧' ψ)) ∈ s.1), 
-    from max_ax_contains_by_set_proof s.2 hand ((S _ _ _ _) hintGF),
+  have hand : ((['G] φ) ∧' (['F] ψ)) ∈ s, 
+    from by apply max_ax_contains_by_set_proof_2h s.2 hX_h.right hY_h.right (p4 _ _),
+  have hunionand : ((['(G ∪ F)] (φ ∧' ψ)) ∈ s), 
+    from by apply max_ax_contains_by_set_proof s.2 hand ((S _ _ _ _) hintGF),
 
   -- (φ ∧ ψ)˜ ⊆ X ∩ Y : [G ∪ F](φ ∧ ψ) ∈ s, from hX_h.left and hY_h.left and hunionand
   split,
   { split,
-    { have hsubset : {t : (states form) | φ ∧' ψ ∈ t.val} ⊆ {t : (states form) | φ ∈ t.val}, from
+    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) φ, from
       begin
+        unfold tilde,
         rw set.subset_def,
         intros t ht, simp at *,
-        exact max_ax_contains_by_set_proof t.2 ht (p5 _ _),
+        apply max_ax_contains_by_set_proof t.2 ht (p5 _ _),
       end,
       exact subset.trans hsubset hX_h.left, },
-    { have hsubset : {t : (states form) | φ ∧' ψ ∈ t.val} ⊆ {t : (states form) | ψ ∈ t.val}, from
+    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) ψ, from
       begin
+        unfold tilde,
         rw set.subset_def,
         intros t ht, simp at *,
-        exact max_ax_contains_by_set_proof t.2 ht (p6 _ _),
+        apply max_ax_contains_by_set_proof t.2 ht (p6 _ _),
       end,
       exact subset.trans hsubset hY_h.left, }, },
   { exact hunionand, },
@@ -201,7 +188,7 @@ end
 -- Regularity
 ----------------------------------------------------------
 lemma regularity {agents form : Type} [ha : nonempty agents]
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : set agents} {X : set (states form)}
   (h : X ∈ E (s) (G)) : (Xᶜ ∉ E (s) (Gᶜ)) :=
 begin
@@ -230,17 +217,17 @@ begin
 
       -- [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s, from h_right and hf, 
       -- by axiom S [G]φ ∧ [Gᶜ]ψ → [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s
-      have hS : (['(G ∪ Gᶜ)] (φ ∧' ψ)) ∈ s.val,
+      have hS : (['(G ∪ Gᶜ)] (φ ∧' ψ)) ∈ s,
 
-      { have hand : ((['G] φ) ∧' (['Gᶜ] ψ)) ∈ s.1, 
-        from max_ax_contains_by_set_proof_2h s.2 h_right hf (p4 _ _),
+      { have hand : ((['G] φ) ∧' (['Gᶜ] ψ)) ∈ s, 
+        from by apply max_ax_contains_by_set_proof_2h s.2 h_right hf (p4 _ _),
         apply max_ax_contains_by_set_proof s.2 hand,
         apply (S _ _ _ _),
         simp, },
       simp at hS,
 
       -- (φ ∧ ψ)˜ = ∅, because X and Xᶜ are disjoint, meaning φ˜ and ψ˜ are disjoint
-      have hemptyint : {t : (states form) | (φ ∈ t.val)} ∩ {t : (states form) | (ψ ∈ t.val)} = ∅, from
+      have hemptyint : tilde (states form) φ ∩ tilde (states form) ψ = ∅, from
         begin
           rw set.eq_empty_iff_forall_not_mem,
           intros t hf,
@@ -255,12 +242,12 @@ begin
           { apply h, 
             apply h_left t hf.left, },
         end,
-      have hempty : {t : (states form) | (φ ∧' ψ ∈ t.val)} ⊆ ∅,
+      have hempty : tilde (states form) (φ ∧' ψ) ⊆ ∅,
 
       { intros t hf',
-        simp[set.subset_empty_iff, set.eq_empty_iff_forall_not_mem] at hf',
-        have hφ : φ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' (p5 _ _),
-        have hψ : ψ ∈ t.1, from max_ax_contains_by_set_proof t.2 hf' (p6 _ _),
+        simp[tilde, set.subset_empty_iff, set.eq_empty_iff_forall_not_mem] at hf',
+        have hφ : φ ∈ t, from by apply max_ax_contains_by_set_proof t.2 hf' (p5 _ _),
+        have hψ : ψ ∈ t, from by apply max_ax_contains_by_set_proof t.2 hf' (p6 _ _),
         rw set.eq_empty_iff_forall_not_mem at hemptyint,
         apply hemptyint t,
         simp,
@@ -276,7 +263,7 @@ begin
       simp at *,
 
       -- [N]⊥ ∈ s, from 3.3.7 and 3.3.5.
-      have h : (['univ] ⊥') ∈ s.1, from
+      have h : (['univ] ⊥') ∈ s, from
       begin
         apply max_ax_contains_by_set_proof s.2 hS,
         apply iff_l,
@@ -285,13 +272,13 @@ begin
       end,
 
       -- Contradiction from axiom (⊥) : ¬[N]⊥ and 3.3.8
-      exact ax_neg_containts_pr_false s.2 h (Bot _), }, },
+      exact ax_neg_contains_pr_false s.2 h (Bot _), }, },
 end
 
 -- N maximality
 ----------------------------------------------------------
 lemma N_maximality {agents form : Type} [ha : nonempty agents]
-  [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {X : set (states form)}
   (h : Xᶜ ∉ E (s) (∅)) : X ∈ E (s) (univ) :=
 begin
@@ -302,12 +289,11 @@ begin
 end
 
 ----------------------------------------------------------
--- Canonical Frame Constructions
+-- Canonical Frame and Model Constructions
 ----------------------------------------------------------
 
-
-@[simps?] def canonicalCL (agents form : Type) [ha : nonempty agents]
- [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
+@[simps] def canonical_frame_CL (agents form : Type) [ha : nonempty agents]
+ [pf : Pformula_ax form] [clf : CLformula agents form]
  (hnpr : ¬ ⊢' ⊥') : frameCL agents := 
 { states := states form,
   hs := hs form hnpr,
@@ -326,23 +312,69 @@ end
       exact playable_from_semi_Nmax_reg (states form) semi N_maximality regularity,
     end, }
 
-def canonical_model_CL (agents form : Type) [ha : nonempty agents]
- [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form]
- (hnpr : ¬ ⊢' (⊥' : form)) : modelCL agents :=
-{ f := canonicalCL agents form hnpr,
-  -- V is as usual, such that s ∈ V (p) iff p ∈ s
-  v := λ  n, {s | (Pformula.var n) ∈ s.1} }
+/-- Allows us to write `φ ∈ s` instead of `φ ∈ s.val` -/
+instance canonical_frame_CL.set_like {agents form : Type} [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
+  (hnpr : ¬ ⊢' (⊥' : form)) :
+  set_like (canonical_frame_CL agents form hnpr).states form :=
+{ coe := λ s, s.1,
+  coe_injective' := subtype.coe_injective }
 
-@[simps?] def canonical_CLK {agents : Type} (form : Type) 
-  [ha : nonempty agents] [hN : fintype agents]
-  [pf : Pformula form] [pax : Pformula_ax form] 
-  [clf : CLformula agents form] [kf: Kformula agents form]
-  (hnpr : ¬ ⊢' (⊥' : form)) : frameCLK agents :=
-{ rel := λ i : agents, λ s, {t | {φ | K' (i) (φ) ∈ s.1} = {φ | K' (i) (φ) ∈ t.1}},
-  rfl := by simp,
-  sym := λ i s t ht, eq.symm ht,
-  trans := λ i s t u hst htu, (rfl.congr htu).mp hst,
-  .. canonicalCL agents form hnpr }
+
+def canonical_model_CL (agents form : Type) [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form]
+  (hnpr : ¬ ⊢' (⊥' : form)) : modelCL agents :=
+{ f := canonical_frame_CL agents form hnpr,
+  -- V is as usual, such that s ∈ V (p) iff p ∈ s
+  v := λ  n, {s | (Pformula.var n) ∈ s} }
+
+instance canonical_model_CL.f.states.set_like {agents form : Type} [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form] 
+  (hnpr : ¬ ⊢' (⊥' : form)) :
+  set_like (canonical_model_CL agents form hnpr).f.states form :=
+{ coe := λ s, s.1,
+  coe_injective' := subtype.coe_injective }
+
+@[simp] lemma canonical_model_CL.f.states.val_eq_coe {agents form : Type} [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form] 
+  (hnpr : ¬ ⊢' (⊥' : form)) (s : (canonical_model_CL agents form hnpr).f.states) : s.1 = s := 
+rfl
+
+@[simp] lemma set_like.set_of_mem {S A : Type*} [h : set_like S A] (s : S) : {x | x ∈ s} = s := rfl
+
+----------------------------------------------------------
+-- Lemmas specific to the Canonical Model
+----------------------------------------------------------
+
+-- tilde ¬ ψ = (tilde ψ)ᶜ
+lemma h_tilde_compl {agents form : Type} [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form] 
+  (hnpr : ¬ ⊢' (⊥' : form)) (ψ : form) : 
+  (tilde ((canonical_model_CL agents form hnpr).f.states) (¬' ψ)) = 
+    (tilde ((canonical_model_CL agents form hnpr).f.states) ψ)ᶜ := 
+begin
+  ext1 s,
+  split,
+  { intros hs hf,
+    exact contra_contains_pr_false s.2 hf hs, },
+  { intros hs,
+    exact not_in_from_notin s.2 hs, },
+end
+
+-- ⊢ ψ ↔ χ ⇒ tilde ψ = tilde χ
+lemma tilde_ax_iff {agents form : Type} [ha : nonempty agents]
+  [pf : Pformula_ax form] [clf : CLformula agents form] 
+  {hnpr : ¬ ⊢' (⊥' : form)} {ψ χ : form} (hax : ⊢' (ψ ↔' χ)) : 
+  tilde ((canonical_model_CL agents form hnpr).f.states) ψ = 
+    tilde ((canonical_model_CL agents form hnpr).f.states) χ :=
+begin
+  ext1 s,
+  split,
+  { intro hs,
+    apply max_ax_contains_by_set_proof s.2 hs (iff_l hax), },
+  { intro hs,
+    apply max_ax_contains_by_set_proof s.2 hs (iff_r hax), },
+end
 
 
 end canonical
