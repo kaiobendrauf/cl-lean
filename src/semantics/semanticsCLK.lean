@@ -1,75 +1,77 @@
-import semantics.model 
+/-
+Authors : Kai Obendrauf
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+by Thomas Ågotnes and Natasha Alechina,
+and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+
+This file contains the defintions of semantic entailment and validity for CL.
+-/
+
 import syntax.syntaxCLK 
-import semantics.playability 
-import data.fintype.basic
--- cl.syntax.syntaxCL data.set.basic
--- import del.semantics.translationfunction
+import semantics.model
 local attribute [instance] classical.prop_decidable
 
 open formCLK set
 
----------------------- Semantics ----------------------
 
--- structure frameCL (agents : Type) :=
--- (states : Type)
--- (hs : nonempty states)
--- (ha : nonempty agents)
--- (E  : playable_effectivity_struct states ha)
+----------------------------------------------------------
+-- Common Knowledge Path
+----------------------------------------------------------
+def C_path {agents : Type} {m : modelECL agents} : 
+  list agents → list m.f.states →  m.f.states →  m.f.states → Prop
+  | list.nil  _        s t := false
+  | (i :: is) list.nil s t := t ∈ (m.f.rel i s)
+  | (i :: is)(u :: us) s t := (u ∈ (m.f.rel i s) ∧ (C_path is us u t)) 
 
+----------------------------------------------------------
+-- Semantic Entailment
+----------------------------------------------------------
 
--- structure frameCLK (agents : Type) extends frameCL agents :=
--- (rel   : agents → states → set states)
--- (rfl   : ∀ i s, s ∈ (rel i s))
--- (sym   : ∀ i s t, t ∈ (rel i s) → s ∈ (rel i t))
--- (trans : ∀ i s t u, t ∈ (rel i s) → u ∈ (rel i t) → u ∈ (rel i s))
+def s_entails_CLK {agents : Type} (m : modelECL agents) : 
+  m.f.states → formCLK agents → Prop
+  | s bot       := false
+  | s (var n)   := s ∈ m.v n
+  | s (imp φ ψ) := (s_entails_CLK s φ) → (s_entails_CLK s ψ)
+  | s (and φ ψ) := (s_entails_CLK s φ) ∧ (s_entails_CLK s ψ)
+  | s ('[G] φ)   := {t : m.f.states | s_entails_CLK t φ} ∈ m.f.E.E (s) (G)
+  | s ('K i φ)   := ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLK t φ
 
+notation m `;` s `'⊨` φ := s_entails_CLK m s φ
 
--- structure modelCLK (agents : Type) :=
--- (f : frameCLK agents)
--- (v : ℕ → set f.states)
-
-@[simp]
-protected def formCLK.sizeof' (agents : Type) [agents_inst : has_sizeof agents] : formCLK agents → ℕ
-| bot := 1
-| (var n) := 1 + sizeof n
-| (imp φ ψ) := 1 + formCLK.sizeof' φ + formCLK.sizeof' ψ
-| (and φ ψ) := 1 + formCLK.sizeof' φ + formCLK.sizeof' ψ
-| ([G] φ) := 1 + sizeof G + formCLK.sizeof' φ
-| (K' i φ) := 1 + sizeof i + formCLK.sizeof' φ
-| (E' i φ) := 1 + sizeof i + formCLK.sizeof' φ + 1 -- Make recursion from E' to K' possible
-
-def formCLK.has_sizeof' {agents} : has_sizeof (formCLK agents) := ⟨formCLK.sizeof' _⟩
-local attribute [instance] formCLK.has_sizeof'
-
--- Definition of semantic entailment
--- Order of arguments is swapped to help the equation compiler find the recursive parameter
-def s_entails_CLK.aux {agents : Type} : ∀ m : modelCLK agents,
-  formCLK agents → m.f.states → Prop
-| m bot       s  := false
-| m (var n)   s  := s ∈ m.v n
-| m (imp φ ψ) s  := (s_entails_CLK.aux m φ s) → (s_entails_CLK.aux m ψ s)
-| m (and φ ψ) s  := (s_entails_CLK.aux m φ s) ∧ (s_entails_CLK.aux m ψ s)
-| m ([G] φ)   s  := {t: m.f.states | s_entails_CLK.aux m φ t} ∈ m.f.E.E (s) (G)
-| m (K' i φ)  s  := ∀ t: m.f.states, t ∈ (m.f.rel i s) → s_entails_CLK.aux m φ t
-| m (E' G φ)  s  := ∀ i ∈ G, s_entails_CLK.aux m (K' i φ) s
-
--- Definition of semantic entailment
-def s_entails_CLK {agents : Type} (m : modelCLK agents) (s : m.f.states) (φ : formCLK agents) : Prop :=
-s_entails_CLK.aux m φ s
-
-variables {agents : Type}
-
--- φ is valid in a model M = (f,v)
-def valid_m (m: modelCLK agents) (φ : formCLK agents) := 
-  ∀ s, s_entails_CLK m s φ
-
-def global_valid (φ : formCLK agents) :=
-  ∀ m, valid_m m φ
-
-lemma not_s_entails_imp (m : modelCLK agents) : ∀ s φ, 
-  (¬(s_entails_CLK m s φ)) ↔ (s_entails_CLK m s (¬ φ)) :=
+lemma not_s_entails_imp {agents: Type} (m : modelECL agents) (s : m.f.states) (φ : formCLK agents) :
+  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ ('¬ φ)) :=
 begin
-  intros s φ,
-  unfold s_entails_CLK s_entails_CLK.aux,
-  refl,
+  split,
+  repeat {intros h1 h2, exact h1 h2},
 end
+
+lemma s_entails_CLK_conjunction {agents : Type} {m : modelECL agents} {s : m.f.states} 
+  {φs : list (formCLK agents)} : 
+  (m; s '⊨ (finite_conjunction φs)) ↔ ∀ φ ∈ φs, m; s '⊨ φ :=
+begin
+  induction φs with φ φs ih,
+  { simp only [finite_conjunction, list.not_mem_nil, forall_false_left, implies_true_iff, iff_true],
+    show s_entails_CLK m s '⊤,
+      simp only [s_entails_CLK, forall_false_left], },
+  { unfold finite_conjunction,
+    show s_entails_CLK m s (φ '∧ finite_conjunction φs) ↔ _,
+      simp [s_entails_CLK, list.mem_cons_iff, forall_eq_or_imp, and.congr_right_iff],
+      intro h,
+      exact ih, },
+end
+
+----------------------------------------------------------
+-- Validity
+----------------------------------------------------------
+
+-- φ is valid in a model M = (f,v), if it is entailed by every state of the model
+def valid_m {agents : Type} (m: modelECL agents) (φ : formCLK agents) := 
+  ∀ s : m.f.states, m; s '⊨ φ
+
+notation m `'⊨` φ := valid_m m φ
+
+-- φ is globally valid, if it is valid in all models
+def global_valid {agents : Type} (φ : formCLK agents) :=
+  ∀ m : modelECL agents, m '⊨ φ
+
+notation `'⊨` φ := global_valid φ

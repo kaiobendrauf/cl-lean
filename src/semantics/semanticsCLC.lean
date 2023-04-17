@@ -8,7 +8,6 @@ This file contains the defintions of semantic entailment and validity for CL.
 -/
 
 import syntax.syntaxCLC 
-import semantics.playability 
 import semantics.model
 local attribute [instance] classical.prop_decidable
 
@@ -23,14 +22,6 @@ def C_path {agents : Type} {m : modelECL agents} :
   | list.nil  _        s t := false
   | (i :: is) list.nil s t := t ∈ (m.f.rel i s)
   | (i :: is)(u :: us) s t := (u ∈ (m.f.rel i s) ∧ (C_path is us u t)) 
-
--- @[simp] def C_path_nil {agents : Type} {m : modelECL agents} 
---  {ss : list (m.f.states)} {s t : m.f.states} : 
---   C_path list.nil ss s t → false :=
--- begin
---   unfold C_path, 
---   exact is_empty.false,
--- end
 
 ----------------------------------------------------------
 -- Semantic Entailment

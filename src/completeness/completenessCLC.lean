@@ -16,7 +16,7 @@ namespace canonical
 
 @[simps] noncomputable def Mf_CLC {agents : Type} [ha : nonempty agents] [hN : fintype agents] 
   (φ : formCLC agents) : modelECL agents := 
-filtered_model_CLC agents (formCLC agents) nprfalseCLC cl cl_closed_single_neg φ
+filtered_modelECL agents (formCLC agents) nprfalseCLC cl cl_closed_single_neg φ
 
 
 /-- Allows us to write `φ ∈ s` instead of `φ ∈ s` -/

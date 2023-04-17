@@ -7,7 +7,6 @@ This file contains the defintions of semantic entailment and validity for CL.
 -/
 
 import syntax.syntaxCL 
-import semantics.playability 
 import semantics.model
 local attribute [instance] classical.prop_decidable
 

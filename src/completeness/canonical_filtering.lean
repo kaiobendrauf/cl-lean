@@ -358,21 +358,6 @@ begin
   apply h,
 end
 
--- -- ∀ ψ ∈ sf ⇒ (⊢ phi sf ⇔ ⊢ (ψ ∧ phi sf))
--- lemma phi_s_f_conj_contains_ax {agents form : Type} [pf : Pformula_ax form]
---   {m : modelCL agents} [hm : set_like m.f.states form] {cl : form → finset (form)} {φ ψ : form}
---   {sf : S_f m cl φ} (hψ : ψ ∈ sf) : ⊢' (phi_s_f sf) ↔ ⊢' (ψ ∧' (phi_s_f sf)) :=
--- begin
---   split,
---   { intro h,
---     apply ax_and_split,
---     exact (phi_s_f_forall_iff sf).mpr h ψ hψ,
---     exact h, },
---   { intro h,
---     apply and.elim_right,
---     apply ax_and.mp h, },
--- end
-
 -- ∀ ψ ∈ sf ⇒ (⊢ phi sf ↔ (ψ ∧ phi sf))
 lemma phi_s_f_conj_contains {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : set_like m.f.states form] {cl : form → finset (form)} {φ ψ : form}
@@ -1517,10 +1502,10 @@ begin
 end
 
 ----------------------------------------------------------
--- Building the coplete filtered CLC model
+-- Building the coplete filtered model
 ----------------------------------------------------------
 
-noncomputable def filtered_model_CLC (agents form : Type) [ha : nonempty agents]
+noncomputable def filtered_modelECL (agents form : Type) [ha : nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form] [kf : Kformula agents form]
   (hnpr : ¬ ⊢' (⊥' : form)) (cl : form → finset (form))
   (hcl : ∀ φ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ)))) (φ : form) :
