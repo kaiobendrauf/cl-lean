@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
@@ -98,5 +98,3 @@ instance CLformulaCL {agents : Type} : CLformula agents (formCL agents) :=
   M   := @axCL.M agents,
   S   := @axCL.S agents,
   Eq  := @axCL.Eq agents, }
-
-

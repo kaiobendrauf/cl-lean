@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 
 This file contains proofs for a variety of lemmas for CL.
 -/
@@ -9,12 +9,12 @@ import syntax.propLemmas
 open set
 
 -- ⊢ [G] (φ ∧ ψ) → [G] (ψ ∧ φ)
-def ef_and_switch {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
+lemma ef_and_switch {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
   {φ ψ : form} {G : set agents} : ⊢' ((['G] (φ ∧' ψ)) →' (['G] (ψ ∧' φ))) :=
 iff_l ((Eq _ _ _) and_switch)
 
 -- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
-def derived_monoticity_rule {agents form : Type} 
+lemma derived_monoticity_rule {agents form : Type} 
   [pf : Pformula_ax form] [clf : CLformula agents form] {φ ψ : form} {G : set agents} :
   ⊢' (φ →' ψ) → ⊢' ((['G] φ) →' (['G] ψ)) :=
 begin
@@ -37,7 +37,7 @@ begin
 end
 
 -- ⊢ [N] φ ↔ ⊢ ¬ [∅] ¬φ
-def univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form] 
+lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form] 
   {φ : form} : ⊢' ((['(univ : set agents)] φ) ↔' (¬' (['(∅ : set agents)] (¬' φ)))) :=
   -- ⇒
 begin
@@ -65,9 +65,7 @@ begin
     apply mp,
     --Contradiction from axiom (⊥) : ¬[N] ⊥ and above.
     exact contra_imp_imp_false,
-    exact Bot _,
-  },
+    exact Bot _, },
   -- ⇒ 
   { exact N _, },
 end
-

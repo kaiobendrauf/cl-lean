@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly,
 the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley,
 and the paper "Coalition Logic with Individual, Distributed and Common Knowledge 

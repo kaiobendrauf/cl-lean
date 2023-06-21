@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina,
 
@@ -75,10 +75,12 @@ begin
       exact @iff_dni (formCLK agents) _ _, }, 
     cases hx,
     { apply exists.intro ('⊤),
-      simp only [hx, finset.mem_insert, eq_self_iff_true, false_and, finset.mem_singleton, false_or, true_and],
+      simp only [hx, finset.mem_insert, eq_self_iff_true, false_and, 
+                 finset.mem_singleton, false_or, true_and],
       apply @iff_iden (formCLK agents) _ _, },
     { apply exists.intro ('⊥),
-      simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, or_false, false_or, true_and],
+      simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, or_false, 
+                 false_or, true_and],
       apply MP,
     apply MP,
     apply Prop4,
@@ -153,7 +155,7 @@ begin
         exact hψ.1, },
       { exact hψ.2, }, },
     { apply exists.intro ('[φ_G] φ_φ),
-      simp only [hx, finset.union_insert, finset.mem_insert, eq_self_iff_true, finset.mem_union, 
+      simp only [hx, finset.union_insert, finset.mem_insert, eq_self_iff_true, finset.mem_union,
                   false_or, true_or, true_and],
       exact @iff_dni (formCLK agents) _ _, }, },
   { cases hx,  
@@ -185,7 +187,7 @@ inductive subformula {agents : Type} : formCLK agents → formCLK agents → Pro
 ----------------------------------------------------------
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
-lemma subformula.cl_subset_and_left {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_and_left {agents : Type}
   {φ ψ : formCLK agents} : cl φ ⊆ cl (φ '∧ ψ) :=
 begin
   intros x h,
@@ -197,7 +199,7 @@ begin
     {simp only [h, eq_self_iff_true, and_self, true_or, false_or, or_true], }, },
 end
 
-lemma subformula.cl_subset_and_right {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_and_right {agents : Type}
   {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ '∧ ψ) :=
 begin
   intros x h,
@@ -208,7 +210,7 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset_imp_left {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_imp_left {agents : Type}
   {φ ψ : formCLK agents} : cl φ ⊆ cl (φ '→ ψ) :=
 begin
   intros x h,
@@ -219,7 +221,7 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset_imp_right {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_imp_right {agents : Type}
   {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ '→ ψ) :=
 begin
   intros x h,
@@ -230,7 +232,7 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset_effectivity {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_effectivity {agents : Type}
   {φ : formCLK agents} {G : set (agents)} : cl φ ⊆ cl ('[G] φ) :=
 begin
   intros x h,
@@ -241,7 +243,7 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset_knows {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset_knows {agents : Type}
   {φ : formCLK agents} {i : agents}  : cl φ ⊆ cl ('K i φ) :=
 begin
   intros x h,
@@ -252,12 +254,12 @@ begin
     {simp [h], }, },
 end
 
-lemma subformula.cl_subset {agents : Type} [ha : nonempty agents]
+lemma subformula.cl_subset {agents : Type}
   {φ ψ : formCLK agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
 begin
-  induction h,
+  induction h with _ _ _ _ _ h ih ih',
   { exact finset.subset.rfl, },
-  { exact finset.subset.trans h_ih_ᾰ h_ih_ᾰ_1, },
+  { exact finset.subset.trans ih ih', },
   { exact subformula.cl_subset_and_left, },
   { exact subformula.cl_subset_and_right, },
   { exact subformula.cl_subset_imp_left, },
@@ -266,16 +268,16 @@ begin
   { exact subformula.cl_subset_knows, },
 end
 
-lemma subformula.mem_cl {agents : Type} [ha : nonempty agents]
+lemma subformula.mem_cl {agents : Type}
   {φ ψ : formCLK agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
-lemma subformula.in_cl_sub {agents : Type} [ha : nonempty agents]
+lemma subformula.in_cl_sub {agents : Type}
   {φ ψ χ : formCLK agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
 begin
-  induction hsub,
+  induction hsub with _ _ _ _ hsub1 hsub2 hih1 hih2,
   { exact hcl, },
-  { exact hsub_ih_ᾰ (hsub_ih_ᾰ_1 hcl), },
+  { exact hih1 (hih2 hcl), },
   all_goals
   { induction φ,
     repeat 
@@ -290,8 +292,9 @@ begin
   any_goals { rw hcl.1 at *, rw hcl.2 at *, },
   any_goals { rw h at *, },
   any_goals { simp only [cl, finset.union_assoc, finset.mem_insert, finset.mem_union, 
-                          finset.mem_singleton, false_or, finset.mem_insert, finset.mem_singleton, 
-                          or_self, or_false, eq_self_iff_true, and_self, or_true, true_or] at hcl, },
+                          finset.mem_singleton, false_or, finset.mem_insert, finset.mem_singleton,
+                          or_self, or_false, eq_self_iff_true, and_self, or_true, true_or] 
+              at hcl, },
   repeat { apply or.elim hcl, all_goals { intro hcl, }, },
   any_goals { rw hcl.1 at *, rw hcl.2 at *, },
   any_goals { rw h at *, },
@@ -300,8 +303,11 @@ begin
   any_goals { simp only [cl, φ_ih_ψ hcl, finset.mem_union, true_or, or_true], },
   any_goals { simp only [cl, finset.mem_union, cl_contains_phi, true_or, or_true], },
   any_goals { simp only [φ_ih hcl, true_or], },
-  any_goals { simp only [if_true, finset.mem_insert, finset.mem_singleton, or_false, eq_self_iff_true, and_self, or_true, true_or], }, 
-  any_goals { simp only [hcl.1, hcl.2, eq_self_iff_true, cl_contains_phi, and_self, or_false, or_true, true_or], },
-  any_goals { simp only [h, if_false, finset.mem_insert, eq_self_iff_true, and_self, finset.mem_singleton, and_false, or_false, or_true], },
+  any_goals { simp only [if_true, finset.mem_insert, finset.mem_singleton, or_false, 
+                          eq_self_iff_true, and_self, or_true, true_or], }, 
+  any_goals { simp only [hcl.1, hcl.2, eq_self_iff_true, cl_contains_phi, and_self, 
+                          or_false, or_true, true_or], },
+  any_goals { simp only [h, if_false, finset.mem_insert, eq_self_iff_true, and_self, 
+                          finset.mem_singleton, and_false, or_false, or_true], },
   any_goals { simp only [cl_contains_bot, or_self, true_or], },
 end

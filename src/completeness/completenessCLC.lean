@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina,
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
@@ -217,7 +217,8 @@ begin
     end,
   -- 8. ∃t ∈ SC′, Σ ∪ {¬ψ} ⊆ t, from 7, because SC′ is maximally consistent.
   obtain ⟨t', hmax, hsub⟩ := lindenbaum hcon,
-  obtain ⟨t, ht⟩ : ∃ t : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, t = ⟨t', hmax⟩,
+  obtain ⟨t, ht⟩ : 
+    ∃ t : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, t = ⟨t', hmax⟩,
     from exists_apply_eq_apply _ _,
   rw union_subset_iff at hsub,
   -- Note that ¬ψ ∈ t.
@@ -368,7 +369,8 @@ begin
     rw (compl_union_self Γ),
     apply univ_disjunct_provability,
   end,
-  -- 9.7 ∃ uf ∈ Σᶜ, such that ¬ 'K i ¬ (phi_s_f φ uf) ∈ s, from 9.6, by propositional logic and axiom K.
+  -- 9.7 ∃ uf ∈ Σᶜ, such that ¬ 'K i ¬ (phi_s_f φ uf) ∈ s, from 9.6, 
+    -- by propositional logic and axiom K.
   have hnkc : _ ∈ s, 
     from by apply max_ax_contains_by_set_proof s.2 hnkc (by apply nk_disjunction i),
   have huf : ∃ uf ∈ Γᶜ, (¬' (K' i (¬' (phi_s_f uf)))) ∈ s, from
@@ -441,8 +443,7 @@ begin
         from by apply max_ax_contains_by_set_proof s.2 htfs 
           (cut (phi_s_f_forall_imp _ hnχ) (iff_l hiffnχ)),
       -- Contradiction.
-      apply contra_contains_pr_false s.2 hsk hsnk,
-    },
+      apply contra_contains_pr_false s.2 hsk hsnk, },
   end,
   -- 9.10 ψ ∈ vf, because tf ∈ Σ (from 9.4) 
     -- and there is a path tf ~fi uf (from 9.9), uf ~cG vf (from 9.8).
@@ -550,7 +551,8 @@ begin
     obtain ⟨u, hu⟩ := s_f_to_s uf,
     obtain ⟨v, hv⟩ := s_f_to_s vf,
     simp only [hu, hcl', and_true] at h,
-    -- 2.2 K i C G ψ ∈ uf, from 2.1, by definition (cl (C G ψ)), propositional logic, and Axioms C, K and RN.
+    -- 2.2 K i C G ψ ∈ uf, from 2.1, by definition (cl (C G ψ)), propositional logic, 
+      -- and Axioms C, K and RN.
     have hkuf : 'K i ('C G ψ) ∈ uf, from 
     begin
       apply hu.mpr,
@@ -569,9 +571,7 @@ begin
     simp only [@hv, hcl, hcl', hcl'', and_true] at ⊢ hkv,
     -- 2.4 C G ψ ∈ vf, from 2.3, by Axiom T.
     have hcv : ('C G ψ) ∈ v, from 
-      begin 
-        apply @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ v.2 hkv.1 (by apply axCLC.T),
-      end,
+      @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ v.2 hkv.1 (by apply axCLC.T),
     -- 2.5 ψ ∈ vf, from 2.4, by propositional logic, and Axioms T, C, K and RN.
     have hv : ψ ∈ v, 
       from by apply @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ v.2 hcv 
@@ -696,7 +696,8 @@ begin
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m],
   -- let that state (s) be the maximally consistent set extended from {¬ φ}
-  obtain ⟨s, hs⟩ : ∃ s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, s = ⟨s', hmax⟩,
+  obtain ⟨s, hs⟩ : 
+    ∃ s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, s = ⟨s', hmax⟩,
     from exists_apply_eq_apply _ _,
   obtain ⟨sf, hsf⟩ := s_to_s_f cl φ s,
   apply exists.intro sf,

@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina,
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
@@ -12,7 +12,6 @@ import semantics.model
 local attribute [instance] classical.prop_decidable
 
 open formCLK set
-
 
 ----------------------------------------------------------
 -- Common Knowledge Path

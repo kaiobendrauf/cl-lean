@@ -1,12 +1,12 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 
 This file contains proofs for a variety of lemmas about common knowledge.
 -/
 
 import syntax.consistency
 
-def c_imp_kc {agents form : Type} [hN : fintype agents]
+lemma c_imp_kc {agents form : Type} [hN : fintype agents]
   [pf : Pformula_ax form] [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 
   ⊢' ((C' G φ) →' (K' i (C' G φ))) :=
@@ -22,7 +22,7 @@ begin
   exact p6 _ _,
 end
 
-def c_imp_k {agents form : Type} [hN : fintype agents]
+lemma c_imp_k {agents form : Type} [hN : fintype agents]
   [pf : Pformula_ax form] [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G): 
   ⊢' ((C' G φ) →' (K' i φ)) :=
@@ -38,7 +38,7 @@ begin
   exact p5 _ _,
 end
 
-def c_imp {agents form : Type} [hN : fintype agents]
+lemma c_imp {agents form : Type} [hN : fintype agents]
   [pf : Pformula_ax form] [kf : Kformula agents form] [cf : Cformula agents form]
   {φ : form} {G : set (agents)} {i : agents} (hi : i ∈ G) : 
   ⊢' ((C' G φ) →' φ) := cut (c_imp_k hi) (T φ i)

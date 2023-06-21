@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina
 
@@ -70,20 +70,22 @@ noncomputable def s_f {agents form : Type} {m : modelCL agents} [hm : set_like m
 begin
   fconstructor, fconstructor,
   exact finset.filter (λ ψ, ψ ∈ s) (cl(φ)),
-  simp only [finset.set_of_mem, finset.mem_filter, finset.mem_powerset, finset.filter_subset, finset.coe_filter, true_and],
+  simp only [finset.set_of_mem, finset.mem_filter, finset.mem_powerset, finset.filter_subset, 
+              finset.coe_filter, true_and],
   apply exists.intro s,
   exact rfl,
   simp only [finset.mem_attach],
 end
 
 -- get sf from s
-def s_to_s_f {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
+lemma s_to_s_f {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
   (cl : form → finset (form)) (φ : form) (s : m.f.states) : 
   ∃ sf : (S_f m cl φ), ∀ {ψ}, ψ ∈ sf ↔ ψ ∈ s ∧ ψ ∈ cl φ  :=
 begin
   fconstructor, fconstructor,fconstructor,
   { exact finset.filter (λ ψ, ψ ∈ s) (cl(φ)), },
-  { simp only [finset.set_of_mem, finset.mem_filter, finset.mem_powerset, finset.filter_subset, finset.coe_filter, true_and],
+  { simp only [finset.set_of_mem, finset.mem_filter, finset.mem_powerset, finset.filter_subset, 
+                finset.coe_filter, true_and],
     apply exists.intro s,
     exact rfl, },
   { simp only [finset.mem_attach], },
@@ -99,7 +101,7 @@ end
 -- Getting s from sf
 ----------------------------------------------------------
 -- for each sf, there exists some s which filters to sf
-def s_f_to_s {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
+lemma s_f_to_s {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
   {cl : form → finset (form)} {φ : form} (sf : (S_f m cl φ)) :
   ∃ s: m.f.states, ∀ {ψ}, ψ ∈ sf ↔ ψ ∈ s ∧ ψ ∈ cl φ :=
 begin
@@ -295,7 +297,7 @@ begin
   { exact hχ.right, },
 end 
 
-@[simp] lemma set_of_S_f {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
+@[simp] lemma set_of_S_f {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form]
   {cl : form → finset (form)} {φ ψ : form} (sf : S_f m cl φ) :
   sf ∈ {sf : S_f m cl φ | ψ ∈ sf} ↔ (ψ ∈ sf) := mem_set_of
 
@@ -323,7 +325,8 @@ begin
     induction fs with f fs ih,
     { unfold finite_conjunction,
       apply max_ax_contains_taut s.2 prtrue, },
-    { simp only [finite_conjunction, subtype.val_eq_coe, list.cons_subset, finset.mem_to_list] at *,
+    { simp only [finite_conjunction, subtype.val_eq_coe, list.cons_subset, finset.mem_to_list] 
+        at *,
       cases hfs with hf hfs,
       have hf_in_s : f ∈ s, from s_f_subset_s cl φ s f hf,
       have hfs_in_s : finite_conjunction fs ∈ s, from ih hfs,
@@ -824,7 +827,8 @@ begin
   { simp only [finset.not_subset] at this,
     rcases this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
       use x;
-      simp only [finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true, true_and], },
+      simp only [finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true, 
+                  true_and], },
   rw finset.mem_union at hun,
   -- 5-11. ⊢ phi sf ∧ phi tf → ⊥, using helper (steps 5-11)
   have hcontra : ⊢' phi_s_f sf ∧' phi_s_f tf →' ⊥', from
@@ -1234,7 +1238,7 @@ def E_f {agents form : Type} [ha : nonempty agents]
     (canonical_model_CL agents form hnpr).f.E.E (t) (G))
   -- condition G ≠ N
   -- ∀t ∈ S, sf = tf ⇒  ̃phiX ∈ E(t)(G)
-  (∀ t, sf = (s_f cl φ t) → (tilde (canonical_model_CL agents form hnpr).f.states (phi_X_set X)) ∈ 
+  (∀ t, sf = (s_f cl φ t) → (tilde (canonical_model_CL agents form hnpr).f.states (phi_X_set X)) ∈
     (canonical_model_CL agents form hnpr).f.E.E (t) (G))}
 
 
@@ -1294,7 +1298,8 @@ begin
     simp only [E_f, hG, eq_self_iff_true, subtype.val_eq_coe, if_true, mem_set_of_eq],
     -- 2.2.2. Sf ∈ Ef (sf )(N ) iff ∃t ∈ SC′, sf = tf and SC′ ∈ EC′(t)(N ), from 2.1 & 2.2.1.
     rw tilde_univ,
-    -- 2.2.3. ∃t ∈ SC′ , sf = tf and S ∈ EC′ (t)(N ), when t = s, because SC′ ∈ EC′ (t)(N ), because EC′ is safe.
+    -- 2.2.3. ∃t ∈ SC′ , sf = tf and S ∈ EC′ (t)(N ), when t = s, because SC′ ∈ EC′ (t)(N ), 
+      -- because EC′ is safe.
     apply exists.intro s,
     -- 2.2.4. Sf ∈ Ef sf )(N ), from 2.2.2 & 2.2.3.
     exact ⟨sf_eq_s_f @hs, M.f.E.safety s univ⟩, },
@@ -1342,9 +1347,11 @@ begin
   end,
   -- 3.6. ∃t ∈ SC′, sf = tf and ~¬φX ∉ EC′(t)(∅)), from 3.4 & 3.5
   rw h_tilde at hXc,
-  -- 3.7. ∃t ∈ SC′, sf = tf and (~φX)ᶜ ∉ EC′(t)(∅)), from 3.6, because all s ∈ S are maximally consistent.
+  -- 3.7. ∃t ∈ SC′, sf = tf and (~φX)ᶜ ∉ EC′(t)(∅)), from 3.6, 
+    -- because all s ∈ S are maximally consistent.
   rw h_tilde_compl hnpr at hXc,
-  -- 3.8. ∃t ∈ SC′, sf = tf and  ̃φX ∈ EC′ ∈ EC′(t)(N)), when s = t from 3.7, because EC′(s) is N-maximal
+  -- 3.8. ∃t ∈ SC′, sf = tf and  ̃φX ∈ EC′ ∈ EC′(t)(N)), when s = t from 3.7,
+    --  because EC′(s) is N-maximal
   apply exists.intro s,
   -- 3.9. Ef (sf )(N), from 3.8, by definition Ef .
   exact ⟨hs, M.f.E.N_max s (tilde (M.f.states) (phi_X_set X)) hXc⟩,
@@ -1355,7 +1362,6 @@ end
 lemma Ef_mono {agents form : Type} [ha : nonempty agents] 
   [pf : Pformula_ax form] [clf : CLformula agents form] 
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → finset (form)} {φ : form} 
-  (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   (sf : S_f (canonical_model_CL agents form hnpr) cl φ) {G : set (agents)} 
   {X Y : set _} (hXY : X ⊆ Y) (hX : X ∈ E_f sf G) : Y ∈ E_f sf G :=
 begin
@@ -1371,7 +1377,8 @@ begin
     -- 4.2.2.  ̃φX ⊆  ̃φY , from 4.3.1, because all s ∈ SC′ are maximally consistent.
     have h_phiXY : (tilde (M.f.states) (phi_X_set X)) ⊆ (tilde (M.f.states) (phi_X_set Y)), 
       from λ t ht, by apply max_ax_contains_by_set_proof t.2 ht hax,
-    -- 4.2.3. ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′ (s)(G) ⇒  ̃φY ∈ EC′ (s)(G), from 4.2.2, because EC′ (s) is outcome monotonic.
+    -- 4.2.3. ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′ (s)(G) ⇒  ̃φY ∈ EC′ (s)(G), from 4.2.2,
+      --  because EC′ (s) is outcome monotonic.
     exact λ s G, M.f.E.mono s G _ _ h_phiXY,
   end,
   -- 4.3. Case G = N
@@ -1521,7 +1528,7 @@ noncomputable def filtered_modelECL (agents form : Type) [ha : nonempty agents]
       liveness   := Ef_liveness,
       safety     := Ef_safety,
       N_max      := Ef_nmax (hcl φ),
-      mono       := Ef_mono (hcl φ),
+      mono       := Ef_mono,
       superadd   := Ef_superadd (hcl φ), },
     rel   := λ i s, {t | {φ | K' (i) (φ) ∈ s} = {φ | K' (i) (φ) ∈ t}},
     rfl   := λ i s, rfl, 

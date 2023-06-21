@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the proof that CLC is complete.
@@ -180,11 +180,9 @@ begin
       simp [s_entails_CLC] at ih,
       simp[C_path] at *,
       cases ss with u ss,
-      { 
-        simp[C_path] at *,
+      { simp[C_path] at *,
          specialize ih his.left t hC,
-        exact ih.left, 
-        },
+        exact ih.left, },
       { simp[C_path] at *,
         specialize @ih_is hN _ _ _ h m u,
         apply ih_is,
@@ -229,7 +227,7 @@ begin
   exact finset.mem_singleton.mpr rfl,
 end
 
-def m_ex {agents : Type} [hN : fintype agents] : modelECL agents  :=
+def m_ex {agents : Type} : modelECL agents  :=
 { f := 
   { states := single,
     hs := single_nonempty,

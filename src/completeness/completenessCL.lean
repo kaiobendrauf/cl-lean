@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
@@ -23,8 +23,7 @@ def M_CL (agents : Type) [ha : nonempty agents] : modelCL agents :=
 canonical_model_CL agents (formCL agents) nprfalseCL
 
 /-- Allows us to write `φ ∈ s` instead of `φ ∈ s` -/
-instance M_CL.f.states.set_like {agents form : Type} [ha : nonempty agents]
- [pf : Pformula form] [pax : Pformula_ax form] [clf : CLformula agents form] :
+instance M_CL.f.states.set_like {agents : Type} [ha : nonempty agents] :
   set_like ((M_CL agents).f.states) (formCL agents) :=
 { coe := λ s, s.1,
   coe_injective' := subtype.coe_injective }

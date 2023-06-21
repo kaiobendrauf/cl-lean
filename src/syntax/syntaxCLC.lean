@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina,
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
@@ -134,5 +134,3 @@ instance CformulaCLC {agents : Type} [hN : fintype agents] : Cformula agents (fo
 { common_know := formCLC.C,
   C  := @axCLC.C agents hN,
   RC := @axCLC.RC agents hN, }
-
-

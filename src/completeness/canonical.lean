@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 
 This file defines a canonical model for CL. 
@@ -19,11 +19,11 @@ open set list
 ----------------------------------------------------------
 -- Set Helper Functions
 ----------------------------------------------------------
-def union_neq_univ_left {α : Type} {A B : set α} (h : A ∪ B ⊂ univ) : 
+lemma union_neq_univ_left {α : Type} {A B : set α} (h : A ∪ B ⊂ univ) : 
   A ≠ univ := 
 ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_left A B) h)
 
-def union_neq_univ_right {α : Type} {A B : set α} (h : A ∪ B ⊂ univ) : 
+lemma union_neq_univ_right {α : Type} {A B : set α} (h : A ∪ B ⊂ univ) : 
   B ≠ univ := 
 ne_of_ssubset (ssubset_of_subset_of_ssubset (subset_union_right A B) h)
 
@@ -384,6 +384,5 @@ begin
   { intro hs,
     apply max_ax_contains_by_set_proof s.2 hs (iff_r hax), },
 end
-
 
 end canonical

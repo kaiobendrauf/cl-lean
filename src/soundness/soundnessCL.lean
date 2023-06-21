@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the proof that CL is complete.

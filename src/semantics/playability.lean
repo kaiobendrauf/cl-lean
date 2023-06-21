@@ -1,14 +1,18 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the papers:
   - "A Modal Logic for Coalitional Power in Games" by Mark Pauly
-  - "Coalition Logic with Individual, Distributed and Common Knowledge" by Thomas Ågotnes and Natasha Alechina
-  - "Strategic Games and Truly Playable Effectivity Functions", by Valentin Groanko, Wojciech Jamroga and Paolo Turrini
+  - "Coalition Logic with Individual, Distributed and Common Knowledge" 
+    by Thomas Ågotnes and Natasha Alechina
+  - "Strategic Games and Truly Playable Effectivity Functions", 
+    by Valentin Groanko, Wojciech Jamroga and Paolo Turrini
 
 This file contains definitions for effectivity structures, N-maximality, regularity.
 We define structures for truly, semi- and playable effectivity structure.
-A playable effectivity structure can be created from from a semi-playable one which is regular and N-maximal.
-A truly playable effectivity structure can be created from from a playable one with a finite domain.
+A playable effectivity structure can be created from from a semi-playable one which 
+is regular and N-maximal.
+A truly playable effectivity structure can be created from from a playable one with a 
+finite domain.
 -/
 
 import order.filter.basic
@@ -65,19 +69,19 @@ structure truly_playable_effectivity_struct (agents states : Type)
 ----------------------------------------------------------
 -- Set Helper Functions
 ----------------------------------------------------------
-def empty_subset_univ {α : Type} (h : nonempty α) : 
+lemma empty_subset_univ {α : Type} (h : nonempty α) : 
   ∅ ⊂ @univ (α) := 
 by simp[empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
   
-def empty_union_subset_univ {α : Type} (h : nonempty α) : 
+lemma empty_union_subset_univ {α : Type} (h : nonempty α) : 
   ∅ ∪ ∅ ⊂ @univ (α) := 
 by simp[union_self, empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
 
-def intersect_complement {α : Type} (A B : set α) : 
+lemma intersect_complement {α : Type} (A B : set α) : 
   (A ∩ B)ᶜ ∩ B = Aᶜ ∩ B := 
 by simp[compl_inter, inter_distrib_right, compl_inter_self]
 
-def show_complement {α : Type} (A B : set α) (hint : A ∩ B = ∅) (hunion : A ∪ B  = univ) : 
+lemma show_complement {α : Type} (A B : set α) (hint : A ∩ B = ∅) (hunion : A ∪ B  = univ) : 
   A = Bᶜ := 
 begin
   ext,

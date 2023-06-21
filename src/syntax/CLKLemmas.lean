@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 
 This file contains proofs for a variety of lemmas about individual knowledge.
 -/
@@ -8,7 +8,7 @@ import syntax.consistency
 open set
 
 -- ⊢ ((¬ φ) → (¬ (K i φ)))
-def n_imp_nk {agents form : Type} [pf : Pformula_ax form] [kf : Kformula agents form]
+lemma n_imp_nk {agents form : Type} [pf : Pformula_ax form] [kf : Kformula agents form]
   {φ : form} {i : agents} : ⊢'  ((¬' φ) →' (¬' (K' i φ))) :=
 begin
   apply by_contra_ax,
@@ -124,4 +124,3 @@ begin
       exact likemp, },
     { exact ih, }, },
 end
-

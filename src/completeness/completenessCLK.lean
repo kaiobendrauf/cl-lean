@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
 by Thomas Ågotnes and Natasha Alechina,
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
@@ -217,7 +217,8 @@ begin
     end,
   -- 8. ∃t ∈ SC′, Σ ∪ {¬ψ} ⊆ t, from 7, because SC′ is maximally consistent.
   obtain ⟨t', hmax, hsub⟩ := lindenbaum hcon,
-  obtain ⟨t, ht⟩ : ∃ t : (canonical_model_CL agents (formCLK agents) nprfalseCLK).f.states, t = ⟨t', hmax⟩,
+  obtain ⟨t, ht⟩ : 
+    ∃ t : (canonical_model_CL agents (formCLK agents) nprfalseCLK).f.states, t = ⟨t', hmax⟩,
     from exists_apply_eq_apply _ _,
   rw union_subset_iff at hsub,
   -- Note that ¬ψ ∈ t.
@@ -375,7 +376,8 @@ begin
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m],
   -- let that state (s) be the maximally consistent set extended from {¬ φ}
-  obtain ⟨s, hs⟩ : ∃ s : (canonical_model_CL agents (formCLK agents) nprfalseCLK).f.states, s = ⟨s', hmax⟩,
+  obtain ⟨s, hs⟩ : 
+    ∃ s : (canonical_model_CL agents (formCLK agents) nprfalseCLK).f.states, s = ⟨s', hmax⟩,
     from exists_apply_eq_apply _ _,
   obtain ⟨sf, hsf⟩ := s_to_s_f cl φ s,
   apply exists.intro sf,

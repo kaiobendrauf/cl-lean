@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
@@ -49,4 +49,3 @@ def global_valid {agents: Type} (φ : formCL agents) :=
   ∀ m, valid_m m φ
 
 notation `'⊨` φ := global_valid φ
-

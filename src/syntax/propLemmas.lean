@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Adapted from the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains proofs for a variety of propositional lemmas.
@@ -26,16 +26,19 @@ lemma cut {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} :
 ----------------------------------------------------------
 -- SKI
 ----------------------------------------------------------
-def combS {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} (x : ⊢' (φ →' ψ →' χ)) (y : ⊢' (φ →' ψ))
+def combS {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} 
+  (x : ⊢' (φ →' ψ →' χ)) (y : ⊢' (φ →' ψ))
   : ⊢' (φ →' χ) :=
 mp _ _ (mp _ _ (p2 _ _ _) x) y
 
-def combS2 {form : Type} [pf : Pformula_ax form] {φ ψ χ ω : form} (x : ⊢' (φ →' ψ →' χ →' ω)) (y : ⊢' (φ →' ψ)) (z : ⊢' (φ →' χ))
+def combS2 {form : Type} [pf : Pformula_ax form] {φ ψ χ ω : form} 
+  (x : ⊢' (φ →' ψ →' χ →' ω)) (y : ⊢' (φ →' ψ)) (z : ⊢' (φ →' χ))
   : ⊢' (φ →' ω) :=
 combS (combS x y) z
 
 def propS {φ ψ χ : Type} (x : φ → ψ → χ) (y : φ → ψ) : (φ → χ) := λ z, (x z) (y z)
-def propS2 {φ ψ χ ω : Type} (x : φ → ψ → χ → ω) (y : φ → ψ) (z : φ → χ) : (φ → ω) := λ w, (x w) (y w) (z w)
+def propS2 {φ ψ χ ω : Type} (x : φ → ψ → χ → ω) (y : φ → ψ) (z : φ → χ) : (φ → ω) := 
+  λ w, (x w) (y w) (z w)
 
 def combK {form : Type} [pf : Pformula_ax form] {φ ψ : form} (x : ⊢' φ) : ⊢' (ψ →' φ) :=
 mp _ _ (p1 _ _) x
@@ -173,8 +176,8 @@ end
 
 /-- `φ` is provable iff `ψ` is, if it's provable `φ` and `ψ` are equivalent.
 
-If we have the deduction theorem, the converse is also true: Pformulas are provably equivalent iff
-their provability is equivalent. -/
+If we have the deduction theorem, the converse is also true: 
+Pformulas are provably equivalent iff their provability is equivalent. -/
 -- Motivation: allows rewriting after proving equivalence
 lemma ax_iff_mp {form : Type} [pf : Pformula_ax form] {φ ψ : form} (hiff : ⊢' (φ ↔' ψ)) :
   ⊢' φ ↔ ⊢' ψ :=
@@ -742,12 +745,10 @@ begin
   apply by_contra_ax,
   apply cut h3,
   apply @cut _ _ _ (¬' (¬' φ →' ψ)) _,
-  { 
-    refine contrapos.mp _,
+  { refine contrapos.mp _,
     apply cut,
     apply dne,
-    exact demorgans',
-  },
+    exact demorgans', },
   exact contra_imp_imp_false,
 end
 
@@ -764,7 +765,7 @@ lemma or_inr {form : Type} [pf : Pformula_ax form] {φ ψ : form} :
 --  ⇒  ⊢ (φ) → ⊢ (¬ φ → χ)
   ⊢' ((ψ) →' ((¬' φ) →' ψ)) := p1 ψ (¬' φ)
 
-  def disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
+lemma disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
   ⊢' (((¬' φ) →' ψ) ↔' (finite_disjunction (φ :: [ψ]))) :=
 begin
   apply ax_iff_intro,
@@ -890,7 +891,7 @@ begin
 end
 
 lemma fin_conj_s_imp {form : Type} [pf : Pformula_ax form] 
-  {Γ : set form} {φ ψ : form } {φs : list form} :
+  {φ ψ : form } {φs : list form} :
 --  ⊢ finite_conjunction (φ :: φs) → (φ → ψ) ⇒  ⊢ (finite_conjunction φs) → (φ → ψ)
   ⊢' ((finite_conjunction (φ :: φs)) →' (φ →' ψ)) →  ⊢' ((finite_conjunction φs) →' (φ →' ψ)) :=
 λ h, imp_imp_iff_imp.mp (imp_conj_imp_imp.mp h)
@@ -901,7 +902,7 @@ lemma fin_conj_append {form : Type} [pf : Pformula_ax form] {φs φs' : list (fo
   ⊢' (((finite_conjunction φs') ∧' (finite_conjunction φs)) ↔' (finite_conjunction (φs' ++ φs))) :=
 begin
   induction φs', rw finite_conjunction,
-  exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch) (mp _ _ (p5 _ _) phi_and_true))) 
+  exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch) (mp _ _ (p5 _ _) phi_and_true)))
     (cut (mp _ _ (p6 _ _) phi_and_true) (mp _ _ (p5 _ _) and_switch))),
   exact mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p5 _ _) and_commute) 
     (imp_and_imp (mp _ _ (p5 _ _) φs'_ih))))
@@ -919,7 +920,8 @@ begin
   rw finite_conjunction, simp at *,
   cases h1 with h1 h2,
   subst h1,
-  exact cut (mp _ _ double_imp (p4 _ _)) (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (φs_ih h2))),
+  exact cut (mp _ _ double_imp (p4 _ _)) 
+    (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (φs_ih h2))),
 end
 
 lemma neg_fin_conj_repeat {form : Type} [pf : Pformula_ax form] 
@@ -1055,7 +1057,7 @@ end
 ----------------------------------------------------------
 -- Finite Disjunction
 ----------------------------------------------------------
-def ax_disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
+lemma ax_disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
   ⊢' ((¬' φ) →' ψ) ↔ ⊢' (finite_disjunction [φ, ψ]) :=
 begin
   refine ax_iff_mp _,
@@ -1094,11 +1096,10 @@ begin
     have hφs' := imp_finite_disjunction φ φs' hφ,
     apply or_cases,
     exact hφs',
-    exact ih,
-  },
+    exact ih, },
 end
 
-def disjunct_of_disjuncts {form : Type} [pf : Pformula_ax form] (φs φs': list (form)) : 
+lemma disjunct_of_disjuncts {form : Type} [pf : Pformula_ax form] (φs φs': list (form)) : 
   ⊢' ((finite_disjunction [(finite_disjunction φs), (finite_disjunction φs')]) ↔' 
       (finite_disjunction (φs ++ φs') )) :=
 begin
@@ -1144,7 +1145,8 @@ end
 
 lemma disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : list (form)} :
-  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')  →' finite_disjunction (φs ++ φs') )  :=
+  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')  
+    →' finite_disjunction (φs ++ φs'))  :=
 begin
   apply or_cases,
   apply imp_finite_disjunction_subset,
@@ -1155,7 +1157,7 @@ end
 
 lemma ax_iff_disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : list (form)} :
-  ⊢' (¬' (finite_disjunction φs) →' finite_disjunction φs') ↔ ⊢' (finite_disjunction (φs ++ φs') )  :=
+  ⊢' (¬' (finite_disjunction φs) →' finite_disjunction φs')↔ ⊢' (finite_disjunction (φs ++ φs')) :=
 begin
   split,
   { intro h,
@@ -1170,7 +1172,7 @@ end
 
 lemma iff_disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : list (form)} :
-  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs') ↔' (finite_disjunction (φs ++ φs') ))  :=
+  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')↔' (finite_disjunction (φs ++ φs'))) :=
 begin
   apply ax_iff_intro,
   { apply disjunc_disjunct, },
@@ -1197,52 +1199,3 @@ begin
       apply ax_and.mpr,
       exact and.intro iden (iff_r ih), }, },
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

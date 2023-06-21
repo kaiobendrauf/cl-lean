@@ -1,5 +1,5 @@
 /-
-Authors : Kai Obendrauf
+Authors: Kai Obendrauf
 Adapted from the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley, 
 who's work followed the textbook "Dynamic Epistemic Logic" by 
 Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
@@ -8,8 +8,13 @@ This file defines proofs from a set, consistency and maximal consistency.
 It proves sever lemmas related to the above definitions, including Lindenbaums Lemma.
 -/
 
-import syntax.formula syntax.propLemmas
-import data.set.basic data.set.finite order.zorn data.list.basic
+import syntax.formula 
+import syntax.propLemmas
+
+import data.set.basic 
+import data.set.finite 
+import order.zorn 
+import data.list.basic
 
 open set 
 
@@ -218,7 +223,8 @@ begin
     simp [ax_consistent, set_proves],
     intro φs,
     cases φs with φ φs,
-    { simp only [list.not_mem_nil, forall_false_left, implies_true_iff, finite_conjunction_nil, ax_not_bot_imp, forall_true_left],
+    { simp only [list.not_mem_nil, forall_false_left, implies_true_iff, finite_conjunction_nil, 
+                  ax_not_bot_imp, forall_true_left],
       exact h, },
     { simp only [list.mem_cons_iff, forall_eq_or_imp, false_and, forall_false_left], }, },
 end
@@ -307,11 +313,11 @@ begin
     rw ← set.lt_eq_ssubset at hΓΔ,
     exact hΓΔ.not_le (max Δ hconsΔ hΓΔ.le) },
   { intros c c_cons c_chain Γ hΓ,
-    exact ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _, set.subset_sUnion_of_mem⟩, }
+    exact ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _, set.subset_sUnion_of_mem⟩, },
 end
 
-lemma listempty {form : Type} [pf : Pformula_ax form] 
-  {φs : list form} {Γ : set form} : (∀ φ ∈ φs, φ ∈ Γ) → Γ = ∅ → φs = [] := 
+lemma listempty {form : Type} {φs : list form} {Γ : set form} : 
+  (∀ φ ∈ φs, φ ∈ Γ) → Γ = ∅ → φs = [] := 
 begin
   intros h1 h2,
   by_contradiction h3,
@@ -336,8 +342,7 @@ begin
     apply mp,
     exact h1.right,
     exact set.has_emptyc,
-    simp[h2],
-    exact pf,
+    simp only [h2, finite_conjunction_nil, explosion],
   end,
   have h2 := lindenbaum h1, 
   cases h2 with Γ h2, cases h2 with h2 h3, existsi (Γ : set form), apply h2
@@ -445,8 +450,8 @@ begin
 end
 
 -- For maximall consistent Γ, φ ∈ Γ and ⊢ (φ → ψ) ⇒ ψ ∈ Γ
-lemma max_ax_contains_by_set_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} {Γ : set form}
-  (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hproves :  ⊢' (φ →' ψ)) : ψ ∈ Γ :=
+lemma max_ax_contains_by_set_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} 
+  {Γ : set form} (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hproves :  ⊢' (φ →' ψ)) : ψ ∈ Γ :=
 begin
   rw ←(mem_max_consistent_iff_proves ψ hΓ),
   simp[set_proves],
@@ -460,8 +465,9 @@ begin
 end 
 
 -- For maximall consistent Γ, φ ∈ Γ and ψ ∈ Γ and ⊢ (φ → ψ → χ) ⇒ χ ∈ Γ
-lemma max_ax_contains_by_set_proof_2h {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} {Γ : set form}
-  (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ) (hproves :  ⊢' (φ →' (ψ →' χ))) : χ ∈ Γ :=
+lemma max_ax_contains_by_set_proof_2h {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} 
+  {Γ : set form} (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ) 
+  (hproves :  ⊢' (φ →' (ψ →' χ))) : χ ∈ Γ :=
 begin
   rw ←(mem_max_consistent_iff_proves χ hΓ),
   simp only [set_proves],
@@ -487,8 +493,8 @@ begin
 end 
 
 -- For maximall consistent Γ,  φ ∈ Γ → ψ ∈ Γ ⇒ φ → ψ ∈ Γ
-lemma max_ax_contains_imp_by_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} {Γ : set form}
-  (hΓ : max_ax_consistent Γ) (himp : φ ∈ Γ → ψ ∈ Γ) : (φ →' ψ) ∈ Γ :=
+lemma max_ax_contains_imp_by_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} 
+  {Γ : set form} (hΓ : max_ax_consistent Γ) (himp : φ ∈ Γ → ψ ∈ Γ) : (φ →' ψ) ∈ Γ :=
 begin
   cases (max_ax_contains_phi_or_neg hΓ φ),
 
@@ -521,7 +527,7 @@ begin
 end
 
 lemma ex_empty_proves_false {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} {Γ : set form}
-  (hΓ : max_ax_consistent Γ) (hempty : {Γ : {Γ : set form | max_ax_consistent Γ }| ψ ∈ Γ.val} ⊆ ∅) 
+  (hΓ : max_ax_consistent Γ) (hempty : {Γ : {Γ : set form | max_ax_consistent Γ }| ψ ∈ Γ.val} ⊆ ∅)
   (hin : φ ∈ Γ) (hiff :  ⊢' (ψ ↔' ⊥') →  ⊢' (φ ↔' χ)) (hax :  ⊢' (¬' χ)) : false :=
 begin
   -- ⊢ ψ ↔ ⊥, because {ψ} cannot be extended into a maximally consistent set (by hempty), 
