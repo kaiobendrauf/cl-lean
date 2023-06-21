@@ -1,3 +1,9 @@
+/-
+Authors : Kai Obendrauf
+
+This file contains proofs for a variety of lemmas about common knowledge.
+-/
+
 import syntax.consistency
 
 def c_imp_kc {agents form : Type} [hN : fintype agents]

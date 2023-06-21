@@ -1,3 +1,12 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
+
+This file defines a canonical model for CL. 
+First we define the states in the model, then the effectivity structure.
+Given these we prove semi playability and regularity, which suffices to prove playability.
+-/
+
 import syntax.consistency
 import syntax.CLLemmas
 import semantics.model
@@ -60,10 +69,10 @@ def E {agents form : Type}
   (s : states form) (G : set agents) :=
 {X | ite (G = univ) 
 -- condition G = N
---  X ∈ E(s)(N) iff ∀φ˜ ⊆ Xᶜ : [∅]φ ∉ s, where φ˜ := {t ∈ S| φ ∈ t}
+--  X ∈ E(s)(N) iff ∀ φ, φ˜ ⊆ Xᶜ → [∅]φ ∉ s, where φ˜ := {t ∈ S| φ ∈ t}
 (∀ φ, tilde (states form) φ ⊆ Xᶜ → (['∅] φ) ∉ s)
 -- condition G ≠ N
---  When G ≠ N : X ∈ E(s)(G) iff ∃φ˜ ⊆ X : [G]φ ∈ s
+--  When G ≠ N : X ∈ E(s)(G) iff ∃φ, φ˜ ⊆ X ∧ [G]φ ∈ s
 (∃ φ, tilde (states form) φ ⊆ X ∧ (['G] φ) ∈ s)}
 
 -- Semi-liveness

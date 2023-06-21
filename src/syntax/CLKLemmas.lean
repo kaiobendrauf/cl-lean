@@ -1,7 +1,10 @@
+/-
+Authors : Kai Obendrauf
+
+This file contains proofs for a variety of lemmas about individual knowledge.
+-/
+
 import syntax.consistency
--- import data.set.finite
--- import data.fintype.basic
--- import data.set.basic 
 open set
 
 -- ⊢ ((¬ φ) → (¬ (K i φ)))

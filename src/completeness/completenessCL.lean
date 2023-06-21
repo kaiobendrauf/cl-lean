@@ -1,6 +1,13 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
+and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+
+This file contains the truth lemma for CL, and from that the proof of completeness for CL.
+-/
+
 import soundness.soundnessCL
 import completeness.canonical
-import syntax.consistency_lemmas
 import tactic.induction
 
 local attribute [instance] classical.prop_decidable

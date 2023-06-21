@@ -1,3 +1,20 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+by Thomas Ågotnes and Natasha Alechina
+
+This file defines how a model, where states contain formulas form, 
+ might be filtered through some closure cl into a finite model.
+We define S_f as the filtered set of states, and s_f as the filtered state s ∩ cl(φ)).
+  We prove several lemmas about these filtered states, and the set of all filtered states.
+  We also define phi_s_f as the conjunction of all formulas in some filtered state s_f, and
+  phi_X_set for some set of filtered states in X as the disjunction of phi_s_f, 
+  for all filtered states in X and then prove several lemmas related to these definitions.
+Lastly we prove that given that cl is closed under single negations, 
+  the filtered model is playable. Using this we define an epistemic coalition model by filtering
+  the canonical model for CL through some closure.
+-/
+
 import completeness.canonical
 
 local attribute [instance] classical.prop_decidable
@@ -924,7 +941,7 @@ lemma phi_X_contains_iff_psi {agents form : Type} [ha : nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form] 
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → finset (form)} {φ ψ : form} 
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ)))) (hψ : ψ ∈ cl φ) :
-  ⊢' (phi_X_set {sf : (S_f (canonical_model_CL agents form hnpr) cl φ) | ψ ∈ sf} ↔' ψ) :=
+  ⊢' (phi_X_set {sf : (S_f (canonical_model_CL _ _ hnpr) cl φ) | ψ ∈ sf} ↔' ψ) :=
 begin
   apply phi_X_contains_iff_psi_finset hcl hψ, 
   -- ∀ sf, sf ∈ phi {sf | ψ ∈ sf } → ψ ∈ sf
@@ -1333,20 +1350,6 @@ begin
   exact ⟨hs, M.f.E.N_max s (tilde (M.f.states) (phi_X_set X)) hXc⟩,
 end
 
--- 4. Ef (sf ) is outcome monotonic: ∀G ⊆ N, ∀X ⊆ Y ⊆ Sf : X ∈ Ef (sf )(G) ⇒ Y ∈ Ef (sf )(G)
--- 4.1. Let G be some G ⊆ N and X and Y be some X ⊆ Y ⊆ Sf . Assume X ∈ Ef (sf )(G).
--- 4.2. First we note that ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′(s)(G) ⇒  ̃φY ∈ EC′(s)(G)
--- 4.2.1. ⊢ φX → φY , from 4.1 (X ⊆ Y ).
--- 4.2.2.  ̃φX ⊆  ̃φY , from 4.3.1, because all s ∈ SC′ are maximally consistent.
--- 4.2.3. ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′ (s)(G) ⇒  ̃φY ∈ EC′ (s)(G), from 4.2.2, because EC′ (s) is outcome monotonic.
--- 4.3. Case G = N
--- 4.3.1. ∃t ∈ SC′, sf = tf and  ̃φX ∈ EC′ (t)(N ), from 4.1, by definition Ef .
--- 4.3.2. ∃t ∈ SC′, sf = tf and  ̃φY ∈ EC′ (t)(N ), from 4.2 & 4.3.1.
--- 4.3.3. Y ∈ Ef (sf )(N ), from 4.2.2, by definition Ef .
--- 4.4. Case: G ̸ = N
--- 4.4.1. ∀t ∈ SC′, sf = tf ⇒  ̃φX ∈ EC′(t)(N ), from 4.1, by definition Ef .
--- 4.4.2. ∀t ∈ SC′, sf = tf ⇒  ̃φY ∈ EC′(t)(N ), from 4.2 & 4.4.1.
--- 4.4.3. Y ∈ Ef (sf )(G), from 4.4.2, by definition Ef .
 
 -- 4. Ef (sf) is outcome monotonic: ∀G ⊆ N, ∀X ⊆ Y ⊆ Sf : X ∈ Ef (sf)(G) ⇒ Y ∈ Ef (sf)(G)
 lemma Ef_mono {agents form : Type} [ha : nonempty agents] 

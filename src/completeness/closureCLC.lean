@@ -4,7 +4,8 @@ Following the paper "Coalition Logic with Individual, Distributed and Common Kno
 by Thomas Ågotnes and Natasha Alechina,
 
 This file contains the filtration closure for CLC, and related lemmas, 
-as well as defining subformulas for CLC and how if φ is a subformula of ψ, then cl φ ⊆ cl ψ
+as well as defining subformulas for CLC and related lemmas, including the fact that
+if ψ ∈ cl φ and subformula χ ψ, then we must have χ ∈ cl φ .
 -/
 
 import syntax.syntaxCLC
@@ -24,7 +25,7 @@ finset.image (λ i, 'K (i) ('C G φ)) (to_finset G) ∪ finset.image (λ i, ('¬
 noncomputable def cl {agents : Type} [hN : fintype agents] : 
   formCLC agents → finset (formCLC agents)
 |  '⊥      := {'⊥, '¬ '⊥}
-| (var n)  := {var n, '¬ var n}
+| (var n)  := {var n, '¬ (var n), '⊥, '¬ '⊥}
 | (φ '→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = '⊥) {(imp φ '⊥)} {(imp φ ψ), '¬ (imp φ ψ)} )
 | (φ '∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), '¬ (and φ ψ)}
 | ('[G] φ) := cl φ ∪ {('[G] φ), '¬ '[G] φ} ∪ 
@@ -42,6 +43,46 @@ begin
   repeat { unfold cl, simp, },
   { split_ifs,
     repeat { simp[h] at *, }, },
+end
+
+@[simp] lemma cl_contains_bot {agents : Type} [hN : fintype agents] (φ : formCLC agents) :
+  '⊥ ∈ cl φ :=
+begin
+  induction φ,
+  any_goals { unfold cl, simp, },
+  any_goals { simp [φ_ih], },
+  any_goals { simp [φ_ih_φ, φ_ih_ψ], },
+end
+
+lemma cl_C_contains_KC {agents : Type} [hN : fintype agents] {φ ψ : formCLC agents} {G : set agents}
+{i : agents} (hi : i ∈ G) (h : 'C G ψ ∈ cl φ) : 'K i ('C G ψ) ∈ cl φ :=
+begin
+  induction φ,
+  any_goals 
+  { simp only [cl, finset.mem_insert, finset.mem_singleton, or_self] at *, exact h, },
+  { simp only [cl, finset.mem_insert, finset.mem_union, finset.mem_singleton, or_false] at *, 
+    cases h, exact or.inl (φ_ih_φ h), exact or.inr (φ_ih_ψ h), },
+  { simp only [cl, finset.union_assoc, finset.mem_union] at *,
+    cases h, exact or.inl (φ_ih_φ h),
+    cases h, simp only [φ_ih_ψ h, true_or, or_true],
+    split_ifs at h, simp only [finset.mem_singleton] at h, cases h,
+    simp only [finset.mem_insert, finset.mem_singleton, or_self] at h, cases h, },
+  { simp only [cl, finset.union_insert, finset.insert_union, finset.union_assoc, finset.mem_insert,
+                finset.mem_union, finset.mem_singleton, false_or] at *,
+    cases h, rw [h.1, h.2] at *,
+    simp only [cl_C, hi, finset.mem_union, finset.mem_image, mem_to_finset, eq_self_iff_true, 
+                and_true, exists_prop, exists_eq_right, exists_false, or_false, or_true],
+    cases h, exact or.inl (φ_ih h),
+    simp only [cl_C, finset.mem_union, finset.mem_image, exists_false, or_false] at h, cases h, },
+  { simp only [cl, finset.union_insert, finset.mem_insert, finset.mem_union, finset.mem_singleton, 
+                false_or, or_false] at *,
+    exact or.inr (φ_ih h), },
+  { simp only [cl, cl_C, finset.union_insert, finset.mem_insert, finset.mem_union, 
+                finset.mem_singleton, finset.mem_image, mem_to_finset, exists_prop, exists_false,
+                or_false, false_or] at *,
+    cases h, rw [h.1, h.2] at *,
+    simp only [hi, eq_self_iff_true, and_true, exists_eq_right, or_true],
+    exact or.inl (φ_ih h), },
 end
 
 lemma cl_closed_single_neg {agents : Type} [hN : fintype agents] 
@@ -64,10 +105,22 @@ begin
     apply Prop4,
     exact @dni (formCLC agents) _ _,
     exact @nnn_bot (formCLC agents) _, },
-  { { apply exists.intro (var φ),
+  { cases hx,
+   { apply exists.intro (var φ),
       simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, 
                   or_false, true_and] at *,
-      exact @iff_dni (formCLC agents) _ _, }, },
+      exact @iff_dni (formCLC agents) _ _, }, 
+    cases hx,
+    { apply exists.intro ('⊤),
+      simp only [hx, finset.mem_insert, eq_self_iff_true, false_and, finset.mem_singleton, false_or, true_and],
+      apply @iff_iden (formCLC agents) _ _, },
+    { apply exists.intro ('⊥),
+      simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, or_false, false_or, true_and],
+      apply MP,
+    apply MP,
+    apply Prop4,
+    exact @dni (formCLC agents) _ _,
+    exact @nnn_bot (formCLC agents) _, }, },
   { cases hx,
     { specialize φ_ih_φ hx,
       cases φ_ih_φ with ψ hψ,
@@ -322,4 +375,42 @@ lemma subformula.mem_cl {agents : Type} [ha : nonempty agents] [hN : fintype age
   {φ ψ : formCLC agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
-
+lemma subformula.in_cl_sub {agents : Type} [ha : nonempty agents] [hN : fintype agents]
+  {φ ψ χ : formCLC agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
+begin
+  induction hsub,
+  { exact hcl, },
+  { exact hsub_ih_ᾰ (hsub_ih_ᾰ_1 hcl), },
+  all_goals
+  { induction φ,
+    repeat 
+    { simp only [cl, finset.mem_insert, finset.mem_singleton, or_self] at hcl,
+      cases hcl, }, },
+  any_goals
+  { simp only [cl, cl_C, finset.mem_insert, finset.mem_union, finset.mem_singleton, finset.mem_image, 
+                  exists_false, or_false, false_or] at hcl,
+      cases hcl, },
+  repeat { apply or.elim hcl, all_goals { intro hcl, }, }, 
+  any_goals { split_ifs at hcl, }, 
+  any_goals { rw hcl.1 at *, rw hcl.2 at *, },
+  any_goals { rw h at *, },
+  any_goals { simp only [cl, finset.union_assoc, finset.mem_insert, finset.mem_union, 
+                          finset.mem_singleton, false_or, finset.mem_insert, finset.mem_singleton, 
+                          or_self, or_false, eq_self_iff_true, and_self, or_true, true_or] at hcl, },
+  any_goals { simp only [cl_C, finset.mem_union, finset.mem_image, exists_false, or_self, or_false] at hcl, },
+  repeat { apply or.elim hcl, all_goals { intro hcl, }, },
+  any_goals { rw hcl.1 at *, rw hcl.2 at *, },
+  any_goals { rw h at *, },
+  any_goals { solve1 { by_contradiction, exact hcl, }, },
+  any_goals { simp only [cl, φ_ih_φ hcl, finset.mem_union, true_or, or_true], },
+  any_goals { simp only [cl, φ_ih_ψ hcl, finset.mem_union, true_or, or_true], },
+  any_goals { simp only [cl, finset.mem_union, cl_contains_phi, true_or, or_true], },
+  any_goals { simp only [φ_ih hcl, true_or], },
+  any_goals { simp only [if_true, finset.mem_insert, finset.mem_singleton, or_false, eq_self_iff_true, and_self, or_true, true_or], }, 
+  any_goals { simp only [hcl.1, hcl.2, eq_self_iff_true, cl_contains_phi, and_self, or_false, or_true, true_or], },
+  any_goals { simp only [h, if_false, finset.mem_insert, eq_self_iff_true, and_self, finset.mem_singleton, and_false, or_false, or_true], },
+  any_goals { obtain ⟨i, ⟨hi, hcl⟩⟩ := hcl,
+              rw ←hcl.1 at *, rw ←hcl.2 at *, 
+              simp only [cl_C, or_false, finset.mem_union, finset.mem_image, mem_to_finset, eq_self_iff_true, and_true, exists_prop, exists_eq_right, exists_false, mem_to_finset.mp hi, or_true], },
+  any_goals { simp only [cl_contains_bot, or_self, true_or], },
+end

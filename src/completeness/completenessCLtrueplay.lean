@@ -1,3 +1,16 @@
+/-
+Authors : Kai Obendrauf
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+by Thomas Ågotnes and Natasha Alechina,
+and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
+
+This file proves of completeness for CL, if we require the effectivity structure to be
+truly playable.
+In order to achieve this we first redefine a CL model, and the semantics for that model,
+and prove soundness of CL. Then we define the filter for CL, to create a filtered canonical
+model, for which we prove the truth lemma and finally completeness.
+-/
+
 import syntax.syntaxCL 
 import semantics.playability 
 import tactic.induction
@@ -249,7 +262,7 @@ end
 noncomputable def cl {agents : Type} : 
   formCL agents → finset (formCL agents)
 |  '⊥      := {'⊥, '¬ '⊥}
-| (var n)  := {var n, '¬ var n}
+| (var n)  := {var n, '¬ (var n), '⊥, '¬ '⊥}
 | (φ '→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = '⊥) {(imp φ '⊥)} {(imp φ ψ), '¬ (imp φ ψ)} )
 | (φ '∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), '¬ (and φ ψ)}
 | ('[G] φ) := cl φ ∪ {('[G] φ), '¬ '[G] φ} 
@@ -264,6 +277,15 @@ begin
   repeat { unfold cl, simp, },
   { split_ifs,
     repeat { simp[h] at *, }, },
+end
+
+@[simp] lemma cl_contains_bot {agents : Type} (φ : formCL agents) :
+  '⊥ ∈ cl φ :=
+begin
+  induction φ,
+  repeat { unfold cl, simp, },
+  repeat { simp [φ_ih], },
+  repeat { simp [φ_ih_φ, φ_ih_ψ], },
 end
 
 lemma cl_closed_single_neg {agents : Type} (φ x : formCL agents) (hx : x ∈ cl φ) :
@@ -286,10 +308,22 @@ begin
     apply Prop4,
     exact @dni (formCL agents) _ _,
     exact @nnn_bot (formCL agents) _, },
-  { { apply exists.intro (var φ),
+  { cases hx,
+   { apply exists.intro (var φ),
       simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, 
                   or_false, true_and] at *,
-      exact @iff_dni (formCL agents) _ _, }, },
+      exact @iff_dni (formCL agents) _ _, }, 
+    cases hx,
+    { apply exists.intro ('⊤),
+      simp only [hx, finset.mem_insert, eq_self_iff_true, false_and, finset.mem_singleton, false_or, true_and],
+      apply @iff_iden (formCL agents) _ _, },
+    { apply exists.intro ('⊥),
+      simp only [hx, finset.mem_insert, eq_self_iff_true, finset.mem_singleton, or_false, false_or, true_and],
+      apply MP,
+    apply MP,
+    apply Prop4,
+    exact @dni (formCL agents) _ _,
+    exact @nnn_bot (formCL agents) _, }, },
   { cases hx,
     { specialize φ_ih_φ hx,
       cases φ_ih_φ with ψ hψ,
@@ -452,12 +486,47 @@ lemma subformula.mem_cl {agents : Type} [ha : nonempty agents]
   {φ ψ : formCL agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
+lemma subformula.in_cl_sub {agents : Type} [ha : nonempty agents]
+  {φ ψ χ : formCL agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
+begin
+  induction hsub,
+  { exact hcl, },
+  { exact hsub_ih_ᾰ (hsub_ih_ᾰ_1 hcl), },
+  all_goals
+  { induction φ,
+    repeat 
+    { simp only [cl, finset.mem_insert, finset.mem_singleton, or_self] at hcl,
+      cases hcl, }, },
+  any_goals
+  { simp only [cl, finset.mem_insert, finset.mem_union, finset.mem_singleton, finset.mem_image, 
+                  exists_false, or_false, false_or] at hcl,
+      cases hcl, },
+  repeat { apply or.elim hcl, all_goals { intro hcl, }, }, 
+  any_goals { split_ifs at hcl, }, 
+  any_goals { rw hcl.1 at *, rw hcl.2 at *, },
+  any_goals { rw h at *, },
+  any_goals { simp only [cl, finset.union_assoc, finset.mem_insert, finset.mem_union, 
+                          finset.mem_singleton, false_or, finset.mem_insert, finset.mem_singleton, 
+                          or_self, or_false, eq_self_iff_true, and_self, or_true, true_or] at hcl, },
+  repeat { apply or.elim hcl, all_goals { intro hcl, }, },
+  any_goals { rw hcl.1 at *, rw hcl.2 at *, },
+  any_goals { rw h at *, },
+  any_goals { solve1 { by_contradiction, exact hcl, }, },
+  any_goals { simp only [cl, φ_ih_φ hcl, finset.mem_union, true_or, or_true], },
+  any_goals { simp only [cl, φ_ih_ψ hcl, finset.mem_union, true_or, or_true], },
+  any_goals { simp only [cl, finset.mem_union, cl_contains_phi, true_or, or_true], },
+  any_goals { simp only [φ_ih hcl, true_or], },
+  any_goals { simp only [if_true, finset.mem_insert, finset.mem_singleton, or_false, eq_self_iff_true, and_self, or_true, true_or], }, 
+  any_goals { simp only [hcl.1, hcl.2, eq_self_iff_true, cl_contains_phi, and_self, or_false, or_true, true_or], },
+  any_goals { simp only [h, if_false, finset.mem_insert, eq_self_iff_true, and_self, finset.mem_singleton, and_false, or_false, or_true], },
+  any_goals { simp only [cl_contains_bot, or_self, true_or], },
+end
 
 namespace canonical
 ----------------------------------------------------------
 -- Canonical Model CL
 ----------------------------------------------------------
-@[simps] noncomputable def Mf_CLK {agents : Type} [ha : nonempty agents] 
+@[simps] noncomputable def Mf_CL {agents : Type} [ha : nonempty agents] 
   (φ : formCL agents) : modelCLtrue agents := 
 { f := 
   { states := S_f (canonical_model_CL agents (formCL agents) nprfalseCLtrue) cl φ,
@@ -473,8 +542,8 @@ namespace canonical
 
 
 /-- Allows us to write `φ ∈ s` instead of `φ ∈ s` -/
-instance Mf_CLK.f.states.set_like {agents : Type} [ha : nonempty agents] 
-  {φ : formCL agents} : set_like ((Mf_CLK φ).f.states) (formCL agents) :=
+instance Mf_CL.f.states.set_like {agents : Type} [ha : nonempty agents] 
+  {φ : formCL agents} : set_like ((Mf_CL φ).f.states) (formCL agents) :=
 { coe := λ s, s.1.1,
   coe_injective' :=
   begin
@@ -494,33 +563,33 @@ instance Mf_CLK.f.states.set_like {agents : Type} [ha : nonempty agents]
 ----------------------------------------------------------
 -- Truth Lemma: case [G]ψ, where G = N :
 lemma truth_E_univ {agents : Type} [ha : nonempty agents]
-  {φ ψ : formCL agents} {G : set agents} (sf : (Mf_CLK φ).f.states) 
-  (hφ : subformula ψ φ) (hφ' : subformula ('[G] ψ) φ)
-  (ih : ∀ tf, ((Mf_CLK φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
-  ((Mf_CLK φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
+  {φ ψ : formCL agents} {G : set agents} (sf : (Mf_CL φ).f.states) 
+  (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
+  (ih : ∀ tf, ((Mf_CL φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
+  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
 begin
   let MC' := canonical_model_CL agents (formCL agents) nprfalseCLtrue,
       --  M f , sf ⊨ ψ
-  calc ((Mf_CLK φ); sf '⊨ ('[G]ψ))
+  calc ((Mf_CL φ); sf '⊨ ('[G]ψ))
       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ Ef (sf )(N ), by definition ⊨
-      ↔ {tf | (Mf_CLK φ); tf '⊨ ψ} ∈ (Mf_CLK φ).f.E.E sf G : 
+      ↔ {tf | (Mf_CL φ); tf '⊨ ψ} ∈ (Mf_CL φ).f.E.E sf G : 
           by unfold s_entails_CLtrue
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(N ), by definition Ef.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
-        tilde MC'.f.states (phi_X_set {sf | (Mf_CLK φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
+        tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
     begin
       dsimp [E_f, MC', hG, eq_self_iff_true, if_true] {eta := ff},
       simp only [hG, eq_self_iff_true, if_true] {eta := ff},
     end
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(N ), by ih.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
-        tilde MC'.f.states (phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t univ :
+        tilde MC'.f.states (phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t univ :
     by simp only [ih, hG]
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) :
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) '↔ ψ), 
-          from phi_X_contains_iff_psi (cl_closed_single_neg φ) (subformula.mem_cl hφ),
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) '↔ ψ), 
+          from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ),
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff,
         rw htilde,
       end
@@ -537,7 +606,7 @@ begin
         split,
         { intro h,
           obtain ⟨t, ⟨heq, h⟩⟩ := h,
-          exact (sf_eq_forall heq).mpr ⟨h, subformula.mem_cl hφ'⟩, },
+          exact (sf_eq_forall heq).mpr ⟨h, hφ'⟩, },
         { intro h,
           obtain ⟨s, hs⟩ := s_f_to_s sf,
           apply exists.intro s,
@@ -547,33 +616,33 @@ end
 
 -- Truth Lemma: case [G]ψ, where G = N :
 lemma truth_E_nuniv {agents : Type} [ha : nonempty agents]
-  {φ ψ : formCL agents} {G : set agents} (sf : (Mf_CLK φ).f.states) 
-  (hφ : subformula ψ φ) (hφ' : subformula ('[G] ψ) φ)
-  (ih : ∀ tf, ((Mf_CLK φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
-  ((Mf_CLK φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
+  {φ ψ : formCL agents} {G : set agents} (sf : (Mf_CL φ).f.states) 
+  (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
+  (ih : ∀ tf, ((Mf_CL φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
+  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
 begin
   let MC' := canonical_model_CL agents (formCL agents) nprfalseCLtrue,
       -- M f , sf ⊨ ψ
-  calc ((Mf_CLK φ); sf '⊨ ('[G]ψ))
+  calc ((Mf_CL φ); sf '⊨ ('[G]ψ))
       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ Ef (sf )(G ), by definition ⊨
-      ↔ {tf | (Mf_CLK φ); tf '⊨ ψ} ∈ (Mf_CLK φ).f.E.E sf G : 
+      ↔ {tf | (Mf_CL φ); tf '⊨ ψ} ∈ (Mf_CL φ).f.E.E sf G : 
           by unfold s_entails_CLtrue
       -- ↔ ∀t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(G ), by definition Ef .
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
-          tilde MC'.f.states (phi_X_set {sf | (Mf_CLK φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
+          tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
       begin
         dsimp [E_f, MC'],
         simp only [hG, if_false] {eta := ff},
       end
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(G ), by ih.
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
-          tilde MC'.f.states (phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t G :
+          tilde MC'.f.states (phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t G :
       by simp only [ih]
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
   ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G : 
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) '↔ ψ), 
-          from phi_X_contains_iff_psi (cl_closed_single_neg φ) (subformula.mem_cl hφ),
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) '↔ ψ), 
+          from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ),
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff,
         rw htilde,
       end
@@ -591,7 +660,7 @@ begin
           obtain ⟨s, hs⟩ := s_f_to_s sf,
           specialize h s (eq.symm (s_f_eq_sf @hs)),
           apply hs.mpr,
-          exact ⟨h,  subformula.mem_cl hφ'⟩, },
+          exact ⟨h, hφ'⟩, },
         { intros h t ht,
           exact ((sf_eq_forall ht).mp h).1, },
       end,
@@ -600,8 +669,8 @@ end
 -- Truth Lemma
 ----------------------------------------------------------
 lemma truth_lemma_CLK {agents : Type} [ha : nonempty agents]
-  (φ ψ : formCL agents) (sf : (Mf_CLK φ).f.states) (hφ : subformula ψ φ) :
-  ((Mf_CLK φ); sf '⊨ ψ) ↔ (ψ ∈ sf) :=
+  (φ ψ : formCL agents) (sf : (Mf_CL φ).f.states) (hφ : ψ ∈ cl φ) :
+  ((Mf_CL φ); sf '⊨ ψ) ↔ (ψ ∈ sf) :=
 begin
   -- This proof is by induction on φ.
   induction' ψ fixing ha ψ with n ψ χ _ _ ψ χ _ _, -- sf needs to vary for the modal operators
@@ -619,13 +688,13 @@ begin
     simpa [s_entails_CLtrue], },
 
   { -- case and
-    have hψ := subformula.trans subformula.and_left hφ,
-    have hχ := subformula.trans subformula.and_right hφ,
+    have hψ := subformula.in_cl_sub hφ subformula.and_left,
+    have hχ := subformula.in_cl_sub hφ subformula.and_right,
     specialize ih_ψ _ sf hψ,
     specialize ih_χ _ sf hχ,
     unfold s_entails_CLtrue at *,
     rw [ih_ψ, ih_χ, hs, hs, hs],
-    simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
+    simp only [hφ, hψ, hχ, and_true],
     split,
     { rintro ⟨hψs, hχs⟩,
       apply max_ax_contains_by_set_proof_2h s.2 hψs hχs axCL.Prop4 },
@@ -635,13 +704,13 @@ begin
       { apply max_ax_contains_by_set_proof s.2 hψχs axCL.Prop6 } } },
 
   { -- case imp
-    have hψ := subformula.trans subformula.imp_left hφ,
-    have hχ := subformula.trans subformula.imp_right hφ,
+    have hψ := subformula.in_cl_sub hφ subformula.imp_left,
+    have hχ := subformula.in_cl_sub hφ subformula.imp_right,
     specialize ih_ψ _ sf hψ,
     specialize ih_χ _ sf hχ,
     unfold s_entails_CLtrue at *,
     rw [ih_ψ, ih_χ, hs, hs, hs],
-    simp only [hφ.mem_cl, hψ.mem_cl, hχ.mem_cl, and_true],
+    simp only [hφ, hψ, hχ, and_true],
     split,
     { intro h,
       exact max_ax_contains_imp_by_proof s.2 h, },
@@ -649,8 +718,7 @@ begin
       apply max_ax_contains_by_set_proof_2h s.2 hφ h likemp, }, },
 
   { -- case [G] ψ
-    -- have hE : (Mf_CLK χ).f.E.E = E_f, from rfl,
-    have hψ := subformula.trans subformula.effectivity hφ,
+    have hψ := subformula.in_cl_sub hφ subformula.effectivity,
     let ih := λ sf, ih _ sf hψ,
     cases em (G = univ) with hG hG,
     { exact truth_E_univ _ hψ hφ ih hG,},
@@ -676,7 +744,7 @@ begin
   -- by showing that there exists some model where φ is not valid.
   simp[global_valid],
   -- let that model be the canonical model
-  apply exists.intro (Mf_CLK φ),
+  apply exists.intro (Mf_CL φ),
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m],
   -- let that state (s) be the maximally consistent set extended from {¬ φ}
@@ -687,7 +755,7 @@ begin
   -- assume by contradiction that M s ⊨ φ
   intro hf,
   -- by the truth lemma φ ∈ s
-  have hφ, from (truth_lemma_CLK φ _ sf (@subformula.refl _ φ)).mp hf,
+  have hφ, from (truth_lemma_CLK φ _ sf (cl_contains_phi φ)).mp hf,
   -- in that state (s), φ ∈ s, so we do not have ¬ φ ∈ s (by consistency)
   -- contradiction with hnφ
   rw hsf at hφ,
