@@ -190,7 +190,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
   apply h
   apply Exists.intro []
   split
-  { simp only [List.not_mem_nil, IsEmpty.forall_iff, implies_true_iff], }
+  { simp only [List.not_mem_nil, IsEmpty.forall_iff, imp_true_iff], }
   { simp only [finite_conjunction_nil, ax_not_bot_imp]
     exact hf, }
 
@@ -204,7 +204,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
     simp [ax_consistent, set_proves]
     intro φs
     cases φs with φ φs
-    { simp only [List.not_mem_nil, IsEmpty.forall_iff, implies_true_iff, finite_conjunction_nil
+    { simp only [List.not_mem_nil, IsEmpty.forall_iff, imp_true_iff, finite_conjunction_nil
                   ax_not_bot_imp, forall_true_left]
       exact h, }
     { simp only [List.mem_cons, forall_eq_or_imp, false_and, IsEmpty.forall_iff], }, }
