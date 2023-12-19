@@ -9,7 +9,7 @@ as well as the axioms for CLK and instances of the differenct applicaple formula
 (Pformula, Pformula_ax, CLformula, Kformula and Cformula) for CLK.
 -/
 
-import syntax.formula
+import CLLean.Syntax.formula
 
 open set
 

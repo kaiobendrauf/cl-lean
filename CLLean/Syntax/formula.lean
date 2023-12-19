@@ -9,9 +9,9 @@ This file contains generic classes for the following types of formulas:
 - Cformula    : contains the C knowledge operator (common knowledge) and associated axioms.
 -/
 
-import data.set.finite
-import data.finset.basic
-import data.fintype.basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Set.Finite
 
 open set
 

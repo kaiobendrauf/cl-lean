@@ -8,8 +8,8 @@ as well as defining subformulas for CLK and related lemmas, including the fact t
 if ψ ∈ cl φ and subformula χ ψ, then we must have χ ∈ cl φ .
 -/
 
-import syntax.syntaxCLK
-import syntax.propLemmas
+import CLLean.Syntax.syntaxCLK
+import CLLean.Syntax.propLemmas
 
 local attribute [instance] classical.prop_decidable
 

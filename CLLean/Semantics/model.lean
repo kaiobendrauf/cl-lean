@@ -9,8 +9,8 @@ This file contains the structure definitions for frames and models for CL and CL
 Note that CLC uses CLK frames and models.
 -/
 
-import semantics.playability
-import order.filter.basic
+import CLLean.Semantics.playability
+import Mathlib.Order.Filter.Basic
 
 structure frameCL (agents : Type) :=
 (states : Type)

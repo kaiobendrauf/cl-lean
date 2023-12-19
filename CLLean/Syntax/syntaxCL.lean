@@ -8,7 +8,7 @@ as well as the axioms for CL and instances of the differenct applicaple formula 
 (Pformula, Pformula_ax, and CLformula) for CL.
 -/
 
-import syntax.formula
+import CLLean.Syntax.formula
 
 open set
 

@@ -7,11 +7,10 @@ and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 This file contains the truth lemma for CLK, and from that the proof of completeness for CLK.
 -/
 
-import completeness.canonical_filtering
-import completeness.closureCLK
-import soundness.soundnessCLK
-import syntax.CLKLemmas
-import syntax.CLKLemmas
+import CLLean.Completeness.canonical_filtering
+import CLLean.Completeness.closureCLK
+import CLLean.Soundness.soundnessCLK
+import CLLean.Syntax.CLKLemmas
 
 local attribute [instance] classical.prop_decidable
 

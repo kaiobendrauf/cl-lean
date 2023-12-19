@@ -4,7 +4,7 @@ Authors: Kai Obendrauf
 This file contains proofs for a variety of lemmas about individual knowledge.
 -/
 
-import syntax.consistency
+import CLLean.Syntax.consistency
 open set
 
 -- ⊢ ((¬ φ) → (¬ (K i φ)))

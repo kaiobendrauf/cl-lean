@@ -11,10 +11,10 @@ and prove soundness of CL. Then we define the filter for CL, to create a filtere
 model, for which we prove the truth lemma and finally completeness.
 -/
 
-import syntax.syntaxCL 
-import semantics.playability 
-import tactic.induction
-import completeness.canonical_filtering
+import CLLean.Completeness.canonical_filtering
+import CLLean.Syntax.syntaxCL
+import CLLean.Semantics.playability
+import Mathlib.Tactic
 local attribute [instance] classical.prop_decidable
 
 open formCL set axCL

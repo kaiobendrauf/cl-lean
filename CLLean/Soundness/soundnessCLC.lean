@@ -7,8 +7,8 @@ Given completeness we also prove that CLC does not prove ⊥,
   by coming up with a simple instance of a coalition model. 
 -/
 
-import tactic.induction
-import semantics.semanticsCLC
+import Mathlib.Tactic
+import CLLean.Semantics.semanticsCLC
 local attribute [instance] classical.prop_decidable
 
 open set

@@ -6,8 +6,8 @@ and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 This file contains the defintions of semantic entailment and validity for CL.
 -/
 
-import syntax.syntaxCL 
-import semantics.model
+import CLLean.Syntax.syntaxCL 
+import CLLean.Semantics.model
 local attribute [instance] classical.prop_decidable
 
 open formCL set

@@ -7,10 +7,10 @@ First we define the states in the model, then the effectivity structure.
 Given these we prove semi playability and regularity, which suffices to prove playability.
 -/
 
-import syntax.consistency
-import syntax.CLLemmas
-import semantics.model
-import tactic.induction
+import CLLean.Syntax.consistency
+import CLLean.Syntax.CLLemmas
+import CLLean.Semantics.model
+import Mathlib.Tactic
 
 local attribute [instance] classical.prop_decidable
 

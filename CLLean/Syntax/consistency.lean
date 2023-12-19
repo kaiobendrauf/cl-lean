@@ -8,13 +8,13 @@ This file defines proofs from a set, consistency and maximal consistency.
 It proves sever lemmas related to the above definitions, including Lindenbaums Lemma.
 -/
 
-import syntax.formula 
-import syntax.propLemmas
+import CLLean.Syntax.formula 
+import CLLean.Syntax.propLemmas
 
-import data.set.basic 
-import data.set.finite 
-import order.zorn 
-import data.list.basic
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Set.Basic
+import Mathlib.Data.Set.Finite
+import Mathlib.Order.Zorn
 
 open set 
 

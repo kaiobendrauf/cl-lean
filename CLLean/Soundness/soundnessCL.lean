@@ -2,13 +2,12 @@
 Authors: Kai Obendrauf
 Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
-This file contains the proof that CLK is complete.
-Given completeness we also prove that CLK does not prove ⊥, 
+This file contains the proof that CL is complete.
+Given completeness we also prove that CL does not prove ⊥, 
   by coming up with a simple instance of a coalition model. 
 -/
 
-import tactic.induction
-import semantics.semanticsCLK
+import CLLean.Semantics.semanticsCL
 local attribute [instance] classical.prop_decidable
 
 open set
@@ -17,122 +16,79 @@ open set
 -- Soundness
 ----------------------------------------------------------
 
----------------------- Soundness ----------------------
-
-theorem soundnessCLK {agents: Type} (φ : formCLK agents) : 
-  '⊢ φ → '⊨ φ :=
+theorem soundnessCL {agents : Type} (φ : formCL agents) : '⊢ φ → '⊨ φ :=
 begin
   intro h,
-  induction' h,
-
-  -- Prop 1
+  induction h,
+  -- case Prop1
   { intros m s h1 h2, 
     exact h1, },
-
-  -- Prop 2
+  -- case Prop2
   { intros m s h1 h2 h3, 
     apply h1, 
       { exact h3,},
-
       { apply h2, 
         exact h3 }, },
-
-  -- Prop 3
+  -- case Prop3
   { intros m s h1 h2,
     by_contradiction hf,
     exact (h1 hf) (h2 hf), },
-
-  -- Prop 4
+  -- case Prop4
   { intros m s h1 h2, 
     exact and.intro h1 h2, },
-
-  -- Prop 5
+  -- case Prop5
   { intros m s h1, 
     exact h1.left, },
-
-  -- Prop 6
+  -- case Prop6
   { intros m s h1, 
     exact h1.right, },
-
-  -- Prop 7
+  -- case Prop7
   { intros m s h1 h2,
     by_contradiction hf,
     exact h1 hf h2, },
-
-  -- Bot
-  { intros m s h1, 
-    exact m.f.E.liveness s G h1, },
-
-  -- Top
+  -- case ⊥
+  { intros m s h1,
+    exact m.f.E.liveness s h h1, },
+  -- case ⊤
   { intros m s,
-    simp [s_entails_CLK],
-    exact m.f.E.safety s G, },
-
-  -- N
+    simp [s_entails_CL],
+    exact m.f.E.safety s h, },
+  -- case N
   { intros m s h1,
     apply m.f.E.N_max,
     by_contradiction,
     exact h1 h, },
-
-  -- M
+  -- case M
   { intros m s,
-    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ '∧ φ_1)}
-      {t : m.f.states | m; t '⊨ φ},
+    apply m.f.E.mono s h_G _ {t | m; t '⊨ h_φ},
     intros t h1,
-    unfold s_entails_CLK at h1,
     exact h1.left, },
-
-  -- S
+  -- case S
   { intros m s h1,
-    exact m.f.E.superadd s G F {t : m.f.states | m; t '⊨ φ} 
-      {t : m.f.states | m; t '⊨ φ_1} h1.left h1.right hInt, },
-
-  -- MP
+    exact m.f.E.superadd s h_G h_F _ _ h1.left h1.right h_hInt, },
+  -- case MP
   { intros m s,
-    apply ih_h,
-    exact ih_h_1 m s, },
-
-  -- Eq
+    apply h_ih_hImp,
+    exact h_ih_hL m s, },
+  -- case Eq
   { intros m s,
-    have heq: {t : m.f.states | m; t '⊨ φ} = {t : m.f.states | m; t '⊨ φ_1},
-    { apply set.ext,
-      intros u,
-      cases (ih m u),
-      apply iff.intro,
-      { intro hu,
-        exact left hu, },
-      { intro hu,
-        exact right hu } },
+    have heq : {t | m; t '⊨ h_φ} = {t | m; t '⊨ h_ψ}, from
+      begin
+        apply set.ext,
+        intro u,
+        apply iff.intro,
+        { intro hu,
+          exact (h_ih m u).left hu, },
+        { intro hu,
+          exact (h_ih m u).right hu, },
+      end,
     apply and.intro,
     { intro h1,
-      simp only [s_entails_CLK, ←heq] at *,
+      simp only [s_entails_CL, ←heq] at *,
       exact h1, },
     { intro h1,
-      simp only [s_entails_CLK, heq] at *,
+      simp only [s_entails_CL, heq] at *,
       exact h1, }, },
-
-  -- K
-  { intros m s h1 h2 t ht,
-    exact h1 t ht (h2 t ht), },
-
-  -- T
-  { intros m s h,
-    exact h s (m.f.rfl i s), },
-
-  -- Four
-  { intros m s h t ht u hu,
-    exact h u (m.f.trans i s t u ht hu), },
-
-  -- Five
-  { intros m s h1 t ht ht1,
-    apply h1,
-    intros u hu,
-    apply ht1,
-    exact m.f.trans _ _ _ _ (m.f.sym _ _ _ ht) hu, },
-
-  -- RN
-  { intros m s t hst,
-    apply ih, }, 
 end
 
 ----------------------------------------------------------
@@ -140,9 +96,9 @@ end
 ----------------------------------------------------------
 -- create an example Model
 inductive single : Type
-  | one: single
+  | one : single
 
-lemma univ_single : (set.univ: set single) = {single.one} := 
+lemma univ_single : (set.univ : set single) = {single.one} := 
 begin
   rw eq_comm,
   rw set.eq_univ_iff_forall,
@@ -158,19 +114,11 @@ begin
   exact trivial,
 end
 
-instance single_finite : fintype single := 
-begin
-  refine {elems := {single.one}, complete := _},
-  intro x,
-  cases x,
-  exact finset.mem_singleton.mpr rfl,
-end
-
-def m_ex {agents : Type} : modelECL agents  :=
+def m_ex {agents : Type} : modelCL agents :=
 { f := 
   { states := single,
     hs := single_nonempty,
-    E  :=  truly_playable_from_finite
+    E  :=  
     { E := λ s G, {{single.one}},
       liveness := 
       begin 
@@ -181,7 +129,7 @@ def m_ex {agents : Type} : modelECL agents  :=
         apply hf single.one,
         refl, 
       end,
-      safety:=
+      safety :=
         begin
           intros _ _, simp at *,
           exact univ_single,
@@ -190,7 +138,7 @@ def m_ex {agents : Type} : modelECL agents  :=
         begin
           intros _ _ hxc, simp at *,
           rw ←univ_single at *,
-          have hcond : {single.one} ≠ (∅: set single), 
+          have hcond : {single.one} ≠ (∅ : set single), 
 
             { intro hf,
               rw set.ext_iff at hf, 
@@ -198,7 +146,7 @@ def m_ex {agents : Type} : modelECL agents  :=
               apply hf single.one,
               refl, },
           simp [hcond] at *, by_contradiction,
-          have hex: ∃ x, x ∈ X, from nonempty_def.mp (ne_empty_iff_nonempty.mp hxc),
+          have hex : ∃ x, x ∈ X, from nonempty_def.mp (ne_empty_iff_nonempty.mp hxc),
           cases hex with s hs,
           cases s,
           rw ←singleton_subset_iff at hs,
@@ -217,29 +165,18 @@ def m_ex {agents : Type} : modelECL agents  :=
         intros _ _ _ _ _ hX hY hGF,
         simp at *,
         simp[hX, hY],
-      end },
-    rel := λ a s, {s},
-    rfl := by simp,
-    sym :=
-    begin
-      intros i s t h,
-      simp at *,
-      rw h,
-    end,
-    trans :=
-    begin
-      intros i s t u hst htu,
-      simp at *,
-      simp[hst, htu],
-    end, },
+      end } },
   v := λ _, {}, }
 
-lemma nprfalseCLK {agents : Type} :
-  ¬ (axCLK (formCLK.bot : formCLK agents )) :=
+
+lemma nprfalseCL {agents : Type} : ¬ ('⊢ ('⊥ : formCL agents)) :=
 begin
-  apply (mt (soundnessCLK (@formCLK.bot agents))),
-  intro hf ,
-  simp[global_valid, valid_m, s_entails_CLK] at hf,
-  apply hf (m_ex),
-  exact single.one,
+  -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
+  apply (mt (soundnessCL (@formCL.bot agents))),
+  -- assume by contradiction : ⊨ ⊥
+  intro hf,
+  -- ⊨ ⊥ only holds if no model with states exists
+  simp[global_valid, valid_m, s_entails_CL] at hf,
+  -- we create an example model with a single state to prove a contradiction
+  exact hf (m_ex) single.one,
 end

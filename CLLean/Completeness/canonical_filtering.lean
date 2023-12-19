@@ -15,7 +15,7 @@ Lastly we prove that given that cl is closed under single negations,
   the canonical model for CL through some closure.
 -/
 
-import completeness.canonical
+import CLLean.Completeness.canonical
 
 local attribute [instance] classical.prop_decidable
 

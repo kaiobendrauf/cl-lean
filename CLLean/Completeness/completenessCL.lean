@@ -6,9 +6,9 @@ and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 This file contains the truth lemma for CL, and from that the proof of completeness for CL.
 -/
 
-import soundness.soundnessCL
-import completeness.canonical
-import tactic.induction
+import CLLean.Completeness.canonical
+import CLLean.Soundness.soundnessCL
+import Mathlib.Tactic
 
 local attribute [instance] classical.prop_decidable
 

@@ -15,7 +15,7 @@ A truly playable effectivity structure can be created from from a playable one w
 finite domain.
 -/
 
-import order.filter.basic
+import Mathlib.Order.Filter.Basic
 
 open set
 

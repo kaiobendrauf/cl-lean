@@ -4,7 +4,7 @@ Authors: Kai Obendrauf
 This file contains proofs for a variety of lemmas about common knowledge.
 -/
 
-import syntax.consistency
+import CLLean.Syntax.consistency
 
 lemma c_imp_kc {agents form : Type} [hN : fintype agents]
   [pf : Pformula_ax form] [kf : Kformula agents form] [cf : Cformula agents form]

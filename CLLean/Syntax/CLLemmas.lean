@@ -4,7 +4,7 @@ Authors: Kai Obendrauf
 This file contains proofs for a variety of lemmas for CL.
 -/
 
-import syntax.propLemmas
+import CLLean.Syntax.propLemmas
 
 open set
 

@@ -5,8 +5,8 @@ Adapted from the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Ne
 This file contains proofs for a variety of propositional lemmas.
 -/
 
-import syntax.formula
-import tactic.induction
+import CLLean.Syntax.formula
+import Mathlib.Tactic
 
 
 ----------------------------------------------------------
