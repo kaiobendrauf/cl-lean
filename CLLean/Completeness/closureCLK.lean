@@ -31,26 +31,21 @@ noncomputable def cl {agents : Type} :
 -- Lemmas about cl
 ----------------------------------------------------------
 @[simp] lemma cl_contains_phi {agents : Type} (φ : formCLK agents) :
-  φ ∈ cl φ :=
-begin
+  φ ∈ cl φ := by
   cases φ
   repeat { unfold cl, simp, }
   { split_ifs
     repeat { simp[h] at *, }, }
-end
 
 @[simp] lemma cl_contains_bot {agents : Type} (φ : formCLK agents) :
-  _⊥ ∈ cl φ :=
-begin
+  _⊥ ∈ cl φ := by
   induction φ
   repeat { unfold cl, simp, }
   repeat { simp [φ_ih], }
   repeat { simp [φ_ih_φ, φ_ih_ψ], }
-end
 
 lemma cl_closed_single_neg {agents : Type} (φ x : formCLK agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) :=
-begin
+  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) := by
   induction φ
   repeat
     { unfold cl at *
@@ -169,7 +164,6 @@ begin
     { apply Exists.intro (_K φ_a φ_φ)
       simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true, true_or, true_and]
       exact @iff_dni (formCLK agents) _ _, }, }
-end
 
 ----------------------------------------------------------
 -- Subformulas in CLK
@@ -188,8 +182,7 @@ inductive subformula {agents : Type} : formCLK agents → formCLK agents → Pro
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
 lemma subformula.cl_subset_and_left {agents : Type}
-  {φ ψ : formCLK agents} : cl φ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCLK agents} : cl φ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
@@ -197,66 +190,54 @@ begin
                 Finset.mem_union, Finset.mem_singleton] at *
     repeat {cases h, simp only [h, eq_self_iff_true, and_self, false_or, true_or, or_true],}
     {simp only [h, eq_self_iff_true, and_self, true_or, false_or, or_true], }, }
-end
 
 lemma subformula.cl_subset_and_right {agents : Type}
-  {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_left {agents : Type}
-  {φ ψ : formCLK agents} : cl φ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCLK agents} : cl φ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_right {agents : Type}
-  {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCLK agents} : cl ψ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_effectivity {agents : Type}
-  {φ : formCLK agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) :=
-begin
+  {φ : formCLK agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_knows {agents : Type}
-  {φ : formCLK agents} {i : agents}  : cl φ ⊆ cl (_K i φ) :=
-begin
+  {φ : formCLK agents} {i : agents}  : cl φ ⊆ cl (_K i φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset {agents : Type}
-  {φ ψ : formCLK agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
-begin
+  {φ ψ : formCLK agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ := by
   induction h with _ _ _ _ _ h ih ih'
   { exact Finset.subset.rfl, }
   { exact Finset.subset.trans ih ih', }
@@ -266,15 +247,13 @@ begin
   { exact subformula.cl_subset_imp_right, }
   { exact subformula.cl_subset_effectivity, }
   { exact subformula.cl_subset_knows, }
-end
 
 lemma subformula.mem_cl {agents : Type}
   {φ ψ : formCLK agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
 lemma subformula.in_cl_sub {agents : Type}
-  {φ ψ χ : formCLK agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
-begin
+  {φ ψ χ : formCLK agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ := by
   induction hsub with _ _ _ _ hsub1 hsub2 hih1 hih2
   { exact hcl, }
   { exact hih1 (hih2 hcl), }
@@ -310,4 +289,3 @@ begin
   any_goals { simp only [h, if_false, Finset.mem_insert, eq_self_iff_true, and_self
                           Finset.mem_singleton, and_false, or_false, or_true], }
   any_goals { simp only [cl_contains_bot, or_self, true_or], }
-end

@@ -16,8 +16,7 @@ open Set
 -- Soundness
 ----------------------------------------------------------
 
-theorem soundnessCL {agents : Type} (φ : formCL agents) : '⊢ φ → '⊨ φ :=
-begin
+theorem soundnessCL {agents : Type} (φ : formCL agents) : '⊢ φ → '⊨ φ := by
   intro h
   induction h
   -- case Prop1
@@ -72,8 +71,7 @@ begin
     exact h_ih_hL m s, }
   -- case Eq
   { intro m s
-    have heq : {t | m; t '⊨ h_φ} = {t | m; t '⊨ h_ψ}:=
-      begin
+    have heq : {t | m; t '⊨ h_φ} = {t | m; t '⊨ h_ψ}:= by
         apply Set.ext
         intro u
         apply iff.intro
@@ -81,7 +79,6 @@ begin
           exact (h_ih m u).left hu, }
         { intro hu
           exact (h_ih m u).right hu, }
-      end
     apply and.intro
     { intro h1
       simp only [s_entails_CL, ←heq] at *
@@ -89,7 +86,6 @@ begin
     { intro h1
       simp only [s_entails_CL, heq] at *
       exact h1, }, }
-end
 
 ----------------------------------------------------------
 -- CL does not prove ⊥
@@ -98,21 +94,17 @@ end
 inductive single : Type
   | one : single
 
-lemma univ_single : (Set.univ : Set single) = {single.one} := 
-begin
+lemma univ_single : (Set.univ : Set single) = {single.one} :=  by
   rw eq_comm
   rw Set.eq_univ_iff_forall
   intro x
   cases x
   simp
-end
 
-instance single_nonempty : Nonempty single := 
-begin
+instance single_nonempty : Nonempty single :=  by
   apply exists_true_iff_nonempty.mp
   apply Exists.intro single.one
   exact trivial
-end
 
 def m_ex {agents : Type} : modelCL agents :=
 { f := 
@@ -120,22 +112,17 @@ def m_ex {agents : Type} : modelCL agents :=
     hs := single_nonempty
     E  :=  
     { E := λ s G, {{single.one}}
-      liveness := 
-      begin 
+      liveness :=  by
         intro _ _ hf
         simp at hf
         rw Set.ext_iff at hf
         simp at hf
         apply hf single.one
         refl
-      end
-      safety :=
-        begin
+      safety := by
           intro _ _, simp at *
           exact univ_single
-        end
-      N_max :=
-        begin
+      N_max := by
           intro _ _ hxc, simp at *
           rw ←univ_single at *
           have hcond : {single.one} ≠ (∅ : Set single)
@@ -152,25 +139,19 @@ def m_ex {agents : Type} : modelCL agents :=
           rw ←singleton_subset_iff at hs
           rw ←univ_single at hs
           exact h (univ_subset_iff.mp hs)
-        end
-      mono :=
-        begin
+      mono := by
           intro _ _ _ _ hxy hx
           simp [←univ_single] at *
           rw hx at hxy
           exact univ_subset_iff.mp hxy
-        end
-      superadd :=
-      begin
+      superadd := by
         intro _ _ _ _ _ hX hY hGF
         simp at *
         simp[hX, hY]
-      end } }
   v := λ _, {}, }
 
 
-lemma nprfalseCL {agents : Type} : ¬ ('⊢ (_⊥ : formCL agents)) :=
-begin
+lemma nprfalseCL {agents : Type} : ¬ ('⊢ (_⊥ : formCL agents)) := by
   -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
   apply (mt (soundnessCL (@formCL.bot agents)))
   -- assume by contradiction : ⊨ ⊥
@@ -179,4 +160,3 @@ begin
   simp[global_valid, valid_m, s_entails_CL] at hf
   -- we create an example model with a single state to prove a contradiction
   exact hf (m_ex) single.one
-end

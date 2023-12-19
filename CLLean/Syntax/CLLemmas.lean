@@ -16,8 +16,7 @@ iff_l ((Eq _ _ _) and_switch)
 -- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
 lemma derived_monoticity_rule {agents form : Type} 
   [pf : Pformula_ax form] [clf : CLformula agents form] {φ ψ : form} {G : Set agents} :
-  ⊢' (φ →' ψ) → ⊢' ((['G] φ) →' (['G] ψ)) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' ((['G] φ) →' (['G] ψ)) := by
   -- Let ⊢ φ → ψ
   intro h
   -- ⊢ φ → (φ ∧ ψ):= h, by propositional logic
@@ -34,13 +33,11 @@ begin
   have hM :  ⊢' ((['G](φ ∧' ψ)) →' ['G] ψ):= cut ef_and_switch (M _ _ _)
   -- ⊢ [G]φ → [G]ψ:= hif & hM, by propositional logic
   exact cut hif hM
-end
 
 -- ⊢ [N] φ ↔ ⊢ ¬ [∅] ¬φ
 lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form] 
   {φ : form} : ⊢' ((['(univ : Set agents)] φ) ↔' (¬' (['(∅ : Set agents)] (¬' φ)))) :=
-  -- ⇒
-begin
+  -- ⇒ by
   refine ax_and.mpr _
   split
   -- ⇒ 
@@ -56,11 +53,9 @@ begin
     apply cut
     simp at *
     --  [N] (⊥):= above by axiom (Eq)
-    have hGiff : ⊢' ((['(univ : Set agents)] (φ ∧' (¬' φ))) ↔' (['(univ : Set agents)] ⊥')):=
-      begin
+    have hGiff : ⊢' ((['(univ : Set agents)] (φ ∧' (¬' φ))) ↔' (['(univ : Set agents)] ⊥')):= by
         apply Eq
         exact contra_equiv_false
-      end
     exact iff_l hGiff
     apply mp
     --Contradiction from axiom (⊥) : ¬[N] ⊥ and above.
@@ -68,4 +63,3 @@ begin
     exact Bot _, }
   -- ⇒ 
   { exact N _, }
-end

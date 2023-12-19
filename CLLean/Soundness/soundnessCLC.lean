@@ -20,8 +20,7 @@ open Set
 ---------------------- Soundness ----------------------
 
 theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) : 
-  '⊢ φ → '⊨ φ :=
-begin
+  '⊢ φ → '⊨ φ := by
   intro h
   induction' h
 
@@ -194,7 +193,6 @@ begin
             exact ih', }
           exact his.right
           exact hC.right, }, }, }
-end
 
 ----------------------------------------------------------
 -- CL does not prove ⊥
@@ -203,29 +201,23 @@ end
 inductive single : Type
   | one: single
 
-lemma univ_single : (Set.univ: Set single) = {single.one} := 
-begin
+lemma univ_single : (Set.univ: Set single) = {single.one} :=  by
   rw eq_comm
   rw Set.eq_univ_iff_forall
   intro x
   cases x
   simp
-end
 
-instance single_nonempty : Nonempty single := 
-begin
+instance single_nonempty : Nonempty single :=  by
   apply exists_true_iff_nonempty.mp
   apply Exists.intro single.one
   exact trivial
-end
 
-instance single_finite : Fintype single := 
-begin
+instance single_finite : Fintype single :=  by
   refine {elems := {single.one}, complete := _}
   intro x
   cases x
   exact Finset.mem_singleton.mpr rfl
-end
 
 def m_ex {agents : Type} : modelECL agents  :=
 { f := 
@@ -233,22 +225,17 @@ def m_ex {agents : Type} : modelECL agents  :=
     hs := single_nonempty
     E  :=  truly_playable_from_finite
     { E := λ s G, {{single.one}}
-      liveness := 
-      begin 
+      liveness :=  by
         intro _ _ hf
         simp at hf
         rw Set.ext_iff at hf
         simp at hf
         apply hf single.one
         refl
-      end
-      safety:=
-        begin
+      safety:= by
           intro _ _, simp at *
           exact univ_single
-        end
-      N_max :=
-        begin
+      N_max := by
           intro _ _ hxc, simp at *
           rw ←univ_single at *
           have hcond : {single.one} ≠ (∅: Set single)
@@ -265,42 +252,31 @@ def m_ex {agents : Type} : modelECL agents  :=
           rw ←singleton_subset_iff at hs
           rw ←univ_single at hs
           exact h (univ_subset_iff.mp hs)
-        end
-      mono :=
-        begin
+      mono := by
           intro _ _ _ _ hxy hx
           simp [←univ_single] at *
           rw hx at hxy
           exact univ_subset_iff.mp hxy
-        end
-      superadd :=
-      begin
+      superadd := by
         intro _ _ _ _ _ hX hY hGF
         simp at *
         simp[hX, hY]
-      end }
     rel := λ a s, {s}
     rfl := by simp
-    sym :=
-    begin
+    sym := by
       intro i s t h
       simp at *
       rw h
-    end
-    trans :=
-    begin
+    trans := by
       intro i s t u hst htu
       simp at *
       simp[hst, htu]
-    end, }
   v := λ _, {}, }
 
 lemma nprfalseCLC {agents : Type} [hN : Fintype agents] :
-  ¬ (axCLC (formCLC.bot : formCLC agents )) :=
-begin
+  ¬ (axCLC (formCLC.bot : formCLC agents )) := by
   apply (mt (soundnessCLC (@formCLC.bot agents)))
   intro hf 
   simp[global_valid, valid_m, s_entails_CLC] at hf
   apply hf (m_ex)
   exact single.one
-end

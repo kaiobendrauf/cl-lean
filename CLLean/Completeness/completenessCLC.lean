@@ -32,15 +32,13 @@ filtered_modelECL agents (formCLC agents) nprfalseCLC cl cl_closed_single_neg φ
 instance Mf_CLC.f.states.set_like {agents : Type} [ha : Nonempty agents] [hN : Fintype agents] 
   {φ : formCLC agents} : set_like ((Mf_CLC φ).f.states) (formCLC agents) :=
 { coe := λ s, s.1.1
-  coe_injective' :=
-  begin
+  coe_injective' := by
     unfold_coes
     intro sf tf h
     simp only [subtype.val_eq_coe, Finset.set_of_mem, Finset.coe_inj] at h
     apply subtype.coe_injective
     apply subtype.coe_injective
     exact h
-  end, }
 
 ----------------------------------------------------------
 -- Truth Lemma 
@@ -53,8 +51,7 @@ lemma truth_E_univ {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {G : Set agents} (sf : (Mf_CLC φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
   (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
-  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
-begin
+  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
       --  M f , sf ⊨ ψ
   calc ((Mf_CLC φ); sf '⊨ ('[G]ψ))
@@ -63,32 +60,25 @@ begin
           by unfold s_entails_CLC
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(N ), by definition Ef.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
-        tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
-    begin
+        tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
       dsimp [E_f, MC', hG, eq_self_iff_true, if_true] {eta := ff}
       simp only [hG, eq_self_iff_true, if_true] {eta := ff}
-    end
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(N ), by ih.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
         tilde MC'.f.states (phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t univ :
     by simp only [ih, hG]
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
-  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) :
-      begin
+  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) : by
         have hiff : '⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLC agents) _ _ _ nprfalseCLC _ _ hiff
         rw htilde
-      end
   -- ↔ ∃t ∈ SC′, sf = tf and [N ] ψ ∈ t, by Lemma 7.
-  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ ('[univ] ψ) ∈ t :
-    begin
+  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ ('[univ] ψ) ∈ t : by
       simp only [E_s_contains_tilde_iff_E_in_s _ univ]
       exact iff.rfl
-    end
   -- ↔ [N] ψ ∈ sf:= left to right because [N] ψ ∈ tf, and from right to left when s = t.
-  ... ↔ ('[G] ψ) ∈ sf : 
-      begin
+  ... ↔ ('[G] ψ) ∈ sf :  by
         rw hG at *
         split
         { intro h
@@ -98,16 +88,13 @@ begin
           obtain ⟨s, hs⟩ := s_f_to_s sf
           apply Exists.intro s
           exact ⟨sf_eq_s_f  @hs, (hs.mp h).left⟩, }
-      end
-end
 
 -- Truth Lemma: case [G]ψ, where G = N :
 lemma truth_E_nuniv {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {G : Set agents} (sf : (Mf_CLC φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
   (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
-  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
-begin
+  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
       -- M f , sf ⊨ ψ
   calc ((Mf_CLC φ); sf '⊨ ('[G]ψ))
@@ -116,32 +103,25 @@ begin
           by unfold s_entails_CLC
       -- ↔ ∀t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(G ), by definition Ef .
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
-          tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
-      begin
+          tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
         dsimp [E_f, MC']
         simp only [hG, if_false] {eta := ff}
-      end
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(G ), by ih.
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
           tilde MC'.f.states (phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t G :
       by simp only [ih]
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
-  ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G : 
-      begin
+  ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G :  by
         have hiff : '⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLC agents) _ _ _ nprfalseCLC _ _ hiff
         rw htilde
-      end
       -- ↔ ∀t ∈ SC′, sf = tf ⇒ [G ]ψ ∈ t, by Lemma 7.
-  ... ↔ ∀ t, (sf = s_f cl φ t) → ('[G] ψ) ∈ t :
-    begin
+  ... ↔ ∀ t, (sf = s_f cl φ t) → ('[G] ψ) ∈ t : by
       simp only [E_s_contains_tilde_iff_E_in_s _ G]
       exact iff.rfl
-    end
     -- ↔ [G] ψ ∈ sf := left to right when s = t:= right to left because [G]ψ ∈ sf = tf 
-  ... ↔ (('[G] ψ) ∈ sf) : 
-      begin
+  ... ↔ (('[G] ψ) ∈ sf) :  by
         split
         { intro h
           obtain ⟨s, hs⟩ := s_f_to_s sf
@@ -150,8 +130,6 @@ begin
           exact ⟨h, hφ'⟩, }
         { intro h t ht
           exact ((sf_eq_forall ht).mp h).1, }
-      end
-end
 
 -- K
 ----------------------------------------------------------
@@ -159,8 +137,7 @@ end
 lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {i : agents} (sf : (Mf_CLC φ).f.states) 
   (hφ' : (_K i ψ) ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((Mf_CLC φ); sf '⊨ (_K i ψ)) → ((_K i ψ) ∈ sf) := 
-begin
+  ((Mf_CLC φ); sf '⊨ (_K i ψ)) → ((_K i ψ) ∈ sf) :=  by
   obtain ⟨s, hs⟩ := s_f_to_s sf
   -- 1. Let M f , sf ⊨ Kiψ.
   intro h
@@ -176,45 +153,37 @@ begin
   -- 6. Consider the Set Σ = {χ | Kiχ ∈ s}.
   let Γ := {χ | _K i χ ∈ s }
   -- 7. Σ ∪ {¬ψ} is consistent.
-  have hcon : ax_consistent (Γ ∪ {_¬ ψ}):=
-    begin
+  have hcon : ax_consistent (Γ ∪ {_¬ ψ}):= by
       -- 7.1. Assume by contradiction Σ ∪ {¬ψ} is inconsistent.
       by_contradiction hncon
       -- 7.2. ⊢ (∧χ∈Σ χ) → ψ:= 7.1, by propositional logic.
       obtain ⟨ψs, ⟨hΓ, hax⟩⟩ := inconsistent_prove_neg hncon
       -- 7.3. ⊢ Ki((∧χ∈Σ χ) → ψ):= 7.2, by Axiom RN.
-      have hKimp : '⊢ (_K i ((finite_conjunction ψs) _→ ψ)):=
-      begin
+      have hKimp : '⊢ (_K i ((finite_conjunction ψs) _→ ψ)):= by
         apply axCLC.RN
         apply @cut (formCLC agents)
         exact hax
         exact dne
-      end
       -- 7.4. ⊢ (Ki(∧χ∈Σ χ)) → (Kiψ):= 7.3, by Axiom K.
       have hKimp : '⊢ ((_K i (finite_conjunction ψs)) _→ K' i ψ)
         from by apply axCLC.MP axCLC.K hKimp
       -- 7.5. ⊢ (∧χ∈Σ Kiχ) → (Kiψ):= 7.4, by propositional logic and Axiom RN.
-      have hKimp : '⊢ ((finite_conjunction (List.map (_K i) ψs)) _→ _K i (ψ)):=
-      begin 
+      have hKimp : '⊢ ((finite_conjunction (List.map (_K i) ψs)) _→ _K i (ψ)):= by
         apply @cut (formCLC agents)
         apply @knows_conjunction agents (formCLC agents)
         exact hKimp
-      end
       -- 7.6. (∧χ∈Σ Kiχ) ∈ s, by definition Σ:= 6.
-      have hin : (finite_conjunction (List.map (_K i) ψs)) ∈ s:=
-      begin
+      have hin : (finite_conjunction (List.map (_K i) ψs)) ∈ s:= by
         apply max_ax_contains_conj s.2
         intro φ hφ
         obtain ⟨χ, hχ⟩ := List.mem_map.mp hφ
         rw ←hχ.2
         exact mem_set_of_eq.mp (hΓ χ hχ.1)
-      end
       -- 7.7. Kiψ ∈ s:= 7.5 & 7.6.
       have hK : _K i ψ ∈ s 
         from by apply max_ax_contains_by_set_proof s.2 hin hKimp
       -- 7.8. Contradiction from 5 and 7.7.
       exact hnin hK
-    end
   -- 8. ∃t ∈ SC′, Σ ∪ {¬ψ} ⊆ t:= 7, because SC′ is maximally consistent.
   obtain ⟨t', hmax, hsub⟩ := lindenbaum hcon
   obtain ⟨t, ht⟩ : 
@@ -222,15 +191,12 @@ begin
     from exists_apply_eq_apply _ _
   rw union_subset_iff at hsub
   -- Note that ¬ψ ∈ t.
-  have hnψ : (_¬ ψ) ∈ t:= 
-  begin 
+  have hnψ : (_¬ ψ) ∈ t:=  by
     rw ht
     apply singleton_subset_iff.mp hsub.2
-  end
    -- 9. sf ∼fi tf.
   obtain ⟨tf, htf⟩ := s_to_s_f cl φ t
-  have hrel : tf ∈ (Mf_CLC φ).f.rel i sf:=
-  begin
+  have hrel : tf ∈ (Mf_CLC φ).f.rel i sf:= by
     ext1
     split
     -- 9.1 ∀ χ, K i χ ∈ sf → K i χ ∈ tf.
@@ -257,27 +223,23 @@ begin
         have hnkΓ : (_¬ _K i x) ∈ Γ:= hknks
         exact mem_of_mem_of_subset hnkΓ hsub.1, }
       { exact hkt.2, }, }
-  end
   -- 10. ψ ∈ t:= 3 and 9 
   have hψ : ψ ∈ t:= (htf.mp (h tf hrel)).1
   -- 11. Contradiction from 8 & 10.
   apply contra_contains_pr_false t.2 hψ hnψ
-end
 
 -- Truth Lemma: case Kiψ ⇐ : (Kiψ ∈ sf ⇒ M f , sf ⊨ Kiψ) :
 lemma truth_K_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {i : agents} (sf : (Mf_CLC φ).f.states) 
   (hφ : ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((_K i ψ) ∈ sf) → ((Mf_CLC φ); sf '⊨ (_K i ψ)) := 
-begin
+  ((_K i ψ) ∈ sf) → ((Mf_CLC φ); sf '⊨ (_K i ψ)) :=  by
   -- 1. Let Kiψ ∈ sf .
   intro h
   -- 2. ∀tf ∈ Sf, sf ∼fi tf ⇒ Kiψ ∈ tf := 1, by definition ∼fi .
   have hfaK : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → _K i ψ ∈ tf
     from λ _ htf, (Set.ext_iff.mp htf ψ).mp h
   -- 3. ∀tf ∈ Sf , sf ∼fi tf ⇒ ψ ∈ tf := 2, by Axiom T.
-  have hfa : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → ψ ∈ tf:=
-  begin
+  have hfa : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → ψ ∈ tf:= by
     intro tf htf
     obtain ⟨t, ht⟩ := s_f_to_s tf
     specialize hfaK tf htf
@@ -285,13 +247,11 @@ begin
     split
     { apply max_ax_contains_by_set_proof t.2 hfaK.1 axCLC.T, }
     { exact hφ,}
-  end
   -- 4. ∀tf ∈ Sf , sf ∼fi tf ⇒ M f , tf ⊨ ψ:= 3, by ih.
   have hent : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → ((Mf_CLC φ); tf '⊨ ψ)
     from λ tf htf, (ih tf).mpr (hfa tf htf)
   -- 5. M f , sf ⊨ Kiψ, by the definition of ⊨:= 4.
   exact hent
-end
 
 -- C
 ----------------------------------------------------------
@@ -300,20 +260,17 @@ lemma not_everyone_knows_consistent_list {agents : Type}
   {φ : formCLC agents} {is : List (agents)} 
   {s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states} 
   (hfa : ∀ (x : agents), x ∈ is → (_¬ (_K x φ)) ∉ s) : 
-  finite_conjunction (List.map (λ (i : agents), _K i φ) is) ∈ s :=
-begin
+  finite_conjunction (List.map (λ (i : agents), _K i φ) is) ∈ s := by
   induction is with i is ih
   { apply max_ax_contains_taut s.2 prtrue, }
   { simp only [List.mem_cons_iff, forall_eq_or_imp] at hfa
     apply max_ax_contains_by_set_proof_2h s.2 _ (ih hfa.right) (p4 _ _)
     exact max_ax_contains_by_set_proof s.2 (not_in_from_notin s.2 hfa.left) dne, }
-end
 
 lemma not_everyone_knows_consistent {agents : Type} [hN : Fintype agents] [ha : Nonempty agents] 
   {φ : formCLC agents} {G : Set (agents)} 
   {s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states}
-  (h : (_¬ _E G φ) ∈ s) : ∃ i ∈ G, (_¬ (_K i φ)) ∈ s :=
-begin
+  (h : (_¬ _E G φ) ∈ s) : ∃ i ∈ G, (_¬ (_K i φ)) ∈ s := by
   by_contradiction hfa
   simp at hfa
   apply in_from_not_notin s.2 h
@@ -323,14 +280,12 @@ begin
   apply hfa
   simp [Finite.mem_to_finset] at hi
   exact hi
-end
 
 lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {G : Set (agents)} {Γ : Set ((Mf_CLC φ).f.states)} 
   (hΓ : Γ = {sf : (Mf_CLC φ).f.states | ∀ (tf : (Mf_CLC φ).f.states) (is), (∀ i, i ∈ is → i ∈ G) → 
     ∀ sfs, @C_path agents (Mf_CLC φ) is sfs sf tf → (ψ ∈ tf)}) : 
-  ⊢' ((phi_X_set Γ) →' E' G (phi_X_set Γ)) :=
-begin
+  ⊢' ((phi_X_set Γ) →' E' G (phi_X_set Γ)) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
   -- 9.1 By contradiction assume ¬ ((phi_X_set Σ) → E G (phi_X_set Σ)) is consistent.
   by_contradiction
@@ -349,32 +304,27 @@ begin
   have hsandr : ¬' (_E G (phi_X_set Γ)) ∈ s
     from by apply max_ax_contains_by_set_proof s.2 hsand (p6 _ _)
   -- 9.4 ∃ tf ∈ Σ, phi tf ∈ s:= 9.3, by propositional logic.
-  have htf : ∃ tf : (Mf_CLC φ).f.states, (tf ∈ Γ) ∧ (phi_s_f tf ∈ s):= 
-  begin
+  have htf : ∃ tf : (Mf_CLC φ).f.states, (tf ∈ Γ) ∧ (phi_s_f tf ∈ s):=  by
     obtain ⟨tf, ⟨htf1, htf2⟩⟩ := phi_X_set_exists hsandl
     apply Exists.intro tf
     exact ⟨htf1, htf2⟩
-  end
   obtain ⟨tf, ⟨htfΓ, htfs⟩⟩ := htf
   -- 9.5 ∃ i ∈ G, (¬ _K i (phi_X_set Σ)) ∈ s:= 9.3, by propositional logic.
   have hnk : ∃ i ∈ G, (_¬ _K i (phi_X_set Γ)) ∈ s
     from not_everyone_knows_consistent hsandr
   obtain ⟨i, ⟨hi, hnk⟩⟩ := hnk
   -- 9.6 ¬ _K i ¬ (phi_X_set Σᶜ)) ∈ s:= 9.5, by propositional logic, axiom K and Lemma 4.
-  have hnkc : (_¬ (_K i (_¬ (phi_X_set Γᶜ)))) ∈ s:=
-  begin
+  have hnkc : (_¬ (_K i (_¬ (phi_X_set Γᶜ)))) ∈ s:= by
     apply max_ax_contains_by_set_proof s.2 hnk
     apply (nk_imp_nk i)
     apply (phi_X_set_disjunct_of_disjuncts _ _).mpr
     rw (compl_union_self Γ)
     apply univ_disjunct_provability
-  end
   -- 9.7 ∃ uf ∈ Σᶜ, such that ¬ _K i ¬ (phi_s_f φ uf) ∈ s:= 9.6
     -- by propositional logic and axiom K.
   have hnkc : _ ∈ s
     from by apply max_ax_contains_by_set_proof s.2 hnkc (by apply nk_disjunction i)
-  have huf : ∃ uf ∈ Γᶜ, (¬' (K' i (¬' (phi_s_f uf)))) ∈ s:=
-    begin
+  have huf : ∃ uf ∈ Γᶜ, (¬' (K' i (¬' (phi_s_f uf)))) ∈ s:= by
       by_contradiction hfa
       simp only [exists_prop, not_exists, not_and] at hfa
       apply in_from_not_notin s.2 hnkc
@@ -383,15 +333,13 @@ begin
       apply hfa
       simp only [Finite.mem_to_finset, Finset.mem_to_list, mem_compl_eq] at hsf
       exact hsf
-    end
   obtain ⟨uf, ⟨hufΓc, hufs⟩⟩ := huf
   -- 9.8 ∃ vf, uf ~fCG vf and ψ ∉ vf:= 9.7, by definition Σᶜ.
   simp only [hΓ, mem_set_of_eq, mem_compl_eq, not_forall, exists_prop, exists_and_distrib_right] 
     at hufΓc htfΓ
   obtain ⟨vf, ⟨is, his, ufs, hufvf⟩, hvf⟩ := hufΓc
   -- 9.9 tf ~i uf.
-  have htu : uf ∈ (Mf_CLC φ).f.rel i tf:=
-  begin
+  have htu : uf ∈ (Mf_CLC φ).f.rel i tf:= by
     ext1 χ
     simp only [mem_set_of_eq]
     split
@@ -399,14 +347,12 @@ begin
     { intro hxtf
       by_contradiction hxuf
       -- ⊢ K i χ → ¬ phi uf .
-      have haxkimp : ⊢' (K' i χ →' ¬' (phi_s_f uf)):=
-      begin
+      have haxkimp : ⊢' (K' i χ →' ¬' (phi_s_f uf)):= by
         obtain ⟨nχ, hnχ, hiffnχ⟩ := 
           s_f_closed (cl_closed_single_neg φ) hxuf (Finset.subset_iff.mp (s_f_subset_cl _) hxtf)
         apply cut dni
         apply cut (iff_l (iff_not hiffnχ))
         apply notin_nphi_s_f hnχ
-      end
       -- ⊢ (¬ K i ¬ phi uf) → ¬ K i K i χ, by propositional logic and axiom K.
       have haxnkimp : ⊢' ( ¬' (K' i (¬' (phi_s_f uf))) →' (¬' (K' i (K' i χ))))
         from nk_imp_nk i haxkimp
@@ -414,12 +360,10 @@ begin
       have hsnkk : (¬' (K' i (K' i (χ)))) ∈ s
         from by apply max_ax_contains_by_set_proof s.2 hufs haxnkimp
       -- K i K i χ ∈ s:= 9.4, because K i χ ∈ tf and by axiom Four.
-      have hskk : ((K' i (K' i (χ)))) ∈ s:= 
-      begin
+      have hskk : ((K' i (K' i (χ)))) ∈ s:=  by
         apply max_ax_contains_by_set_proof s.2 htfs
         apply cut (phi_s_f_forall_imp _ hxtf)
         apply Four
-      end
       -- Contradiction.
       apply contra_contains_pr_false s.2 hskk hsnkk, }
     -- ⇐ ∃ χ, K i χ ∈ uf ∧ K i χ ∉ tf.
@@ -444,26 +388,21 @@ begin
           (cut (phi_s_f_forall_imp _ hnχ) (iff_l hiffnχ))
       -- Contradiction.
       apply contra_contains_pr_false s.2 hsk hsnk, }
-  end
   -- 9.10 ψ ∈ vf, because tf ∈ Σ (from 9.4) 
     -- and there is a path tf ~fi uf (from 9.9), uf ~cG vf (from 9.8).
-  have hvf' : ψ ∈ vf:=
-  begin
+  have hvf' : ψ ∈ vf:= by
   apply htfΓ _ (i :: is) _ (uf :: ufs)
   { exact and.intro htu hufvf, }
   { simp only [List.mem_cons_iff, forall_eq_or_imp]
     exact and.intro hi his, }
-  end
   -- Contradiction from 9.8 & 9.10.
   exact hvf hvf'
-end
 
 -- Case CGψ ⇒ (M f , sf ⊨ CGψ ⇒ GGψ ∈ sf) :
 lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {sf : (Mf_CLC φ).f.states} {G : Set (agents)} 
   (hcl : _C G ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((Mf_CLC φ); sf '⊨ (_C G ψ)) → (_C G ψ) ∈ sf :=
-begin
+  ((Mf_CLC φ); sf '⊨ (_C G ψ)) → (_C G ψ) ∈ sf := by
   -- 1. Let M f , sf ⊨ CGψ.
   intro h
   -- 2. ∀ tf, sf ∼f CG tf → M f , tf ⊨ ψ:= 1, by definition ⊨
@@ -474,25 +413,20 @@ begin
   let Γ := {sf : (Mf_CLC φ).f.states | ∀ tf, (∃ is
             (∀ i, i ∈ is → i ∈ G) ∧ ∃ sfs, C_path is sfs sf tf) → ψ ∈ tf}
   -- 5. sf ∈ Σ:= 3, by definition Σ:= 4 .
-  have hsfΓ : sf ∈ Γ:= 
-  begin
+  have hsfΓ : sf ∈ Γ:=  by
     apply mem_set_of_eq.mpr
     exact h
-  end
   -- 6. ⊢ φsf → φΣ := 5, by propositional logic.
   have haxsfΓ : '⊢ ((phi_s_f sf) _→ (phi_X_set Γ))
     from ax_phi_s_f_imp_phi_X_set_of_mem hsfΓ
   -- 7. G ≠ ∅ ⇒ ∀ sf ∈ Σ, ψ ∈ sf, by definition Σ:= 4.
-  have hψΓ : (∃ i, i ∈ G) → ∀ sf ∈ Γ, ψ ∈ sf:=
-  begin
+  have hψΓ : (∃ i, i ∈ G) → ∀ sf ∈ Γ, ψ ∈ sf:= by
     intro hi sf hsf
     cases hi with i hi
     simp only [mem_set_of_eq, mem_mk, subtype.val_eq_coe, forall_exists_index, and_imp] at hsf
     exact hsf sf [i] (by simp only [hi, List.mem_singleton, forall_eq]) [] rfl
-  end
   -- 8. G ≠ ∅ ⇒ ⊢ φΣ → ψ:= 7, by propositional logic.
-  have haxΓψ  : (∃ i, i ∈ G) → '⊢ ((phi_X_set Γ) _→ ψ):=
-  begin
+  have haxΓψ  : (∃ i, i ∈ G) → '⊢ ((phi_X_set Γ) _→ ψ):= by
     intro hi
     apply @cut (formCLC agents)
     apply iff_l
@@ -502,13 +436,11 @@ begin
       simp only [Finset.mem_to_list, Finite.mem_to_finset] at hsf
       exact hsf, }
     exact p5 _ _
-  end
   -- 9. ⊢ φΣ → EGφΣ.
   have haxE : '⊢ ((phi_X_set Γ) _→ _E G (phi_X_set Γ))
     from phi_set_imp_e (by simp only [Γ, forall_exists_index, and_imp])
   -- 10. ⊢ φΣ → CGψ:= 8 & 9, by Axiom RC.
-  have haxC : '⊢ ((phi_X_set Γ) _→ _C G ψ):= 
-  begin
+  have haxC : '⊢ ((phi_X_set Γ) _→ _C G ψ):=  by
     apply axCLC.RC
     cases (em (G = ∅)) with hempty hnempty
     { apply axCLC.MP axCLC.Prop1
@@ -523,29 +455,25 @@ begin
       apply imp_imp_and
       exact haxΓψ hi
       exact iden, }
-  end
   -- 11. CGψ ∈ sf:= 6 & 10, by propositional logic.
   obtain ⟨s, hs⟩ := s_f_to_s sf
   simp only [hs, hcl, and_true]
   apply max_ax_contains_by_set_proof s.2 (phi_s_f_in_s s)
   rw (s_f_eq_sf @hs)
   exact cut haxsfΓ haxC
-end
 
 -- Case CGψ ⇐ (GGψ ∈ sf ⇒ M f, sf ⊨ CGψ) :
 lemma truth_C_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {sf : (Mf_CLC φ).f.states} {G : Set (agents)} 
   (hcl : ψ ∈ cl φ) (hcl' : _C G ψ ∈ cl φ) (hcl'' : ∀ i ∈ G, (_K i (_C G ψ)) ∈ cl φ)
   (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  (_C G ψ) ∈ sf → ((Mf_CLC φ); sf '⊨ (_C G ψ)) :=
-begin
+  (_C G ψ) ∈ sf → ((Mf_CLC φ); sf '⊨ (_C G ψ)) := by
   -- 1. Let CGψ ∈ sf, and tf be some world such that sf ∼f CG tf.
   intro h tf htf
   obtain ⟨is, his, sfs, hsftf⟩ := htf
   -- 2. ∀ u ∈ SC', ∀ v ∈ SC', ∀ i ∈ G, C G ψ ∈ uf → uf ~fi vf → ψ ∈ vf ∧ C G ψ ∈ vf 
   have hsfrel : ∀ uf vf,  ∀ i, i ∈ G → (_C G ψ) ∈ uf → (vf ∈ (@Mf_CLC _ ha hN φ).f.rel i uf) → 
-    ψ ∈ vf ∧ _C G ψ ∈ vf:=
-  begin
+    ψ ∈ vf ∧ _C G ψ ∈ vf:= by
     -- 2.1 Assume some worlds u v, and assume some agent i ∈ G, such that C G ψ ∈ uf and uf ~fi vf.
     intro uf vf i hi h hrel
     obtain ⟨u, hu⟩ := s_f_to_s uf
@@ -553,21 +481,17 @@ begin
     simp only [hu, hcl', and_true] at h
     -- 2.2 K i C G ψ ∈ uf:= 2.1, by definition (cl (C G ψ)), propositional logic
       -- and Axioms C, K and RN.
-    have hkuf : _K i (_C G ψ) ∈ uf:= 
-    begin
+    have hkuf : _K i (_C G ψ) ∈ uf:=  by
       apply hu.mpr
       split
       { apply @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ u.2 h
         exact @c_imp_kc _ _ hN (@formula_axCLC _ hN) _ _ _ G i hi, }
       { exact hcl'' i hi, }
-    end
     -- 2.3 K i C G ψ ∈ vf:= 2.1 & 2.2, by definition ∼if.
-    have hkv : _K i (_C G ψ) ∈ vf:= 
-    begin
+    have hkv : _K i (_C G ψ) ∈ vf:=  by
       simp only [Mf_CLC_f_rel, ext_iff] at hrel, dsimp at hrel
       apply (hrel _).mp
       exact hkuf
-    end
     simp only [@hv, hcl, hcl', hcl'', and_true] at ⊢ hkv
     -- 2.4 C G ψ ∈ vf:= 2.3, by Axiom T.
     have hcv : (_C G ψ) ∈ v:= 
@@ -577,7 +501,6 @@ begin
       from by apply @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ v.2 hcv 
         (@c_imp _ _ hN (@formula_axCLC _ hN) _ _ ψ G i hi)
     exact and.intro hv hcv
-  end
   -- 3. This proof is by induction on length of the path. 
   induction' sfs with uf sfs ihC
   all_goals { cases is with i is his, }, -- to unfold C_path we need to unfold the is too
@@ -595,14 +518,12 @@ begin
     -- 3.2.2  M, tf ⊨  ψ:= 3.2 by the Induction Hypothesis for the path
      -- because C G ψ ∈ sf_1 (from 3.2.1) and sf_1 ∼fCG tf:= 3.2
     exact @ihC ψ uf G hcl hcl' hcl'' ih hsf1 tf is his.2 hsfrel hsftf.2, }
-end
 
 -- Truth Lemma
 ----------------------------------------------------------
 lemma truth_lemma_CLC {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   (φ ψ : formCLC agents) (sf : (Mf_CLC φ).f.states) (hφ : ψ ∈ cl φ) :
-  ((Mf_CLC φ); sf '⊨ ψ) ↔ (ψ ∈ sf) :=
-begin
+  ((Mf_CLC φ); sf '⊨ ψ) ↔ (ψ ∈ sf) := by
   -- This proof is by induction on φ.
   induction' ψ fixing ha hN ψ with n ψ χ _ _ ψ χ _ _, -- sf needs to vary for the modal operators
   all_goals
@@ -671,7 +592,6 @@ begin
     split
     { exact truth_C_lr hφ ih, }
     { exact truth_C_rl hψ hφ hcl ih, }, }
-end
 
 ----------------------------------------------------------
 -- Completeness
@@ -680,8 +600,7 @@ end
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCLC {agents : Type} [ha : Nonempty agents] [hN : Fintype agents] 
-  (φ : formCLC agents) : ('⊨ φ) → '⊢ φ :=
-begin
+  (φ : formCLC agents) : ('⊨ φ) → '⊢ φ := by
   -- rw from contrapositive
   rw ←not_imp_not
   -- assume ¬ ⊢ φ
@@ -695,7 +614,6 @@ begin
   apply Exists.intro (Mf_CLC φ)
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m]
-  -- let that state (s) be the maximally consistent Set extended from {¬ φ}
   obtain ⟨s, hs⟩ : 
     ∃ s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, s = ⟨s', hmax⟩
     from exists_apply_eq_apply _ _

@@ -33,8 +33,7 @@ instance M_CL.f.states.set_like {agents : Type} [ha : Nonempty agents] :
 ----------------------------------------------------------
 lemma truth_lemma_CL {agents : Type} [ha : Nonempty agents] 
   (φ : formCL agents) (s : (M_CL agents).f.states) : 
-  ((M_CL agents); s '⊨ φ) ↔ (φ ∈ s) :=
-begin
+  ((M_CL agents); s '⊨ φ) ↔ (φ ∈ s) := by
   let M := @M_CL agents ha
   -- This proof is by induction on φ.
   induction' φ with n φ ψ _ _ φ ψ _ _
@@ -87,13 +86,11 @@ begin
       { -- M s ⊨ [N] φ ⇒ '[N] φ ∈ s
         intro h
         simp [s_entails_CL, hE] at h
-        have hnin : ('[∅] (_¬ φ)) ∉ s:=
-        begin
+        have hnin : ('[∅] (_¬ φ)) ∉ s:= by
           apply h (_¬ φ)
           apply @eq.subset _ _ {t : (M_CL agents).f.states | (M_CL agents); t '⊨ φ}ᶜ
           simp [ih]
           exact complement_from_contra
-        end
         
         have hin : (_¬ '[∅]_¬ φ) ∈ s:= not_in_from_notin s.2 hnin
 
@@ -138,13 +135,11 @@ begin
         simp [hE, huniv] at h, clear huniv
         -- ∃ψ˜ ⊆ {t ∈ S| M, φ ∈ t} : '[G]ψ ∈ s:= above, by IH
         cases h with ψ hψ
-        have hψih : ∀ (a : (M_CL agents).f.states), ψ ∈ ↑a → φ ∈ a:=
-          begin
+        have hψih : ∀ (a : (M_CL agents).f.states), ψ ∈ ↑a → φ ∈ a:= by
             intro t ht
             apply (ih t).mp
             apply hψ.left
             exact ht
-          end
         -- ∃ψ˜ ⊆ φ˜ : '[G]ψ ∈ s:= hih, by definition ψ˜
         have hGψ : ('[G]ψ) ∈ s:= hψ.right
         -- ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in hψih 
@@ -171,21 +166,18 @@ begin
           exact ht, }
 
         { exact h, }, }, }, }
-end
 
 
 ----------------------------------------------------------
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCL {agents : Type} [ha : Nonempty agents]
-  (φ : formCL agents) : ('⊨ φ) → '⊢ φ :=
-begin
+  (φ : formCL agents) : ('⊨ φ) → '⊢ φ := by
   -- Taking the contrapositive
   rw ←not_imp_not
   -- Assume ¬ ⊢ φ.
   intro hnax
   -- {¬φ} is a consistent Set:= hnax.
-  -- With Lindenbaum’s lemma, {¬φ} can be extended into a maximally consistent Set Σ.
   obtain ⟨s, hmax, hnφ⟩ := @exists_max_ax_consistent_neg_mem (formCL agents) _ _ hnax
   -- Take the state s ∈ SC , where s = Σ.
   simp [global_valid]

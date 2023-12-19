@@ -38,16 +38,13 @@ def s_entails_CLK {agents : Type} (m : modelECL agents) :
 notation m `;` s `'⊨` φ := s_entails_CLK m s φ
 
 lemma not_s_entails_imp {agents: Type} (m : modelECL agents) (s : m.f.states) (φ : formCLK agents) :
-  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) :=
-begin
+  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) := by
   split
   repeat {intro h1 h2, exact h1 h2}
-end
 
 lemma s_entails_CLK_conjunction {agents : Type} {m : modelECL agents} {s : m.f.states} 
   {φs : List (formCLK agents)} : 
-  (m; s '⊨ (finite_conjunction φs)) ↔ ∀ φ ∈ φs, m; s '⊨ φ :=
-begin
+  (m; s '⊨ (finite_conjunction φs)) ↔ ∀ φ ∈ φs, m; s '⊨ φ := by
   induction φs with φ φs ih
   { simp only [finite_conjunction, List.not_mem_nil, forall_false_left, implies_true_iff, iff_true]
     show s_entails_CLK m s '⊤
@@ -57,7 +54,6 @@ begin
       simp [s_entails_CLK, List.mem_cons_iff, forall_eq_or_imp, and.congr_right_iff]
       intro h
       exact ih, }
-end
 
 ----------------------------------------------------------
 -- Validity

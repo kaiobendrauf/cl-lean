@@ -53,9 +53,7 @@ def tilde {form : Type} (states : Type) [sl : set_like states form]
 -- States is not empty
 ----------------------------------------------------------
 lemma hs (form : Type) [pf : Pformula_ax form] 
-  (hnpr : ¬ ⊢' (⊥': form )) : Nonempty (states form) :=
-begin
-  -- Any consistent Set Σ (eg{⊤}) can be extended to the maximally CL-consistent 
+  (hnpr : ¬ ⊢' (⊥': form )) : Nonempty (states form) := by
   -- Set of formulas Σ′ ⊇ Σ,by Lindenbaum’s lemma
   unfold states
   rw nonempty_subtype
@@ -78,8 +76,7 @@ def E {agents form : Type}
 -- Semi-liveness
 ----------------------------------------------------------
 lemma semi_liveness {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
-  (s : states form) {G : Set agents} (hG : G ⊂ univ) : ∅ ∉ E (s) (G) :=
-begin
+  (s : states form) {G : Set agents} (hG : G ⊂ univ) : ∅ ∉ E (s) (G) := by
   -- Let G ⊂ N. Assume towards contradiction that ∅ ∈ E(s)(G)
   unfold E
   intro hf
@@ -88,7 +85,6 @@ begin
   simp [ne_of_ssubset hG] at hf
   cases hf with φ hφ
 
-  -- ⊢ φ ↔ ⊥, because {φ} cannot be extended into a maximally 
   -- consistent Set (by hf), so {φ} must be inconsistent.
   have hiffbot : ⊢' (φ ↔' ⊥'):= set_empty_iff_false hφ.left
 
@@ -107,8 +103,7 @@ end
 ----------------------------------------------------------
 lemma semi_safety {agents form : Type} 
   [pf : Pformula_ax form] [clf : CLformula agents form]
-  (s : states form) {G : Set agents} (hG : G ⊂ univ) : univ ∈ E (s) (G) :=
-begin
+  (s : states form) {G : Set agents} (hG : G ⊂ univ) : univ ∈ E (s) (G) := by
   -- Let G ⊂ N
   unfold E
   have hG' : G ≠ univ:= ne_of_ssubset hG
@@ -122,7 +117,6 @@ begin
   --  ∃φ˜ ⊆ S : [G]φ ∈ s, where φ = ⊤ from hTop
   apply Exists.intro (⊤' : form)
   exact hT
-end
 
 
 -- Semi-monotonicity
@@ -130,8 +124,7 @@ end
 lemma semi_mono {agents form : Type} 
   [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : Set agents} {X Y : Set (states form)} 
-  (hG : G ⊂ univ) (hXY : X ⊆ Y) (hX : X ∈ E (s) (G)) : Y ∈ E (s) (G) :=
-begin
+  (hG : G ⊂ univ) (hXY : X ⊆ Y) (hX : X ∈ E (s) (G)) : Y ∈ E (s) (G) := by
   unfold E at *
   -- Let G ⊂ N and X ⊆ Y ⊆ S, where X ∈ E(s)(G)
   -- ∃φ˜ ⊆ X : [G]φ ∈ s:= hX, by definition EC
@@ -145,7 +138,6 @@ begin
   split
   { exact subset.trans hφ.left hXY, }
   { exact hφ.right, }
-end
 
 -- Semi-superadditivity
 ----------------------------------------------------------
@@ -153,8 +145,7 @@ lemma semi_superadd {agents form : Type}
   [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G F : Set agents} {X Y : Set (states form)}
   (hunion : G ∪ F ⊂ univ) (hX : X ∈ E (s) (G)) (hY : Y ∈ E (s) (F)) (hintGF : G ∩ F = ∅) : 
-  X ∩ Y ∈ E (s) (G ∪ F) :=
-begin
+  X ∩ Y ∈ E (s) (G ∪ F) := by
   unfold E at *
   -- Let G, F ⊆ N (where G ∩ F = ∅ and G ∪ F ⊂ N) and X, Y ⊆ S
   -- where X ∈ E(s)(G) and Y ∈ E(s)(F)
@@ -175,32 +166,26 @@ begin
   -- (φ ∧ ψ)˜ ⊆ X ∩ Y : [G ∪ F](φ ∧ ψ) ∈ s:= hX_h.left and hY_h.left and hunionand
   split
   { split
-    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) φ:=
-      begin
+    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) φ:= by
         unfold tilde
         rw Set.subset_def
         intro t ht, simp at *
         apply max_ax_contains_by_set_proof t.2 ht (p5 _ _)
-      end
       exact subset.trans hsubset hX_h.left, }
-    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) ψ:=
-      begin
+    { have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) ψ:= by
         unfold tilde
         rw Set.subset_def
         intro t ht, simp at *
         apply max_ax_contains_by_set_proof t.2 ht (p6 _ _)
-      end
       exact subset.trans hsubset hY_h.left, }, }
   { exact hunionand, }
-end
 
 -- Regularity
 ----------------------------------------------------------
 lemma regularity {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {G : Set agents} {X : Set (states form)}
-  (h : X ∈ E (s) (G)) : (Xᶜ ∉ E (s) (Gᶜ)) :=
-begin
+  (h : X ∈ E (s) (G)) : (Xᶜ ∉ E (s) (Gᶜ)) := by
   unfold E at *
   cases eq_or_ssubset_of_subset (subset_univ G)
   { -- case : G = N
@@ -236,8 +221,7 @@ begin
       simp at hS
 
       -- (φ ∧ ψ)˜ = ∅, because X and Xᶜ are disjoint, meaning φ˜ and ψ˜ are disjoint
-      have hemptyint : tilde (states form) φ ∩ tilde (states form) ψ = ∅:=
-        begin
+      have hemptyint : tilde (states form) φ ∩ tilde (states form) ψ = ∅:= by
           rw Set.eq_empty_iff_forall_not_mem
           intro t hf
           rw Set.subset_def at *
@@ -250,7 +234,6 @@ begin
 
           { apply h
             apply h_left t hf.left, }
-        end
       have hempty : tilde (states form) (φ ∧' ψ) ⊆ ∅
 
       { intro t hf'
@@ -262,7 +245,6 @@ begin
         simp
         split, exact hφ, exact hψ, }
       
-      -- ⊢ (φ ∧ ψ) ↔ ⊥, because {(φ ∧ ψ)} cannot be extended into 
       -- a maximally consistent Set (by 3.3.6), so {(φ ∧ ψ)} must be inconsistent.
       have hiffbot : ⊢' ((φ ∧' ψ) ↔' ⊥'):= set_empty_iff_false hempty
 
@@ -272,13 +254,11 @@ begin
       simp at *
 
       -- [N]⊥ ∈ s:= 3.3.7 and 3.3.5.
-      have h : (['univ] ⊥') ∈ s:=
-      begin
+      have h : (['univ] ⊥') ∈ s:= by
         apply max_ax_contains_by_set_proof s.2 hS
         apply iff_l
         simp only [ax_and] at *
         apply hiffNbot
-      end
 
       -- Contradiction from axiom (⊥) : ¬[N]⊥ and 3.3.8
       exact ax_neg_contains_pr_false s.2 h (Bot _), }, }
@@ -289,13 +269,11 @@ end
 lemma N_maximality {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form]
   (s : states form) {X : Set (states form)}
-  (h : Xᶜ ∉ E (s) (∅)) : X ∈ E (s) (univ) :=
-begin
+  (h : Xᶜ ∉ E (s) (∅)) : X ∈ E (s) (univ) := by
   unfold E at *
   simp [(ne_of_ssubset (empty_subset_univ ha))] at *
   intro φ hX
   exact h φ hX
-end
 
 ----------------------------------------------------------
 -- Canonical Frame and Model Constructions
@@ -307,8 +285,7 @@ end
 { states := states form
   hs := hs form hnpr
   -- E is a playable Effectivity Function
-  E :=
-    begin
+  E := by
       --  Showing that an effectivity function E(s) is semi-playable
       -- regular and N-maximal, suffices to prove that E(s) is playable
       let semi : semi_playable_effectivity_struct agents (states form) :=
@@ -319,7 +296,6 @@ end
         semi_superadd := semi_superadd, }
 
       exact playable_from_semi_Nmax_reg (states form) semi N_maximality regularity
-    end, }
 
 /-- Allows us to write `φ ∈ s` instead of `φ ∈ s.val` -/
 instance canonical_frame_CL.set_like {agents form : Type} [ha : Nonempty agents]
@@ -360,29 +336,25 @@ lemma h_tilde_compl {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form] 
   (hnpr : ¬ ⊢' (⊥' : form)) (ψ : form) : 
   (tilde ((canonical_model_CL agents form hnpr).f.states) (¬' ψ)) = 
-    (tilde ((canonical_model_CL agents form hnpr).f.states) ψ)ᶜ := 
-begin
+    (tilde ((canonical_model_CL agents form hnpr).f.states) ψ)ᶜ :=  by
   ext1 s
   split
   { intro hs hf
     exact contra_contains_pr_false s.2 hf hs, }
   { intro hs
     exact not_in_from_notin s.2 hs, }
-end
 
 -- ⊢ ψ ↔ χ ⇒ tilde ψ = tilde χ
 lemma tilde_ax_iff {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form] 
   {hnpr : ¬ ⊢' (⊥' : form)} {ψ χ : form} (hax : ⊢' (ψ ↔' χ)) : 
   tilde ((canonical_model_CL agents form hnpr).f.states) ψ = 
-    tilde ((canonical_model_CL agents form hnpr).f.states) χ :=
-begin
+    tilde ((canonical_model_CL agents form hnpr).f.states) χ := by
   ext1 s
   split
   { intro hs
     apply max_ax_contains_by_set_proof s.2 hs (iff_l hax), }
   { intro hs
     apply max_ax_contains_by_set_proof s.2 hs (iff_r hax), }
-end
 
 end canonical

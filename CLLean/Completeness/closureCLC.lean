@@ -38,26 +38,21 @@ noncomputable def cl {agents : Type} [hN : Fintype agents] :
 -- Lemmas about cl
 ----------------------------------------------------------
 @[simp] lemma cl_contains_phi {agents : Type} [hN : Fintype agents] (φ : formCLC agents) :
-  φ ∈ cl φ :=
-begin
+  φ ∈ cl φ := by
   cases φ
   repeat { unfold cl, simp, }
   { split_ifs
     repeat { simp[h] at *, }, }
-end
 
 @[simp] lemma cl_contains_bot {agents : Type} [hN : Fintype agents] (φ : formCLC agents) :
-  _⊥ ∈ cl φ :=
-begin
+  _⊥ ∈ cl φ := by
   induction φ
   any_goals { unfold cl, simp, }
   any_goals { simp [φ_ih], }
   any_goals { simp [φ_ih_φ, φ_ih_ψ], }
-end
 
 lemma cl_C_contains_KC {agents : Type} [hN : Fintype agents] {φ ψ : formCLC agents} 
-  {G : Set agents} {i : agents} (hi : i ∈ G) (h : _C G ψ ∈ cl φ) : _K i (_C G ψ) ∈ cl φ :=
-begin
+  {G : Set agents} {i : agents} (hi : i ∈ G) (h : _C G ψ ∈ cl φ) : _K i (_C G ψ) ∈ cl φ := by
   induction φ
   any_goals 
   { simp only [cl, Finset.mem_insert, Finset.mem_singleton, or_self] at *, exact h, }
@@ -84,12 +79,10 @@ begin
     cases h, rw [h.1, h.2] at *
     simp only [hi, eq_self_iff_true, and_true, exists_eq_right, or_true]
     exact or.inl (φ_ih h), }
-end
 
 lemma cl_closed_single_neg {agents : Type} [hN : Fintype agents] 
   (φ x : formCLC agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) :=
-begin
+  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) := by
   induction φ
   repeat
     { unfold cl at *
@@ -263,7 +256,6 @@ begin
                     eq_self_iff_true, and_true, exists_prop, exists_eq_right, exists_false
                     or_false, or_true, true_and]
         exact @iff_dni (formCLC agents) _ _, }, }, }
-end
 
 ----------------------------------------------------------
 -- Subformulas in CLC
@@ -283,8 +275,7 @@ inductive subformula {agents : Type} : formCLC agents → formCLC agents → Pro
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
 lemma subformula.cl_subset_and_left {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
@@ -292,77 +283,63 @@ begin
                 Finset.mem_union, Finset.mem_singleton] at *
     repeat {cases h, simp only [h, eq_self_iff_true, and_self, false_or, true_or, or_true],}
     {simp only [h, eq_self_iff_true, and_self, true_or, false_or, or_true], }, }
-end
 
 lemma subformula.cl_subset_and_right {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_left {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_right {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_effectivity {agents : Type} [hN : Fintype agents]
-  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) :=
-begin
+  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_knows {agents : Type} [hN : Fintype agents]
-  {φ : formCLC agents} {i : agents}  : cl φ ⊆ cl (_K i φ) :=
-begin
+  {φ : formCLC agents} {i : agents}  : cl φ ⊆ cl (_K i φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_common_know {agents : Type} [hN : Fintype agents]
-  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl (_C G φ) :=
-begin
+  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl (_C G φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
-begin
+  {φ ψ : formCLC agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ := by
   induction h with _ _ _ _ _ h ih ih'
   { exact Finset.subset.rfl, }
   { exact Finset.subset.trans ih ih', }
@@ -373,15 +350,13 @@ begin
   { exact subformula.cl_subset_effectivity, }
   { exact subformula.cl_subset_knows, }
   { exact subformula.cl_subset_common_know, }
-end
 
 lemma subformula.mem_cl {agents : Type} [hN : Fintype agents]
   {φ ψ : formCLC agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
 lemma subformula.in_cl_sub {agents : Type} [hN : Fintype agents]
-  {φ ψ χ : formCLC agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
-begin
+  {φ ψ χ : formCLC agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ := by
   induction hsub with _ _ _ _ hsub1 hsub2 hih1 hih2
   { exact hcl, }
   { exact hih1 (hih2 hcl), }
@@ -424,4 +399,3 @@ begin
                           eq_self_iff_true, and_true, exists_prop, exists_eq_right, exists_false
                           mem_to_finset.mp hi, or_true], }
   any_goals { simp only [cl_contains_bot, or_self, true_or], }
-end

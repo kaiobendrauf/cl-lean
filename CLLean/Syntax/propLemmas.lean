@@ -8,6 +8,7 @@ This file contains proofs for a variety of propositional lemmas.
 import CLLean.Syntax.formula
 import Mathlib.Tactic
 
+open Logic
 
 ----------------------------------------------------------
 -- Simple Rules
@@ -21,7 +22,7 @@ mp _ _ hImp hL
 lemma cut {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒  ⊢ (ψ → χ) ⇒  ⊢ (φ → χ)
   ⊢' (φ →' ψ) → ⊢' (ψ →' χ) → ⊢' (φ →' χ) := 
-λ h1 h2, mp _ _ (mp _ _ (p2 _ ψ _) (mp _ _ (p1 _ _) h2)) h1
+λ h1 h2 => mp _ _ (mp _ _ (p2 _ ψ _) (mp _ _ (p1 _ _) h2)) h1
 
 ----------------------------------------------------------
 -- SKI
@@ -36,14 +37,14 @@ def combS2 {form : Type} [pf : Pformula_ax form] {φ ψ χ ω : form}
   : ⊢' (φ →' ω) :=
 combS (combS x y) z
 
-def propS {φ ψ χ : Type} (x : φ → ψ → χ) (y : φ → ψ) : (φ → χ) := λ z, (x z) (y z)
+def propS {φ ψ χ : Type} (x : φ → ψ → χ) (y : φ → ψ) : (φ → χ) := λ z => (x z) (y z)
 def propS2 {φ ψ χ ω : Type} (x : φ → ψ → χ → ω) (y : φ → ψ) (z : φ → χ) : (φ → ω) := 
-  λ w, (x w) (y w) (z w)
+  λ w => (x w) (y w) (z w)
 
 def combK {form : Type} [pf : Pformula_ax form] {φ ψ : form} (x : ⊢' φ) : ⊢' (ψ →' φ) :=
 mp _ _ (p1 _ _) x
 
-def propK {φ ψ : Type} (x : φ) : ψ → φ := λ _, x
+def propK {φ ψ : Type} (x : φ) : ψ → φ := λ _ => x
 
 def combI {form : Type} [pf : Pformula_ax form] {φ : form} : ⊢' (φ →' φ) :=
 mp _ _ (mp _ _ (p2 φ (φ →' φ) φ) (p1 _ _)) (p1 _ _)
@@ -72,12 +73,12 @@ lemma likemp {form : Type} [pf : Pformula_ax form] {φ ψ : form} :
 lemma imp_if_imp_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → χ) ⇒  ⊢ φ → (ψ → χ)
   ⊢' (φ →' χ) → ⊢' (φ →' (ψ →' χ)) :=
-λ h1, mp _ _ (mp _ _ (p2 _ _ _) (mp _ _ (p1 _ _) (p1 _ _))) h1
+λ h1 => mp _ _ (mp _ _ (p2 _ _ _) (mp _ _ (p1 _ _) (p1 _ _))) h1
 
 lemma imp_switch {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ φ → (ψ → χ) ⇒  ⊢ ψ → (φ → χ)
   ⊢' (φ →' (ψ →' χ)) → ⊢' (ψ →' (φ →' χ)) :=
-λ h1, mp _ _ (mp _ _ (p2 _ _ _ ) (mp _ _ (p1 _ _) (mp _ _ (p2 _ _ _) h1))) (p1 _ _)
+λ h1 => mp _ _ (mp _ _ (p2 _ _ _ ) (mp _ _ (p1 _ _) (mp _ _ (p2 _ _ _) h1))) (p1 _ _)
 
 -- ⊢ (φ → (ψ → χ)) → (ψ → (φ → χ))
 lemma l2 {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
@@ -96,26 +97,22 @@ mp _ _ (p2 _ _ _) (imp_switch iden)
 
 lemma imp_imp_iff_imp {form : Type} [pf : Pformula_ax form] {θ φ ψ : form} : 
 -- ⊢ θ → (φ → (φ → ψ)) ⇔ ⊢ θ → (φ → ψ)
-  ⊢' (θ →' (φ →' (φ →' ψ))) ↔ ⊢' (θ →' (φ →' ψ)) :=
-begin
-  split
-  {intro h1
-  exact cut h1 double_imp}
-  {intro h1
-  exact cut h1 (p1 _ _)}
-end
+  ⊢' (θ →' (φ →' (φ →' ψ))) ↔ ⊢' (θ →' (φ →' ψ)) := by
+  constructor
+  · intro h1
+    exact cut h1 double_imp
+  · intro h1
+    exact cut h1 (p1 _ _)
 
 lemma imp_shift {form : Type} [pf : Pformula_ax form] {θ φ ψ χ : form} : 
 -- ⊢ θ → (φ → (ψ → χ)) ⇔ ⊢ θ → (ψ → (φ → χ))
-  ⊢' (θ →' (φ →' (ψ →' χ))) ↔ ⊢' (θ →' (ψ →' (φ →' χ))) :=
-begin
-  split
-  repeat 
-  { intro h1
+  ⊢' (θ →' (φ →' (ψ →' χ))) ↔ ⊢' (θ →' (ψ →' (φ →' χ))) := by
+  constructor
+  repeat
+  · intro h1
     apply cut
-    { exact h1, }
-    { apply imp_switch (cut (p1 _ _ ) (imp_switch (p2 _ _ _))), }, }
-end
+    · exact h1
+    · apply imp_switch (cut (p1 _ _ ) (imp_switch (p2 _ _ _)))
 
 
 ----------------------------------------------------------
@@ -125,12 +122,12 @@ end
 lemma cut1 {form : Type} [pf : Pformula_ax form] {φ ψ χ θ : form} : 
 -- ⊢ θ → (φ → ψ) ⇒  ⊢ (ψ → χ) ⇒ ⊢ θ → (φ → χ)
   ⊢' (θ →' (φ →' ψ)) → ⊢' (ψ →' χ) → ⊢' (θ →' (φ →' χ)) :=
-λ h1 h2, cut h1 (mp _ _ (p2 _ _ _) (mp _ _ (p1 _ _ ) h2))
+λ h1 h2 => cut h1 (mp _ _ (p2 _ _ _) (mp _ _ (p1 _ _ ) h2))
 
 lemma cut2 {form : Type} [pf : Pformula_ax form] {φ ψ χ θ : form} : 
 -- ⊢ (φ → ψ) ⇒  ⊢ θ → (ψ → χ) ⇒ ⊢ θ → (φ → χ)
   ⊢' (φ →' ψ) → ⊢' (θ →' (ψ →' χ)) → ⊢' (θ →' (φ →' χ)) :=
-λ h1 h2, imp_switch (cut h1 (imp_switch h2))
+λ h1 h2 => imp_switch (cut h1 (imp_switch h2))
 
 
 ----------------------------------------------------------
@@ -153,26 +150,22 @@ mp _ _ (mp _ _ (p4 _ _) iden) iden
 
 -- Motivation: corresponds to Lean's `iff.intro`
 lemma ax_iff_intro {form : Type} [pf : Pformula_ax form] {φ ψ : form}
-  (h1 : ⊢' (φ →' ψ)) (h2 : ⊢' (ψ →' φ)) : ⊢' (φ ↔' ψ) :=
-begin
+  (h1 : ⊢' (φ →' ψ)) (h2 : ⊢' (ψ →' φ)) : ⊢' (φ ↔' ψ) := by
   apply MP' h2
   apply MP' h1
   exact p4 _ _
-end
 
 lemma iff_cut {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ φ ↔ ψ ⇒ ⊢ ψ ↔ χ ⇒ ⊢ φ ↔ χ
-  ⊢' (φ ↔' ψ) → ⊢' (ψ ↔' χ) → ⊢' (φ ↔' χ)  :=
-begin
+  ⊢' (φ ↔' ψ) → ⊢' (ψ ↔' χ) → ⊢' (φ ↔' χ)  := by
   intro h1 h2
   apply ax_iff_intro
-  { apply cut
+  · apply cut
     exact iff_l h1
-    exact iff_l h2, }
-  { apply cut
+    exact iff_l h2
+  · apply cut
     exact iff_r h2
-    exact iff_r h1, }
-end
+    exact iff_r h1
 
 /-- `φ` is provable iff `ψ` is, if it's provable `φ` and `ψ` are equivalent.
 
@@ -231,60 +224,50 @@ mp _ _ (mp _ _ (p3 _ _) (cut dne (p6 _ _))) (cut dne (p5 _ _))
 
 lemma not_contra_equiv_true {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ ¬ (φ ∧ ¬ φ) ↔' ¬ ⊥
-  ⊢' ((¬' (φ ∧' (¬' φ))) ↔' (¬' ⊥') ) :=
-begin
+  ⊢' ((¬' (φ ∧' (¬' φ))) ↔' (¬' ⊥') ) := by
   exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ (p1 _ _) iden)) (mp _ _ (p1 _ _) not_contra))
-end
 
 lemma not_and_subst {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ ↔' ψ) ⇒ (⊢ ¬ (χ ∧ φ) ⇔ ⊢ ¬ (χ ∧ ψ))
-  ⊢' (φ ↔' ψ) → (⊢' (¬' (χ ∧' φ)) ↔ ⊢' (¬' (χ ∧' ψ))) :=
-begin
+  ⊢' (φ ↔' ψ) → (⊢' (¬' (χ ∧' φ)) ↔ ⊢' (¬' (χ ∧' ψ))) := by
   intro h1
-  split
-  {intro h2
-  exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) 
-    (cut dne (mp _ _ double_imp (cut2 
-      (cut (p6 _ _) (mp _ _ (p6 _ _) h1)) 
-      (cut (p5 _ _) (p4 _ _)))))}
-  {intro h2
-  exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2)) 
-    (cut dne (mp _ _ double_imp (cut2 
-      (cut (p6 _ _) (mp _ _ (p5 _ _) h1)) 
-      (cut (p5 _ _) (p4 _ _)))))}
-end
+  constructor
+  · intro h2
+    exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2))
+      (cut dne (mp _ _ double_imp (cut2
+        (cut (p6 _ _) (mp _ _ (p6 _ _) h1))
+        (cut (p5 _ _) (p4 _ _)))))
+  · intro h2
+    exact mp _ _ (mp _ _ (p3 _ _) (mp _ _ (p1 _ _) h2))
+      (cut dne (mp _ _ double_imp (cut2
+        (cut (p6 _ _) (mp _ _ (p5 _ _) h1))
+        (cut (p5 _ _) (p4 _ _)))))
 
 lemma contrapos {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ ¬ ψ → ¬ φ ⇔ ⊢ φ → ψ
-  ⊢' ((¬' ψ) →' (¬' φ)) ↔ ⊢' (φ →' ψ) :=
-begin
-  split
+  ⊢' ((¬' ψ) →' (¬' φ)) ↔ ⊢' (φ →' ψ) := by
+  constructor
   intro h1
   exact mp _ _ (p7 _ _) h1
   intro h1
   exact mp _ _ (cut (cut (mp _ _ hs1 dni) (mp _ _ hs2 dne)) (p7 _ _)) h1
-end
 
 lemma iff_not {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ φ ↔' ψ ⇒ ⊢ ¬ φ ↔' ¬ ψ
-  ⊢' (φ ↔' ψ) → ⊢' ((¬' ψ) ↔' (¬' φ)) :=
-begin
+  ⊢' (φ ↔' ψ) → ⊢' ((¬' ψ) ↔' (¬' φ)) := by
   intro h1
   have h2 : ⊢' (φ →' ψ):= mp _ _ (p5 _ _) h1
   have h3 : ⊢' (ψ →' φ):= mp _ _ (p6 _ _) h1
-  rw ←contrapos at h2
-  rw ←contrapos at h3
+  rw [←contrapos] at h2
+  rw [←contrapos] at h3
   exact (mp _ _ (mp _ _ (p4 _ _) h2) h3)
-end
 
 lemma contra_equiv_false {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ (φ ∧ ¬ φ) ↔' ⊥
-  ⊢' ((φ ∧' (¬' φ)) ↔' ⊥') :=
-begin
-  have h1 := iff_not not_contra_equiv_true
+  ⊢' ((φ ∧' (¬' φ)) ↔' ⊥') := by
+  have h1 := iff_not (not_contra_equiv_true (φ := φ))
   exact (mp _ _ (mp _ _ (p4 _ _) (cut dni (cut (mp _ _ (p6 _ _) h1) dne))) 
     (cut dni (cut (mp _ _ (p5 _ _) h1) dne)))
-end
 
 lemma contra_imp_imp_false {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ ¬ φ → φ → ⊥
@@ -292,13 +275,11 @@ lemma contra_imp_imp_false {form : Type} [pf : Pformula_ax form] {φ : form} :
 
 lemma contra_not_imp_false_ax {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ ¬ φ → ⊥ ⇒ ⊢ φ
-  ⊢' ((¬' (φ)) →' ⊥') → ⊢' φ :=
-begin
+  ⊢' ((¬' (φ)) →' ⊥') → ⊢' φ := by
   intro h
   apply mp
   exact dne
   exact h
-end
 
 lemma contra_imp_false_not_ax {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢  φ → ⊥ ⇒ ⊢ ¬ φ
@@ -324,25 +305,21 @@ by simp
 ----------------------------------------------------------
 @[simp] lemma explosion {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ ⊥ → φ 
-  ⊢' (⊥' →' φ) :=
-begin
-  apply contrapos.mp, exact (mp _ _ (p1 _ _) iden)
-end
+  ⊢' (⊥' →' φ) := by
+  apply contrapos.mp
+  exact (mp _ _ (p1 _ _) iden)
 
 
 @[simp] lemma contra_explosion {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ φ → ¬ φ → ψ 
-  ⊢' (φ →' (¬' φ) →' ψ) :=
-begin
+  ⊢' (φ →' (¬' φ) →' ψ) := by
   apply cut1
   exact contra_imp_imp_false'
   exact explosion
-end
 
 lemma ax_bot_imp {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ (⊤ → ⊥) ⇒ ⊢ (φ → ⊥) 
-  ⊢' (⊤' →' ⊥' : form) → ⊢' (φ →' ⊥') :=
-begin
+  ⊢' (⊤' →' ⊥' : form) → ⊢' (φ →' ⊥') := by
   intro hf
   apply mp
   apply mp
@@ -354,7 +331,6 @@ begin
   apply mp
   exact p1 _ _
   exact prtrue
-end
 
 /-- If there is any formula that cannot be proven, the theory is consistent. -/
 -- Motivation: a lot of places assume `¬ ⊢ ⊥'` so it's worth trying to reduce these assumptions.
@@ -369,8 +345,8 @@ mt (mp _ _ explosion) hφ
 -- Motivation: easier to prove Lean's `and` than in `ax`
 lemma ax_and {form : Type} [pf : Pformula_ax form] {φ ψ : form} :
   ⊢' (φ ∧' ψ) ↔ ⊢' φ ∧ ⊢' ψ :=
-⟨λ h, ⟨mp _ _ (p5 _ _) h, mp _ _ (p6 _ _) h⟩
- λ ⟨h1, h2⟩, mp _ _ (mp _ _ (p4 _ _) h1) h2⟩
+⟨λ h => ⟨mp _ _ (p5 _ _) h, mp _ _ (p6 _ _) h⟩,
+ λ ⟨h1, h2⟩ => mp _ _ (mp _ _ (p4 _ _) h1) h2⟩
 
 @[simp] lemma ax_and_split {form : Type} [pf : Pformula_ax form] 
  {φ ψ : form} (hl : ⊢' φ ) (hr : ⊢' ψ) : ⊢' (φ ∧' ψ) :=
@@ -378,57 +354,47 @@ ax_and.mpr ⟨hl, hr⟩
 
 lemma and_switch {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ (φ ∧ ψ) ↔ (ψ ∧ φ)
-  ⊢' ((φ ∧' ψ) ↔' (ψ ∧' φ)) :=
-begin
+  ⊢' ((φ ∧' ψ) ↔' (ψ ∧' φ)) := by
   exact (mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (cut (p5 _ _) 
     (imp_switch (cut (p6 _ _) (p4 _ _)))))) 
     (mp _ _ double_imp (cut (p5 _ _) (imp_switch (cut (p6 _ _) (p4 _ _))))))
-end
 
 lemma left_and_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ ψ → ((φ ∧ ψ) → χ ) ⇒ ⊢ (φ ∧ ψ) → χ
   ⊢' (ψ →' ((φ ∧' ψ) →' χ)) → ⊢' ((φ ∧' ψ) →' χ) :=
-λ h1, mp _ _ double_imp (cut (p6 _ _) h1)
+λ h1 => mp _ _ double_imp (cut (p6 _ _) h1)
 
 lemma and_right_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ ∧ ψ) → χ  ⇔ ⊢  ψ → (φ → χ)
-  ⊢' ((φ ∧' ψ) →' χ) ↔ ⊢' (ψ →' (φ →' χ)) :=
-begin
-  split
-  {intro h1
-  exact mp _ _ (cut2 (p1 _ _) (p2 _ _ _)) (cut1 (p4 _ _) h1)}
-  {intro h1
-  exact left_and_imp (cut2 (p5 _ _) h1) }
-end
+  ⊢' ((φ ∧' ψ) →' χ) ↔ ⊢' (ψ →' (φ →' χ)) := by
+  constructor
+  · intro h1
+    exact mp _ _ (cut2 (p1 _ _) (p2 _ _ _)) (cut1 (p4 _ _) h1)
+  · intro h1
+    exact left_and_imp (cut2 (p5 _ _) h1)
 
 lemma phi_and_true {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢  (φ ∧ ⊤) ↔' φ 
   ⊢' ((φ ∧' (¬' ⊥')) ↔' φ) :=
-begin
-  exact (mp _ _ (mp _ _ (p4 _ _) (p5 _ _)) (mp _ _ (imp_switch (p4 _ _)) iden))
-end
+  (mp _ _ (mp _ _ (p4 _ _) (p5 _ _)) (mp _ _ (imp_switch (p4 _ _)) iden))
 
 lemma true_and_phi {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢  (⊤ ∧ φ) ↔ φ 
-  ⊢' (((¬' ⊥') ∧' φ) ↔' φ) :=
-begin
-  exact mp _ _(mp _ _ (p4 _ _) (cut (iff_l and_switch) (iff_l phi_and_true))) 
+  ⊢' (((¬' ⊥') ∧' φ) ↔' φ) := by
+  exact mp _ _
+    (mp _ _ (p4 _ _) (cut (iff_l and_switch) (iff_l phi_and_true)))
     (mp _ _ (p4 _ _) iden)
-end
 
 lemma imp_and_and_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ θ : form} : 
 -- ⊢ (φ → ψ) ∧ (χ → θ)⇒ ⊢ (φ ∧ χ) → (ψ ∧ θ)
-  ⊢' (((φ →' ψ) ∧' (χ →' θ))) → ⊢' (((φ ∧' χ) →' (ψ ∧' θ))) :=
-begin
+  ⊢' (((φ →' ψ) ∧' (χ →' θ))) → ⊢' (((φ ∧' χ) →' (ψ ∧' θ))) := by
   intro h
   exact (mp _ _ double_imp (cut (cut (p5 _ _) (mp _ _ (p5 _ _) h)) 
     (cut2 (cut (p6 _ _) (mp _ _ (p6 _ _) h)) (p4 _ _))))
-end
 
 lemma imp_and_and_and_imp {form : Type} [pf : Pformula_ax form] {a b c d e f : form} : 
 -- ⊢ (φ → ψ →) ∧ (χ → θ)⇒ ⊢ (φ ∧ χ) → (ψ ∧ θ) → (φ ∧ χ)
-  ⊢' (((a →' b →' c) ∧' (d →' e →' f))) → ⊢' (((a ∧' d) →' (b ∧' e) →' (c ∧' f))) :=
-begin
+  ⊢' (((a →' b →' c) ∧' (d →' e →' f))) → ⊢' (((a ∧' d) →' (b ∧' e) →' (c ∧' f))) := by
   intro h
   apply cut (imp_and_and_imp h)
   apply mp
@@ -449,91 +415,76 @@ begin
   apply cut1
   apply likemp
   exact p4 _ _
-end
 
 lemma and_switch_ax {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ (φ ∧ ψ) ⇔ ⊢ (ψ ∧ φ)
-  (⊢' (φ ∧' ψ)) ↔ (⊢' (ψ ∧' φ)) :=
-begin
-  split
-  repeat { exact λ h, mp _ _ (mp _ _ (p5 _ _) and_switch) h, }
-end
+  (⊢' (φ ∧' ψ)) ↔ (⊢' (ψ ∧' φ)) := by
+  constructor
+  repeat
+  · exact λ h => mp _ _ (mp _ _ (p5 _ _) and_switch) h
 
 lemma and_commute {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ ((φ ∧ ψ) ∧ χ) ↔' (φ ∧ (ψ ∧ χ))
-  ⊢' (((φ ∧' ψ) ∧' χ) ↔' (φ ∧' (ψ ∧' χ))) :=
-begin
+  ⊢' (((φ ∧' ψ) ∧' χ) ↔' (φ ∧' (ψ ∧' χ))) := by
   exact mp _ _ (mp _ _ (p4 _ _) (mp _ _ double_imp (imp_imp_iff_imp.mp 
-  (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) 
-    (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
-  (mp _ _ double_imp (imp_imp_iff_imp.mp (cut (cut (p6 _ _) (p5 _ _)) 
-  (imp_switch (cut (p5 _ _) (cut1 (p4 _ _) (cut2 (cut (p6 _ _) (p6 _ _)) (p4 _ _))))))))
-end
+    (cut (cut (p5 _ _) (p6 _ _)) (cut2 (p6 _ _) (cut1 (p4 _ _) 
+      (imp_switch (cut (cut (p5 _ _) (p5 _ _)) (p4 _ _))))))))) 
+    (mp _ _ double_imp (imp_imp_iff_imp.mp (cut (cut (p6 _ _) (p5 _ _)) 
+    (imp_switch (cut (p5 _ _) (cut1 (p4 _ _) (cut2 (cut (p6 _ _) (p6 _ _)) (p4 _ _))))))))
 
 lemma imp_and_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ φ → ψ ⇒ ⊢ (χ ∧ φ) → (χ ∧ ψ)
-  ⊢' (φ →' ψ) → ⊢' ((χ ∧' φ) →' (χ ∧' ψ)) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' ((χ ∧' φ) →' (χ ∧' ψ)) := by
   intro h1
   exact imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) h1)
-end
 
 lemma and_iden {form : Type} [pf : Pformula_ax form] {φ : form} : 
 -- ⊢ φ → (φ ∧ φ) 
-  ⊢' (φ →' (φ ∧' φ)) :=
-begin
+  ⊢' (φ →' (φ ∧' φ)) := by
   have hdi : ⊢' ((φ →' (φ →' (φ ∧' φ))) →' (φ →' (φ ∧' φ))):= double_imp
   apply mp _ _ hdi
   exact (p4 _ _)
-end
 
 lemma imp_and_iden {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ φ → ψ ⇒ ⊢ φ → (φ ∧ ψ)
-  ⊢' (φ →' ψ) → ⊢' (φ →' (φ ∧' ψ)) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' (φ →' (φ ∧' ψ)) := by
   intro h
   have hab : ⊢' (φ →' (φ ∧' φ)):= and_iden
   have hbc : ⊢' ((φ ∧' φ) →' (φ ∧' ψ)):= imp_and_imp h
   exact cut hab hbc
-end
 
 
 lemma imp_imp_and {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒ ⊢ (φ → χ) ⇒ ⊢ φ → (ψ ∧ χ)
-  ⊢' (φ →' ψ) → ⊢' (φ →' χ) → ⊢' (φ →' (ψ ∧' χ)) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' (φ →' χ) → ⊢' (φ →' (ψ ∧' χ)) := by
   intro h1 h2
   apply cut
-  { exact and_iden, }
-  { apply imp_and_and_imp
+  · exact and_iden
+  · apply imp_and_and_imp
     apply ax_and.mpr
-    split, exact h1, exact h2, }
-end
+    constructor
+    · exact h1
+    · exact h2
 
 lemma imp_and_r {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒ ⊢ (χ ∧ φ) → ψ
-  ⊢' (φ →' ψ) → ⊢' ((χ ∧' φ) →' ψ) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' ((χ ∧' φ) →' ψ) := by
   intro h
   apply cut
   exact p6 _ _
   exact h
-end
 
 lemma imp_and_l {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → ψ) ⇒ ⊢ (φ ∧ χ) → ψ
-  ⊢' (φ →' ψ) → ⊢' ((φ ∧' χ) →' ψ) :=
-begin
+  ⊢' (φ →' ψ) → ⊢' ((φ ∧' χ) →' ψ) := by
   intro h
   apply cut
   exact p5 _ _
   exact h
-end
 
 lemma iff_and_top {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ (φ ∧ ⊤) → ψ ⇔ ⊢ (φ → ψ) 
-  ⊢' ((φ ∧' ⊤') →' ψ) ↔ ⊢' (φ →' ψ) :=
-begin
+  ⊢' ((φ ∧' ⊤') →' ψ) ↔ ⊢' (φ →' ψ) := by
   split
   { intro h
     apply cut
@@ -543,33 +494,27 @@ begin
     apply cut
     apply p5
     exact h, }
-end
 
 lemma remove_and_imp {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ ∧ φ ∧ ψ) → χ ⇒ ⊢ (φ ∧ ψ) → χ
-  ⊢' ((φ ∧' (φ ∧' (ψ))) →' χ) → ⊢' ((φ ∧' (ψ)) →' χ) :=
-begin
+  ⊢' ((φ ∧' (φ ∧' (ψ))) →' χ) → ⊢' ((φ ∧' (ψ)) →' χ) := by
   intro h
   apply cut
   { exact imp_imp_and (p5 _ _) (iden), }
   { exact h, }
-end
 
 lemma imp_and {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} :
 -- ⊢ (φ → (ψ ∧ χ)) → (φ → ψ)
-  ⊢' ((φ →' (ψ ∧' χ)) →' (φ →' ψ)) :=
-begin
+  ⊢' ((φ →' (ψ ∧' χ)) →' (φ →' ψ)) := by
   apply mp
   apply p2
   apply mp
   apply p1
   apply p5
-end
 
 lemma and_cut_l {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} :
 -- ⊢ ((φ ↔ χ) ⇒ ⊢ ((φ ∧ ψ) ↔ (χ ∧ ψ))
-  ⊢' (φ ↔' χ) → ⊢' ((φ ∧' ψ) ↔' (χ ∧' ψ)) :=
-begin
+  ⊢' (φ ↔' χ) → ⊢' ((φ ∧' ψ) ↔' (χ ∧' ψ)) := by
   intro hl
   refine ax_iff_intro _ _
   { apply imp_imp_and
@@ -584,12 +529,10 @@ begin
       apply iff_r
       exact hl, }
     { exact p6 _ _, }, }
-end
 
 lemma and_cut_r {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} :
 -- ⊢ ((ψ ↔ χ) ⇒ ⊢ ((φ ∧ ψ) ↔ (φ ∧ χ))
-  ⊢' (ψ ↔' χ) → ⊢' ((φ ∧' ψ) ↔' (φ ∧' χ)) :=
-begin
+  ⊢' (ψ ↔' χ) → ⊢' ((φ ∧' ψ) ↔' (φ ∧' χ)) := by
   intro hr
   refine ax_iff_intro _ _
   { apply imp_imp_and
@@ -604,7 +547,6 @@ begin
       apply p6
       apply iff_r
       exact hr, }, }
-end
 
 -- Motivation: for simplication in combination with `ax_iff_mp`
 @[simp] lemma ax_and_top_iff {form : Type} [pf : Pformula_ax form] {φ : form} :
@@ -648,8 +590,7 @@ ax_iff_mp (ax_top_imp_iff φ)
 ----------------------------------------------------------
 lemma demorgans {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ ¬ (φ ∧ ψ) ⇔ ⊢ φ → ¬ ψ
-  ⊢' (¬' (φ ∧' ψ)) ↔ ⊢' (φ →' (¬' ψ)) :=
-begin
+  ⊢' (¬' (φ ∧' ψ)) ↔ ⊢' (φ →' (¬' ψ)) := by
   split
   { intro h1
     apply and_right_imp.mp
@@ -659,7 +600,6 @@ begin
   { intro h1
     apply (mp _ _ (contrapos.mpr (mp _ _ (p5 _ _) and_switch)))
     exact(and_right_imp.mpr h1), }
-end
 
 lemma demorgans' {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 -- ⊢ (¬ φ → ψ) → ¬ (¬ φ ∧ ¬ ψ)
@@ -669,8 +609,7 @@ combS2 (combK (p2 _ _ _)) (combK (combS (combK (p6 _ _)) combI))
 
 
 lemma demorgans'' {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
-  ⊢' (¬' (φ →' ¬' ψ) →' φ ∧' ψ) :=
-begin
+  ⊢' (¬' (φ →' ¬' ψ) →' φ ∧' ψ) := by
   rw ←contrapos
   apply cut _ dni
   apply imp_switch
@@ -678,11 +617,9 @@ begin
   apply cut1
   apply p4
   exact likemp
-end
 
 lemma demorgans''' {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
-  ⊢' (¬' (φ ∧' ψ) ↔' (φ →' (¬' ψ))) :=
-begin
+  ⊢' (¬' (φ ∧' ψ) ↔' (φ →' (¬' ψ))) := by
   apply ax_iff_intro
   { refine and_right_imp.mp _
     refine by_contra_ax _
@@ -705,11 +642,9 @@ begin
     refine and_right_imp.mpr _
     apply imp_shift.mpr
     exact likemp, }
-end
 
 lemma demorgans'''' {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
-  ⊢' (¬' (φ →' ψ) ↔' (φ ∧' ¬' ψ)) :=
-begin
+  ⊢' (¬' (φ →' ψ) ↔' (φ ∧' ¬' ψ)) := by
   apply ax_iff_intro
   { apply contrapos.mp
     apply cut (iff_l demorgans''')
@@ -728,15 +663,13 @@ begin
       apply cut2 (p6 _ _)
       exact contra_explosion, }
     { exact iden, }, }
-end
 
 ----------------------------------------------------------
 -- Or
 ----------------------------------------------------------
 lemma or_cases {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} : 
 -- ⊢ (φ → χ) ⇒  ⊢ (ψ → χ) ⇒ ⊢ (¬ φ → ψ) → χ 
-  ⊢' (φ →' χ) → ⊢' (ψ →' χ) → ⊢' ((¬' φ →' ψ) →' χ) :=
-begin
+  ⊢' (φ →' χ) → ⊢' (ψ →' χ) → ⊢' ((¬' φ →' ψ) →' χ) := by
   intro h1 h2
   have h1' := contrapos.mpr h1
   have h2' := contrapos.mpr h2
@@ -750,24 +683,20 @@ begin
     apply dne
     exact demorgans', }
   exact contra_imp_imp_false
-end
 
 lemma or_inl {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 --  ⇒  ⊢ (φ) → (¬ φ → ψ)
-  ⊢' ((φ) →' ((¬' φ) →' ψ)) :=
-begin
+  ⊢' ((φ) →' ((¬' φ) →' ψ)) := by
   apply cut1
   exact contra_imp_imp_false'
   exact explosion
-end
 
 lemma or_inr {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
 --  ⇒  ⊢ (φ) → ⊢ (¬ φ → χ)
   ⊢' ((ψ) →' ((¬' φ) →' ψ)) := p1 ψ (¬' φ)
 
 lemma disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
-  ⊢' (((¬' φ) →' ψ) ↔' (finite_disjunction (φ :: [ψ]))) :=
-begin
+  ⊢' (((¬' φ) →' ψ) ↔' (finite_disjunction (φ :: [ψ]))) := by
   apply ax_iff_intro
   { simp [finite_disjunction]
     apply imp_switch
@@ -781,22 +710,18 @@ begin
     apply @cut _ _ _ (¬' (¬' ψ))
     exact iden
     exact dne, }
-end
 
 lemma or_switch {form : Type} [pf : Pformula_ax form] {φ ψ : form} :
-  ⊢' ((¬' φ →' ψ) ↔' (¬' ψ →' φ)) :=
-begin
+  ⊢' ((¬' φ →' ψ) ↔' (¬' ψ →' φ)) := by
   refine ax_iff_intro _ _
   repeat 
   { apply or_cases
     exact p1 _ _
     exact or_inl, }
-end
 
 -- ⊢ ((φ ↔ z) ⇒ ⊢ ((φ ∨ y) ↔ (z ∨ y))
 lemma or_cut_l {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} (hl : ⊢' (φ ↔' χ)) :
-  ⊢' ((¬' φ →' ψ) ↔' (¬' χ →' ψ)) :=
-begin
+  ⊢' ((¬' φ →' ψ) ↔' (¬' χ →' ψ)) := by
   refine ax_iff_intro _ _
   { apply or_cases
     { apply cut
@@ -808,23 +733,19 @@ begin
       apply iff_r hl
       exact or_inl, }
     { exact p1 _ _, }, }
-end
 
 -- ⊢ ((ψ ↔ z) ⇒ ⊢ ((φ ∨ y) ↔ (φ ∨ z))
 lemma or_cut_r {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} (hr : ⊢' (ψ ↔' χ)) :
-  ⊢' ((¬' φ →' ψ) ↔' (¬' φ →' χ)) :=
-begin
+  ⊢' ((¬' φ →' ψ) ↔' (¬' φ →' χ)) := by
   apply iff_cut
   exact or_switch
   apply iff_cut
   exact or_cut_l hr
   exact or_switch
-end
 
 -- ⊢ ((φ ∧ ψ) ∨ (φ ∧ χ)) ↔ (φ ∧ (ψ ∨ χ))
 lemma distr_or_and {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} :
-  ⊢' (((¬' (φ ∧' ψ)) →' (φ ∧' χ)) ↔' (φ ∧' ((¬' ψ) →' χ))) :=
-begin
+  ⊢' (((¬' (φ ∧' ψ)) →' (φ ∧' χ)) ↔' (φ ∧' ((¬' ψ) →' χ))) := by
   apply ax_iff_intro
   { apply or_cases
     { apply imp_and_imp
@@ -851,7 +772,6 @@ begin
     exact likemp
     apply imp_switch
     exact p4 _ _, }
-end
 
 
 
@@ -868,19 +788,16 @@ end
 
 lemma fin_conj_simp {form : Type} [pf : Pformula_ax form] (φ : form) : 
 -- ⊢ ¬ finite_conjunction [φ, ¬ φ]
-  ⊢' (¬' (finite_conjunction ([φ, ¬' φ]))) :=
-begin
+  ⊢' (¬' (finite_conjunction ([φ, ¬' φ]))) := by
   simp [finite_conjunction]
   rw not_and_subst
   exact not_contra
   exact phi_and_true
-end
 
 lemma imp_conj_imp_imp {form : Type} [pf : Pformula_ax form] 
   {φ ψ : form} {φs : List (form)} :
 --  ⊢ finite_conjunction (φ :: φs) → ψ ⇔  ⊢ (finite_conjunction φs) → (φ → ψ)
-  ⊢' ((finite_conjunction (φ :: φs)) →' ψ) ↔  ⊢' ((finite_conjunction φs) →' (φ →' ψ)) :=
-begin
+  ⊢' ((finite_conjunction (φ :: φs)) →' ψ) ↔  ⊢' ((finite_conjunction φs) →' (φ →' ψ)) := by
   split
   { intro h
     simp at h
@@ -888,7 +805,6 @@ begin
   { intro h
     simp
     exact and_right_imp.mpr h, }
-end
 
 lemma fin_conj_s_imp {form : Type} [pf : Pformula_ax form] 
   {φ ψ : form } {φs : List form} :
@@ -899,21 +815,18 @@ lemma fin_conj_s_imp {form : Type} [pf : Pformula_ax form]
 
 lemma fin_conj_append {form : Type} [pf : Pformula_ax form] {φs φs' : List (form)} :
 --  ⊢ finite_conjunction φs' ∧ finite_conjunction φs ↔ finite_conjunction (φs' ++ φs)
-  ⊢' (((finite_conjunction φs') ∧' (finite_conjunction φs)) ↔' (finite_conjunction (φs' ++ φs))) :=
-begin
+  ⊢' (((finite_conjunction φs') ∧' (finite_conjunction φs)) ↔' (finite_conjunction (φs' ++ φs))) := by
   induction φs', rw finite_conjunction
   exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch) (mp _ _ (p5 _ _) phi_and_true)))
     (cut (mp _ _ (p6 _ _) phi_and_true) (mp _ _ (p5 _ _) and_switch)))
   exact mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p5 _ _) and_commute) 
     (imp_and_imp (mp _ _ (p5 _ _) φs'_ih))))
     (cut iden (cut (imp_and_imp (mp _ _ (p6 _ _) φs'_ih)) (mp _ _ (p6 _ _) and_commute)))
-end 
 
 lemma fin_conj_repeat {form : Type} [pf : Pformula_ax form] 
   {φ : form} {φs : List form} :
 -- ⊢ φ → finite_conjunction [φ, φ, ...]
-  (∀ ψ ∈ φs, ψ = φ) →  ⊢' (φ →' (finite_conjunction φs)) :=
-begin
+  (∀ ψ ∈ φs, ψ = φ) →  ⊢' (φ →' (finite_conjunction φs)) := by
   intro h1, induction φs
   simp[finite_conjunction]
   exact mp _ _ (p1 _ _) prtrue
@@ -922,13 +835,11 @@ begin
   subst h1
   exact cut (mp _ _ double_imp (p4 _ _)) 
     (imp_and_and_imp (mp _ _ (mp _ _ (p4 _ _) iden) (φs_ih h2)))
-end
 
 lemma neg_fin_conj_repeat {form : Type} [pf : Pformula_ax form] 
   {φ : form} {φs : List form} (hnpr : ¬ ( ⊢' (⊥' : form))) :
 -- ⊢ [¬φ, ¬φ, ...] ⇒ ⊢ φ
-  (∀ ψ ∈ φs, ψ = ¬' φ) →  ⊢' (¬' (finite_conjunction φs)) →  ⊢' φ :=
-begin
+  (∀ ψ ∈ φs, ψ = ¬' φ) →  ⊢' (¬' (finite_conjunction φs)) →  ⊢' φ := by
   intro h1 h2, induction φs
   simp[finite_conjunction] at h2
   have hbot : ⊢' ⊥'
@@ -943,11 +854,9 @@ begin
   apply mp _ _ (mp _ _ (p3 _ _) (contrapos.mpr (cut h5 dne)))
   have h6 := iff_not and_switch
   apply contrapos.mpr (cut ((demorgans.mp) (mp _ _ (mp _ _ (p6 _ _) (h6)) h2)) dne)
-end
 
 lemma finite_conj_forall_iff {form : Type} [pf : Pformula_ax form] 
-  {φs : List form} : (∀ φ ∈ φs, ⊢' φ) ↔ ⊢' (finite_conjunction φs) :=
-begin
+  {φs : List form} : (∀ φ ∈ φs, ⊢' φ) ↔ ⊢' (finite_conjunction φs) := by
   induction φs
   { simp [finite_conjunction], }
   { unfold finite_conjunction
@@ -968,11 +877,9 @@ begin
       { rw ax_and at h
         apply φs_ih.mpr h.right
         exact hx, }, }, }
-end
 
 lemma finite_conj_forall_imp {form : Type} [pf : Pformula_ax form] {φs : List form} : 
-  (∀ x ∈ φs, ⊢' ((finite_conjunction φs) →' x)) :=
-begin
+  (∀ x ∈ φs, ⊢' ((finite_conjunction φs) →' x)) := by
   induction φs
   { simp only [List.not_mem_nil, forall_false_left, implies_true_iff], }
   { intro x hx
@@ -985,7 +892,6 @@ begin
         exact and_switch, }
       { refine imp_and_l _
         exact φs_ih x hx, }, }, }
-end
 
 lemma finite_conj_imp {form : Type} [pf : Pformula_ax form] {φs : List form} 
   {φ : form} (h : φ ∈ φs) : 
@@ -997,8 +903,7 @@ lemma noin_imp_nfin_con {form : Type} [pf : Pformula_ax form] {φs : List form}
 
 lemma demorans_fin_con {form : Type} [pf : Pformula_ax form] 
   {φs : List (form)} :
-  ⊢' ((¬' (finite_conjunction φs)) ↔' ((finite_disjunction (List.map (¬') φs)))) :=
-begin
+  ⊢' ((¬' (finite_conjunction φs)) ↔' ((finite_disjunction (List.map (¬') φs)))) := by
   induction φs with φ φs ih
   { apply ax_iff_intro
     apply dne
@@ -1014,12 +919,10 @@ begin
       apply imp_switch
       apply cut1 likemp
       exact iff_r ih, }, }
-end
 
 lemma contra_con_cons {form : Type} [pf : Pformula_ax form] 
   {fs gs : List (form)} {x y : form} (hax : ⊢' (y ↔' ¬' x)) (hx : x ∈ fs) (hy : y ∈ gs) :
-  ⊢' (¬' ((finite_conjunction fs) ∧' (finite_conjunction gs))) :=
-begin
+  ⊢' (¬' ((finite_conjunction fs) ∧' (finite_conjunction gs))) := by
   induction' fs with f fs ihf
   { finish, }
   { induction gs with g gs ihg
@@ -1052,22 +955,18 @@ begin
         apply imp_and_l
         specialize @ihf pf (g :: gs) x y hax hy hx
         exact ihf, }, }, }
-end
 
 ----------------------------------------------------------
 -- Finite Disjunction
 ----------------------------------------------------------
 lemma ax_disjunct_rw_iff {form : Type} [pf : Pformula_ax form] {φ ψ : form} : 
-  ⊢' ((¬' φ) →' ψ) ↔ ⊢' (finite_disjunction [φ, ψ]) :=
-begin
+  ⊢' ((¬' φ) →' ψ) ↔ ⊢' (finite_disjunction [φ, ψ]) := by
   refine ax_iff_mp _
   exact disjunct_rw_iff
-end
 
 lemma imp_finite_disjunction {form : Type} [pf : Pformula_ax form] 
   (ψ : form) (φs : List (form)) (h : ψ ∈ φs) :
-  ⊢' (ψ →' finite_disjunction φs) :=
-begin
+  ⊢' (ψ →' finite_disjunction φs) := by
   induction φs with φ φs ih
   { by_contradiction, simp at *, exact h, }
   { simp [finite_disjunction] at *
@@ -1082,12 +981,10 @@ begin
     { cases h
     { exact false.rec _ (hf (eq.symm h)), }
     { exact imp_if_imp_imp (ih h), }, }, }
-end
 
 lemma imp_finite_disjunction_subset {form : Type} [pf : Pformula_ax form] 
   {φs φs': List (form)} (hsubset : φs ⊆ φs')  :
-  ⊢' (finite_disjunction φs →' finite_disjunction φs')  :=
-begin
+  ⊢' (finite_disjunction φs →' finite_disjunction φs')  := by
   induction φs with φ φs ih
   { simp[finite_disjunction], }
   { simp [finite_disjunction] at *
@@ -1097,12 +994,10 @@ begin
     apply or_cases
     exact hφs'
     exact ih, }
-end
 
 lemma disjunct_of_disjuncts {form : Type} [pf : Pformula_ax form] (φs φs': List (form)) : 
   ⊢' ((finite_disjunction [(finite_disjunction φs), (finite_disjunction φs')]) ↔' 
-      (finite_disjunction (φs ++ φs') )) :=
-begin
+      (finite_disjunction (φs ++ φs') )) := by
   apply ax_and.mpr
   split
   { rw finite_disjunction
@@ -1141,24 +1036,20 @@ begin
           apply explosion, }
         { unfold finite_disjunction
           apply p1, }, }, }, }
-end
 
 lemma disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : List (form)} :
   ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')  
-    →' finite_disjunction (φs ++ φs'))  :=
-begin
+    →' finite_disjunction (φs ++ φs'))  := by
   apply or_cases
   apply imp_finite_disjunction_subset
   simp
   apply imp_finite_disjunction_subset
   simp
-end
 
 lemma ax_iff_disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : List (form)} :
-  ⊢' (¬' (finite_disjunction φs) →' finite_disjunction φs')↔ ⊢' (finite_disjunction (φs ++ φs')) :=
-begin
+  ⊢' (¬' (finite_disjunction φs) →' finite_disjunction φs')↔ ⊢' (finite_disjunction (φs ++ φs')) := by
   split
   { intro h
     apply MP' h
@@ -1168,12 +1059,10 @@ begin
     apply MP' h
     apply iff_r
     apply disjunct_of_disjuncts, }
-end
 
 lemma iff_disjunc_disjunct {form : Type} [pf : Pformula_ax form] 
   {φs φs' : List (form)} :
-  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')↔' (finite_disjunction (φs ++ φs'))) :=
-begin
+  ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')↔' (finite_disjunction (φs ++ φs'))) := by
   apply ax_iff_intro
   { apply disjunc_disjunct, }
   { apply cut
@@ -1181,12 +1070,10 @@ begin
     apply disjunct_of_disjuncts
     apply iff_r
     exact disjunct_rw_iff, }
-end
 
 lemma demorans_fin_dis {form : Type} [pf : Pformula_ax form] 
   {φs : List (form)} :
-  ⊢' ((¬' (finite_disjunction φs)) ↔' ((finite_conjunction (List.map (¬') φs)))) :=
-begin
+  ⊢' ((¬' (finite_disjunction φs)) ↔' ((finite_conjunction (List.map (¬') φs)))) := by
   induction φs with φ φs ih
   { simp [finite_disjunction, finite_conjunction], }
   { simp only [finite_disjunction, finite_conjunction]
@@ -1198,4 +1085,3 @@ begin
     { apply imp_and_and_imp
       apply ax_and.mpr
       exact and.intro iden (iff_r ih), }, }
-end

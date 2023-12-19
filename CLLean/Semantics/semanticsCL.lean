@@ -28,11 +28,9 @@ def s_entails_CL {agents : Type} (m : modelCL agents) :
 notation m `;` s `'⊨` φ := s_entails_CL m s φ
 
 lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ : formCL agents) :
-  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) :=
-begin
+  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) := by
   split
   repeat {intro h1 h2, exact h1 h2}
-end
 
 ----------------------------------------------------------
 -- Validity

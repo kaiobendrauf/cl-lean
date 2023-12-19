@@ -69,8 +69,7 @@ notation `'⊨` φ := global_valid φ
 ---------------------- Soundness ----------------------
 
 theorem soundnessCLtrue {agents: Type} (φ : formCL agents) : 
-  '⊢ φ → '⊨ φ :=
-begin
+  '⊢ φ → '⊨ φ := by
   intro h
   induction' h
 
@@ -159,7 +158,6 @@ begin
     { intro h1
       simp only [s_entails_CLtrue, heq] at *
       exact h1, }, }
-end
 
 ----------------------------------------------------------
 -- CL does not prove ⊥
@@ -168,29 +166,23 @@ end
 inductive single : Type
   | one: single
 
-lemma univ_single : (Set.univ: Set single) = {single.one} := 
-begin
+lemma univ_single : (Set.univ: Set single) = {single.one} :=  by
   rw eq_comm
   rw Set.eq_univ_iff_forall
   intro x
   cases x
   simp
-end
 
-instance single_nonempty : Nonempty single := 
-begin
+instance single_nonempty : Nonempty single :=  by
   apply exists_true_iff_nonempty.mp
   apply Exists.intro single.one
   exact trivial
-end
 
-instance single_finite : Fintype single := 
-begin
+instance single_finite : Fintype single :=  by
   refine {elems := {single.one}, complete := _}
   intro x
   cases x
   exact Finset.mem_singleton.mpr rfl
-end
 
 def m_ex {agents : Type} : modelCLtrue agents  :=
 { f := 
@@ -198,22 +190,17 @@ def m_ex {agents : Type} : modelCLtrue agents  :=
     hs := single_nonempty
     E  :=  truly_playable_from_finite
     { E := λ s G, {{single.one}}
-      liveness := 
-      begin 
+      liveness :=  by
         intro _ _ hf
         simp at hf
         rw Set.ext_iff at hf
         simp at hf
         apply hf single.one
         refl
-      end
-      safety:=
-        begin
+      safety:= by
           intro _ _, simp at *
           exact univ_single
-        end
-      N_max :=
-        begin
+      N_max := by
           intro _ _ hxc, simp at *
           rw ←univ_single at *
           have hcond : {single.one} ≠ (∅: Set single)
@@ -230,31 +217,24 @@ def m_ex {agents : Type} : modelCLtrue agents  :=
           rw ←singleton_subset_iff at hs
           rw ←univ_single at hs
           exact h (univ_subset_iff.mp hs)
-        end
-      mono :=
-        begin
+      mono := by
           intro _ _ _ _ hxy hx
           simp [←univ_single] at *
           rw hx at hxy
           exact univ_subset_iff.mp hxy
-        end
-      superadd :=
-      begin
+      superadd := by
         intro _ _ _ _ _ hX hY hGF
         simp at *
         simp[hX, hY]
-      end }, }
   v := λ _, {}, }
 
 lemma nprfalseCLtrue {agents : Type} :
-  ¬ (axCL (formCL.bot : formCL agents )) :=
-begin
+  ¬ (axCL (formCL.bot : formCL agents )) := by
   apply (mt (soundnessCLtrue (@formCL.bot agents)))
   intro hf 
   simp[global_valid, valid_m, s_entails_CLtrue] at hf
   apply hf (m_ex)
   exact single.one
-end
 
 ----------------------------------------------------------
 -- Filtration closure cl
@@ -271,26 +251,21 @@ noncomputable def cl {agents : Type} :
 -- Lemmas about cl
 ----------------------------------------------------------
 @[simp] lemma cl_contains_phi {agents : Type} (φ : formCL agents) :
-  φ ∈ cl φ :=
-begin
+  φ ∈ cl φ := by
   cases φ
   repeat { unfold cl, simp, }
   { split_ifs
     repeat { simp[h] at *, }, }
-end
 
 @[simp] lemma cl_contains_bot {agents : Type} (φ : formCL agents) :
-  _⊥ ∈ cl φ :=
-begin
+  _⊥ ∈ cl φ := by
   induction φ
   repeat { unfold cl, simp, }
   repeat { simp [φ_ih], }
   repeat { simp [φ_ih_φ, φ_ih_ψ], }
-end
 
 lemma cl_closed_single_neg {agents : Type} (φ x : formCL agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) :=
-begin
+  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) := by
   induction φ
   repeat
     { unfold cl at *
@@ -398,7 +373,6 @@ begin
       simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true, Finset.mem_union
                   false_or, true_or, true_and]
       exact @iff_dni (formCL agents) _ _, }, }
-end
 
 ----------------------------------------------------------
 -- Subformulas in CLK
@@ -416,8 +390,7 @@ inductive subformula {agents : Type} : formCL agents → formCL agents → Prop
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
 lemma subformula.cl_subset_and_left {agents : Type}
-  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
@@ -425,55 +398,45 @@ begin
                 Finset.mem_union, Finset.mem_singleton] at *
     repeat {cases h, simp only [h, eq_self_iff_true, and_self, false_or, true_or, or_true],}
     {simp only [h, eq_self_iff_true, and_self, true_or, false_or, or_true], }, }
-end
 
 lemma subformula.cl_subset_and_right {agents : Type} 
-  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _∧ ψ) :=
-begin
+  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _∧ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_left {agents : Type}
-  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_imp_right {agents : Type}
-  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _→ ψ) :=
-begin
+  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _→ ψ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset_effectivity {agents : Type} 
-  {φ : formCL agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) :=
-begin
+  {φ : formCL agents} {G : Set (agents)} : cl φ ⊆ cl ('[G] φ) := by
   intro x h
   induction φ
   repeat
   { simp [cl] at *
     repeat {cases h, simp [h],}
     {simp [h], }, }
-end
 
 lemma subformula.cl_subset {agents : Type}
-  {φ ψ : formCL agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ :=
-begin
+  {φ ψ : formCL agents} (h : subformula φ ψ) : cl φ ⊆ cl ψ := by
   induction h with _ _ _ _ _ h ih ih'
   { exact Finset.subset.rfl, }
   { exact Finset.subset.trans ih ih', }
@@ -482,15 +445,13 @@ begin
   { exact subformula.cl_subset_imp_left, }
   { exact subformula.cl_subset_imp_right, }
   { exact subformula.cl_subset_effectivity, }
-end
 
 lemma subformula.mem_cl {agents : Type}
   {φ ψ : formCL agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
 lemma subformula.in_cl_sub {agents : Type}
-  {φ ψ χ : formCL agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ :=
-begin
+  {φ ψ χ : formCL agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ := by
   induction hsub with _ _ _ _ hsub1 hsub2 hih1 hih2
   { exact hcl, }
   { exact hih1 (hih2 hcl), }
@@ -526,7 +487,6 @@ begin
   any_goals { simp only [h, if_false, Finset.mem_insert, eq_self_iff_true, and_self
                           Finset.mem_singleton, and_false, or_false, or_true], }
   any_goals { simp only [cl_contains_bot, or_self, true_or], }
-end
 
 namespace canonical
 ----------------------------------------------------------
@@ -551,15 +511,13 @@ namespace canonical
 instance Mf_CL.f.states.set_like {agents : Type} [ha : Nonempty agents] 
   {φ : formCL agents} : set_like ((Mf_CL φ).f.states) (formCL agents) :=
 { coe := λ s, s.1.1
-  coe_injective' :=
-  begin
+  coe_injective' := by
     unfold_coes
     intro sf tf h
     simp only [subtype.val_eq_coe, Finset.set_of_mem, Finset.coe_inj] at h
     apply subtype.coe_injective
     apply subtype.coe_injective
     exact h
-  end, }
 
 ----------------------------------------------------------
 -- Truth Lemma 
@@ -572,8 +530,7 @@ lemma truth_E_univ {agents : Type} [ha : Nonempty agents]
   {φ ψ : formCL agents} {G : Set agents} (sf : (Mf_CL φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
   (ih : ∀ tf, ((Mf_CL φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
-  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
-begin
+  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCL agents) nprfalseCLtrue
       --  M f , sf ⊨ ψ
   calc ((Mf_CL φ); sf '⊨ ('[G]ψ))
@@ -582,32 +539,25 @@ begin
           by unfold s_entails_CLtrue
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(N ), by definition Ef.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
-        tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
-    begin
+        tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
       dsimp [E_f, MC', hG, eq_self_iff_true, if_true] {eta := ff}
       simp only [hG, eq_self_iff_true, if_true] {eta := ff}
-    end
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(N ), by ih.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
         tilde MC'.f.states (phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t univ :
     by simp only [ih, hG]
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
-  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) :
-      begin
+  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) : by
         have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff
         rw htilde
-      end
   -- ↔ ∃t ∈ SC′, sf = tf and [N ] ψ ∈ t, by Lemma 7.
-  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ ('[univ] ψ) ∈ t :
-    begin
+  ... ↔ ∃ t, (sf = s_f cl φ t) ∧ ('[univ] ψ) ∈ t : by
       simp only [E_s_contains_tilde_iff_E_in_s _ univ]
       exact iff.rfl
-    end
   -- ↔ [N] ψ ∈ sf:= left to right because [N] ψ ∈ tf, and from right to left when s = t.
-  ... ↔ ('[G] ψ) ∈ sf : 
-      begin
+  ... ↔ ('[G] ψ) ∈ sf :  by
         rw hG at *
         split
         { intro h
@@ -617,16 +567,13 @@ begin
           obtain ⟨s, hs⟩ := s_f_to_s sf
           apply Exists.intro s
           exact ⟨sf_eq_s_f  @hs, (hs.mp h).left⟩, }
-      end
-end
 
 -- Truth Lemma: case [G]ψ, where G = N :
 lemma truth_E_nuniv {agents : Type} [ha : Nonempty agents]
   {φ ψ : formCL agents} {G : Set agents} (sf : (Mf_CL φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
   (ih : ∀ tf, ((Mf_CL φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
-  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) :=
-begin
+  ((Mf_CL φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCL agents) nprfalseCLtrue
       -- M f , sf ⊨ ψ
   calc ((Mf_CL φ); sf '⊨ ('[G]ψ))
@@ -635,32 +582,25 @@ begin
           by unfold s_entails_CLtrue
       -- ↔ ∀t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(G ), by definition Ef .
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
-          tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G :
-      begin
+          tilde MC'.f.states (phi_X_set {sf | (Mf_CL φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
         dsimp [E_f, MC']
         simp only [hG, if_false] {eta := ff}
-      end
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(G ), by ih.
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
           tilde MC'.f.states (phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) ∈ MC'.f.E.E t G :
       by simp only [ih]
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
-  ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G : 
-      begin
+  ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G :  by
         have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff
         rw htilde
-      end
       -- ↔ ∀t ∈ SC′, sf = tf ⇒ [G ]ψ ∈ t, by Lemma 7.
-  ... ↔ ∀ t, (sf = s_f cl φ t) → ('[G] ψ) ∈ t :
-    begin
+  ... ↔ ∀ t, (sf = s_f cl φ t) → ('[G] ψ) ∈ t : by
       simp only [E_s_contains_tilde_iff_E_in_s _ G]
       exact iff.rfl
-    end
     -- ↔ [G] ψ ∈ sf := left to right when s = t:= right to left because [G]ψ ∈ sf = tf 
-  ... ↔ (('[G] ψ) ∈ sf) : 
-      begin
+  ... ↔ (('[G] ψ) ∈ sf) :  by
         split
         { intro h
           obtain ⟨s, hs⟩ := s_f_to_s sf
@@ -669,15 +609,12 @@ begin
           exact ⟨h, hφ'⟩, }
         { intro h t ht
           exact ((sf_eq_forall ht).mp h).1, }
-      end
-end
 
 -- Truth Lemma
 ----------------------------------------------------------
 lemma truth_lemma_CLK {agents : Type} [ha : Nonempty agents]
   (φ ψ : formCL agents) (sf : (Mf_CL φ).f.states) (hφ : ψ ∈ cl φ) :
-  ((Mf_CL φ); sf '⊨ ψ) ↔ (ψ ∈ sf) :=
-begin
+  ((Mf_CL φ); sf '⊨ ψ) ↔ (ψ ∈ sf) := by
   -- This proof is by induction on φ.
   induction' ψ fixing ha ψ with n ψ χ _ _ ψ χ _ _, -- sf needs to vary for the modal operators
   all_goals
@@ -729,7 +666,6 @@ begin
     cases em (G = univ) with hG hG
     { exact truth_E_univ _ hψ hφ ih hG,}
     { exact truth_E_nuniv _ hψ hφ ih hG, }, }
-end
 
 ----------------------------------------------------------
 -- Completeness
@@ -738,8 +674,7 @@ end
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCLK {agents : Type} [ha : Nonempty agents] 
-  (φ : formCL agents) : ('⊨ φ) → '⊢ φ :=
-begin
+  (φ : formCL agents) : ('⊨ φ) → '⊢ φ := by
   -- rw from contrapositive
   rw ←not_imp_not
   -- assume ¬ ⊢ φ
@@ -753,7 +688,6 @@ begin
   apply Exists.intro (Mf_CL φ)
   -- in the canonical model (M) there exists some state (s) where ¬ M s ⊨ φ
   simp[valid_m]
-  -- let that state (s) be the maximally consistent Set extended from {¬ φ}
   obtain ⟨s, hs⟩ : 
     ∃ s : (canonical_model_CL agents (formCL agents) nprfalseCLtrue).f.states, s = ⟨s', hmax⟩
     from exists_apply_eq_apply _ _
