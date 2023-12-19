@@ -1,17 +1,17 @@
 /-
 Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
-by Thomas Ågotnes and Natasha Alechina,
+by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
-This file contains the inductive type formCLK and its notation, 
+This file contains the inductive type formCLK and its notation
 as well as the axioms for CLK and instances of the differenct applicaple formula classes
 (Pformula, Pformula_ax, CLformula, Kformula and Cformula) for CLK.
 -/
 
 import CLLean.Syntax.formula
 
-open set
+open Set
 
 ----------------------------------------------------------
 -- Syntax
@@ -22,14 +22,14 @@ inductive formCLK (agents : Type) : Type
   | var  (n   : nat)                      : formCLK
   | and  (φ ψ : formCLK)                  : formCLK
   | imp  (φ ψ : formCLK)                  : formCLK
-  | eff  (G   : set agents) (φ : formCLK) : formCLK
+  | eff  (G   : Set agents) (φ : formCLK) : formCLK
   | K    (a   : agents)     (φ : formCLK) : formCLK
 
 -- Pformula Instance
 instance formulaCLK {agents : Type} : Pformula (formCLK agents) :=
-{ bot := formCLK.bot,
-  var := formCLK.var,
-  and := formCLK.and,
+{ bot := formCLK.bot
+  var := formCLK.var
+  and := formCLK.and
   imp := formCLK.imp, }
 
 -- Notation
@@ -43,8 +43,8 @@ notation `'⊤`       : 80   := '¬ ('⊥)
 notation φ `'∨` ψ   : 79   := '¬ (('¬ φ) '∧ ('¬ ψ))
 notation φ `'↔` ψ   : 78   := (φ '→ ψ) '∧ (ψ '→ φ)
 notation `'K`       : 77   := formCLK.K 
-notation `'E`       : 77   := λ G φ, (finite_conjunction (list.map (λ i, 'K i φ) 
-                               (finset.to_list (finite.to_finset (finite.of_fintype G)))))
+notation `'E`       : 77   := λ G φ, (finite_conjunction (List.map (λ i, 'K i φ) 
+                               (Finset.to_list (Finite.toFinset (Set.toFinite G)))))
 
 
 -- ----------------------------------------------------------
@@ -95,29 +95,29 @@ prefix `'⊢` : 70 := axCLK
 -- Class Instances
 ----------------------------------------------------------
 instance formula_axCLK {agents : Type} : Pformula_ax (formCLK agents) :=
-{ ax := axCLK,
-  p1 := @axCLK.Prop1 agents,
-  p2 := @axCLK.Prop2 agents,
-  p3 := @axCLK.Prop3 agents,
-  p4 := @axCLK.Prop4 agents,
-  p5 := @axCLK.Prop5 agents,
-  p6 := @axCLK.Prop6 agents,
-  p7 := @axCLK.Prop7 agents,
+{ ax := axCLK
+  p1 := @axCLK.Prop1 agents
+  p2 := @axCLK.Prop2 agents
+  p3 := @axCLK.Prop3 agents
+  p4 := @axCLK.Prop4 agents
+  p5 := @axCLK.Prop5 agents
+  p6 := @axCLK.Prop6 agents
+  p7 := @axCLK.Prop7 agents
   mp := @axCLK.MP agents, }
 
 instance CLformulaCLK {agents : Type} : CLformula agents (formCLK agents) :=
-{ eff := λ G φ, '[G] φ,
-  Bot := @axCLK.Bot agents,
-  Top := @axCLK.Top agents,
-  N   := @axCLK.N agents,
-  M   := @axCLK.M agents,
-  S   := @axCLK.S agents,
+{ eff := λ G φ, '[G] φ
+  Bot := @axCLK.Bot agents
+  Top := @axCLK.Top agents
+  N   := @axCLK.N agents
+  M   := @axCLK.M agents
+  S   := @axCLK.S agents
   Eq  := @axCLK.Eq agents, }
 
 instance KformulaCLK {agents : Type} : Kformula agents (formCLK agents) :=
-{ knows := 'K,
-  K     := @axCLK.K agents,
-  T     := @axCLK.T agents,
-  Four  := @axCLK.Four agents,
-  Five  := @axCLK.Five agents,
+{ knows := 'K
+  K     := @axCLK.K agents
+  T     := @axCLK.T agents
+  Four  := @axCLK.Four agents
+  Five  := @axCLK.Five agents
   RN    := @axCLK.RN agents, }

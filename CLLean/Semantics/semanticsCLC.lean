@@ -1,7 +1,7 @@
 /-
 Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
-by Thomas Ågotnes and Natasha Alechina,
+by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the defintions of semantic entailment and validity for CL.
@@ -11,15 +11,15 @@ import CLLean.Syntax.syntaxCLC
 import CLLean.Semantics.model
 local attribute [instance] classical.prop_decidable
 
-open formCLC set
+open formCLC Set
 
 ----------------------------------------------------------
 -- Common Knowledge Path
 ----------------------------------------------------------
 def C_path {agents : Type} {m : modelECL agents} : 
-  list agents → list m.f.states →  m.f.states →  m.f.states → Prop
-  | list.nil  _        s t := false
-  | (i :: is) list.nil s t := t ∈ (m.f.rel i s)
+  List agents → List m.f.states →  m.f.states →  m.f.states → Prop
+  | List.nil  _        s t := false
+  | (i :: is) List.nil s t := t ∈ (m.f.rel i s)
   | (i :: is)(u :: us) s t := (u ∈ (m.f.rel i s) ∧ (C_path is us u t)) 
 
 ----------------------------------------------------------
@@ -42,23 +42,23 @@ notation m `;` s `'⊨` φ := s_entails_CLC m s φ
 lemma not_s_entails_imp {agents: Type} (m : modelECL agents) (s : m.f.states) (φ : formCLC agents) :
   (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ ('¬ φ)) :=
 begin
-  split,
-  repeat {intros h1 h2, exact h1 h2},
+  split
+  repeat {intro h1 h2, exact h1 h2}
 end
 
 lemma s_entails_CLC_conjunction {agents : Type} {m : modelECL agents} {s : m.f.states} 
-  {φs : list (formCLC agents)} : 
+  {φs : List (formCLC agents)} : 
   (m; s '⊨ (finite_conjunction φs)) ↔ ∀ φ ∈ φs, m; s '⊨ φ :=
 begin
-  induction φs with φ φs ih,
-  { simp only [finite_conjunction, list.not_mem_nil, forall_false_left, implies_true_iff, iff_true],
-    show s_entails_CLC m s '⊤,
-      simp only [s_entails_CLC, forall_false_left], },
-  { unfold finite_conjunction,
-    show s_entails_CLC m s (φ '∧ finite_conjunction φs) ↔ _,
-      simp [s_entails_CLC, list.mem_cons_iff, forall_eq_or_imp, and.congr_right_iff],
-      intro h,
-      exact ih, },
+  induction φs with φ φs ih
+  { simp only [finite_conjunction, List.not_mem_nil, forall_false_left, implies_true_iff, iff_true]
+    show s_entails_CLC m s '⊤
+      simp only [s_entails_CLC, forall_false_left], }
+  { unfold finite_conjunction
+    show s_entails_CLC m s (φ '∧ finite_conjunction φs) ↔ _
+      simp [s_entails_CLC, List.mem_cons_iff, forall_eq_or_imp, and.congr_right_iff]
+      intro h
+      exact ih, }
 end
 
 ----------------------------------------------------------

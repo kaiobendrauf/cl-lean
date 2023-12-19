@@ -36,12 +36,12 @@ notation  "⊤'" => ¬' ⊥'
 infix :79 "∨'" => λ φ ψ => (¬' φ) →' ψ
 infix :78 "↔'" => λ φ ψ => (φ →' ψ) ∧' (ψ →' φ)
 
--- finite conjunction of Pformulas
+-- Finite conjunction of Pformulas
 def finite_conjunction {form : Type} [Pformula form] : (List form) → form
   | []         => ⊤'
   | (φ :: φs)  => φ ∧' (finite_conjunction φs)
 
--- finite disjunction of Pformulas
+-- Finite disjunction of Pformulas
 def finite_disjunction {form : Type} [Pformula form] : (List form) → form
   | []         => ⊥'
   | (φ :: φs)  => φ ∨' (finite_disjunction φs)

@@ -1,17 +1,17 @@
 /-
 Authors: Kai Obendrauf
 Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
-by Thomas Ågotnes and Natasha Alechina,
+by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
-This file contains the inductive type formCLC and its notation, 
+This file contains the inductive type formCLC and its notation
 as well as the axioms for CLC and instances of the differenct applicaple formula classes
 (Pformula, Pformula_ax, CLformula, Kformula and Cformula) for CLC.
 -/
 
 import CLLean.Syntax.formula
 
-open set
+open Set
 
 ----------------------------------------------------------
 -- Syntax
@@ -22,15 +22,15 @@ inductive formCLC (agents : Type) : Type
   | var  (n   : nat)                      : formCLC
   | and  (φ ψ : formCLC)                  : formCLC
   | imp  (φ ψ : formCLC)                  : formCLC
-  | eff  (G   : set agents) (φ : formCLC) : formCLC
+  | eff  (G   : Set agents) (φ : formCLC) : formCLC
   | K    (a   : agents)     (φ : formCLC) : formCLC
-  | C    (G   : set agents) (φ : formCLC) : formCLC
+  | C    (G   : Set agents) (φ : formCLC) : formCLC
 
 -- Pformula Instance
 instance formulaCLC {agents : Type} : Pformula (formCLC agents) :=
-{ bot := formCLC.bot,
-  var := formCLC.var,
-  and := formCLC.and,
+{ bot := formCLC.bot
+  var := formCLC.var
+  and := formCLC.and
   imp := formCLC.imp, }
 
 -- Notation
@@ -44,8 +44,8 @@ notation `'⊤`       : 80   := '¬ ('⊥)
 notation φ `'∨` ψ   : 79   := '¬ (('¬ φ) '∧ ('¬ ψ))
 notation φ `'↔` ψ   : 78   := (φ '→ ψ) '∧ (ψ '→ φ)
 notation `'K`       : 77   := formCLC.K 
-notation `'E`       : 77   := λ G φ, (finite_conjunction (list.map (λ i, 'K i φ) 
-                               (finset.to_list (finite.to_finset (finite.of_fintype G)))))
+notation `'E`       : 77   := λ G φ, (finite_conjunction (List.map (λ i, 'K i φ) 
+                               (Finset.to_list (Finite.toFinset (Set.toFinite G)))))
 notation `'C`       : 77  := formCLC.C 
 
 
@@ -53,7 +53,7 @@ notation `'C`       : 77  := formCLC.C
 -- -- Axioms
 -- ----------------------------------------------------------
 -- Proof system for CLC
-inductive axCLC {agents : Type} [hN : fintype agents] : formCLC agents → Prop 
+inductive axCLC {agents : Type} [hN : Fintype agents] : formCLC agents → Prop 
 -- (Prop) Propositional tautologies
 | Prop1 {φ ψ}                 : axCLC (φ '→ (ψ '→ φ))
 | Prop2 {φ ψ χ}               : axCLC ((φ '→ (ψ '→ χ)) '→ ((φ '→ ψ) '→ (φ '→ χ)))
@@ -102,35 +102,35 @@ prefix `'⊢` : 70 := axCLC
 ----------------------------------------------------------
 -- Class Instances
 ----------------------------------------------------------
-instance formula_axCLC {agents : Type} [hN : fintype agents] : Pformula_ax (formCLC agents) :=
-{ ax := axCLC,
-  p1 := @axCLC.Prop1 agents hN,
-  p2 := @axCLC.Prop2 agents hN,
-  p3 := @axCLC.Prop3 agents hN,
-  p4 := @axCLC.Prop4 agents hN,
-  p5 := @axCLC.Prop5 agents hN,
-  p6 := @axCLC.Prop6 agents hN,
-  p7 := @axCLC.Prop7 agents hN,
+instance formula_axCLC {agents : Type} [hN : Fintype agents] : Pformula_ax (formCLC agents) :=
+{ ax := axCLC
+  p1 := @axCLC.Prop1 agents hN
+  p2 := @axCLC.Prop2 agents hN
+  p3 := @axCLC.Prop3 agents hN
+  p4 := @axCLC.Prop4 agents hN
+  p5 := @axCLC.Prop5 agents hN
+  p6 := @axCLC.Prop6 agents hN
+  p7 := @axCLC.Prop7 agents hN
   mp := @axCLC.MP agents hN, }
 
-instance CLformulaCLC {agents : Type} [hN : fintype agents] : CLformula agents (formCLC agents) :=
-{ eff := λ G φ, '[G] φ,
-  Bot := @axCLC.Bot agents hN,
-  Top := @axCLC.Top agents hN,
-  N   := @axCLC.N agents hN,
-  M   := @axCLC.M agents hN,
-  S   := @axCLC.S agents hN,
+instance CLformulaCLC {agents : Type} [hN : Fintype agents] : CLformula agents (formCLC agents) :=
+{ eff := λ G φ, '[G] φ
+  Bot := @axCLC.Bot agents hN
+  Top := @axCLC.Top agents hN
+  N   := @axCLC.N agents hN
+  M   := @axCLC.M agents hN
+  S   := @axCLC.S agents hN
   Eq  := @axCLC.Eq agents hN, }
 
-instance KformulaCLC {agents : Type} [hN : fintype agents] : Kformula agents (formCLC agents) :=
-{ knows := 'K,
-  K     := @axCLC.K agents hN,
-  T     := @axCLC.T agents hN,
-  Four  := @axCLC.Four agents hN,
-  Five  := @axCLC.Five agents hN,
+instance KformulaCLC {agents : Type} [hN : Fintype agents] : Kformula agents (formCLC agents) :=
+{ knows := 'K
+  K     := @axCLC.K agents hN
+  T     := @axCLC.T agents hN
+  Four  := @axCLC.Four agents hN
+  Five  := @axCLC.Five agents hN
   RN    := @axCLC.RN agents hN, }
 
-instance CformulaCLC {agents : Type} [hN : fintype agents] : Cformula agents (formCLC agents) :=
-{ common_know := formCLC.C,
-  C  := @axCLC.C agents hN,
+instance CformulaCLC {agents : Type} [hN : Fintype agents] : Cformula agents (formCLC agents) :=
+{ common_know := formCLC.C
+  C  := @axCLC.C agents hN
   RC := @axCLC.RC agents hN, }

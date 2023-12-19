@@ -3,14 +3,14 @@ Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
-This file contains the inductive type formCL and its notation, 
+This file contains the inductive type formCL and its notation
 as well as the axioms for CL and instances of the differenct applicaple formula classes
 (Pformula, Pformula_ax, and CLformula) for CL.
 -/
 
 import CLLean.Syntax.formula
 
-open set
+open Set
 
 ----------------------------------------------------------
 -- Syntax
@@ -21,7 +21,7 @@ inductive formCL (agents : Type) : Type
   | var  (n   : nat)                     : formCL
   | and  (φ ψ : formCL)                  : formCL
   | imp  (φ ψ : formCL)                  : formCL
-  | eff  (G   : set agents) (φ : formCL) : formCL
+  | eff  (G   : Set agents) (φ : formCL) : formCL
 
 
 notation `'⊥`       : 80   := formCL.bot
@@ -72,29 +72,29 @@ prefix `'⊢` : 70 := axCL
 -- Class Instances
 ----------------------------------------------------------
 instance formulaCL {agents : Type} : Pformula (formCL agents) :=
-{ bot := formCL.bot,
-  var := formCL.var,
-  and := formCL.and,
+{ bot := formCL.bot
+  var := formCL.var
+  and := formCL.and
   imp := formCL.imp, }
 
 
 instance formula_axCL {agents : Type} : Pformula_ax (formCL agents) :=
-{ ax := axCL,
-  p1 := @axCL.Prop1 agents,
-  p2 := @axCL.Prop2 agents,
-  p3 := @axCL.Prop3 agents,
-  p4 := @axCL.Prop4 agents,
-  p5 := @axCL.Prop5 agents,
-  p6 := @axCL.Prop6 agents,
-  p7 := @axCL.Prop7 agents,
+{ ax := axCL
+  p1 := @axCL.Prop1 agents
+  p2 := @axCL.Prop2 agents
+  p3 := @axCL.Prop3 agents
+  p4 := @axCL.Prop4 agents
+  p5 := @axCL.Prop5 agents
+  p6 := @axCL.Prop6 agents
+  p7 := @axCL.Prop7 agents
   mp := @axCL.MP agents, }
 
 
 instance CLformulaCL {agents : Type} : CLformula agents (formCL agents) :=
-{ eff := λ G φ, '[G] φ,
-  Bot := @axCL.Bot agents,
-  Top := @axCL.Top agents,
-  N   := @axCL.N agents,
-  M   := @axCL.M agents,
-  S   := @axCL.S agents,
+{ eff := λ G φ, '[G] φ
+  Bot := @axCL.Bot agents
+  Top := @axCL.Top agents
+  N   := @axCL.N agents
+  M   := @axCL.M agents
+  S   := @axCL.S agents
   Eq  := @axCL.Eq agents, }

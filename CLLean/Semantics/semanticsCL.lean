@@ -10,7 +10,7 @@ import CLLean.Syntax.syntaxCL
 import CLLean.Semantics.model
 local attribute [instance] classical.prop_decidable
 
-open formCL set
+open formCL Set
 
 ----------------------------------------------------------
 -- Semantic Entailment
@@ -30,8 +30,8 @@ notation m `;` s `'⊨` φ := s_entails_CL m s φ
 lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ : formCL agents) :
   (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ ('¬ φ)) :=
 begin
-  split,
-  repeat {intros h1 h2, exact h1 h2},
+  split
+  repeat {intro h1 h2, exact h1 h2}
 end
 
 ----------------------------------------------------------
