@@ -33,7 +33,7 @@ instance M_CL.f.states.set_like {agents : Type} [ha : Nonempty agents] :
 ----------------------------------------------------------
 lemma truth_lemma_CL {agents : Type} [ha : Nonempty agents] 
   (φ : formCL agents) (s : (M_CL agents).f.states) : 
-  ((M_CL agents); s '⊨ φ) ↔ (φ ∈ s) := by
+  ((M_CL agents); s _⊨ φ) ↔ (φ ∈ s) := by
   let M := @M_CL agents ha
   -- This proof is by induction on φ.
   induction' φ with n φ ψ _ _ φ ψ _ _
@@ -88,7 +88,7 @@ lemma truth_lemma_CL {agents : Type} [ha : Nonempty agents]
         simp [s_entails_CL, hE] at h
         have hnin : ('[∅] (_¬ φ)) ∉ s:= by
           apply h (_¬ φ)
-          apply @eq.subset _ _ {t : (M_CL agents).f.states | (M_CL agents); t '⊨ φ}ᶜ
+          apply @eq.subset _ _ {t : (M_CL agents).f.states | (M_CL agents); t _⊨ φ}ᶜ
           simp [ih]
           exact complement_from_contra
         
@@ -172,7 +172,7 @@ lemma truth_lemma_CL {agents : Type} [ha : Nonempty agents]
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCL {agents : Type} [ha : Nonempty agents]
-  (φ : formCL agents) : ('⊨ φ) → '⊢ φ := by
+  (φ : formCL agents) : (_⊨ φ) → _⊢ φ := by
   -- Taking the contrapositive
   rw ←not_imp_not
   -- Assume ¬ ⊢ φ.

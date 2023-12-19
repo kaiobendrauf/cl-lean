@@ -8,29 +8,31 @@ This file contains the defintions of semantic entailment and validity for CL.
 
 import CLLean.Syntax.syntaxCL 
 import CLLean.Semantics.model
-local attribute [instance] classical.prop_decidable
 
-open formCL Set
+open Logic formCL Set
 
 ----------------------------------------------------------
 -- Semantic Entailment
 ----------------------------------------------------------
 
 -- Definition of semantic entailment
-def s_entails_CL {agents : Type} (m : modelCL agents) :
-  m.f.states → formCL agents → Prop
-  | s bot      := false
-  | s (var n)  := s ∈ m.v n
-  | s (φ _→ ψ) := (s_entails_CL s φ) → (s_entails_CL s ψ)
-  | s (φ _∧ ψ) := (s_entails_CL s φ) ∧ (s_entails_CL s ψ)
-  | s ('[G] φ) := {t : m.f.states | s_entails_CL t φ} ∈ m.f.E.E (s) (G)
+def s_entails_CL {agents : Type} (m : modelCL agents) (s : m.f.states) :
+    formCL agents → Prop
+  | _⊥       => false
+  | (.var n) => s ∈ m.v n
+  | (φ _→ ψ) => (s_entails_CL m s φ) → (s_entails_CL m s ψ)
+  | (φ _∧ ψ) => (s_entails_CL m s φ) ∧ (s_entails_CL m s ψ)
+  | (_[G] φ) => {t : m.f.states | s_entails_CL m t φ} ∈ m.f.E.E (s) (G)
 
-notation m `;` s `'⊨` φ := s_entails_CL m s φ
+notation m ";" s "_⊨" φ => s_entails_CL m s φ
 
 lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ : formCL agents) :
-  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) := by
-  split
-  repeat {intro h1 h2, exact h1 h2}
+    (¬ (m; s _⊨ φ)) ↔ (m; s _⊨ (_¬ φ)) := by
+  constructor
+  repeat
+    intro h1 h2
+    simp only [s_entails_CL] at *
+    exact h1 h2
 
 ----------------------------------------------------------
 -- Validity
@@ -38,12 +40,12 @@ lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ
 
 -- φ is valid in a model M = (f,v), if it is entailed by every state of the model
 def valid_m {agents: Type} (m : modelCL agents) (φ : formCL agents) := 
-  ∀ s : m.f.states, m; s '⊨ φ
+  ∀ s : m.f.states, m; s _⊨ φ
 
-notation m `'⊨` φ := valid_m m  φ
+notation m "_⊨" φ => valid_m m  φ
 
 -- φ is globally valid, if it is valid in all models
 def global_valid {agents: Type} (φ : formCL agents) :=
   ∀ m, valid_m m φ
 
-notation `'⊨` φ := global_valid φ
+notation "_⊨" φ => global_valid φ

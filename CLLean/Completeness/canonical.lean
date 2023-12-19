@@ -207,7 +207,7 @@ lemma regularity {agents form : Type} [ha : Nonempty agents]
       intro ψ hψ
 
       -- Assume by contradiction that Xᶜ ∈ E(s)(Gᶜ)
-      by_contradiction hf
+      by_contra hf
 
       -- [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s:= h_right and hf
       -- by axiom S [G]φ ∧ [Gᶜ]ψ → [G ∪ Gᶜ = N](φ ∧ ψ) ∈ s

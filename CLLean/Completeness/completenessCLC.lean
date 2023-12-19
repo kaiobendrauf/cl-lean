@@ -50,17 +50,17 @@ instance Mf_CLC.f.states.set_like {agents : Type} [ha : Nonempty agents] [hN : F
 lemma truth_E_univ {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {G : Set agents} (sf : (Mf_CLC φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
-  (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
-  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
+  (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) (hG : G = univ) :
+  ((Mf_CLC φ); sf _⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
       --  M f , sf ⊨ ψ
-  calc ((Mf_CLC φ); sf '⊨ ('[G]ψ))
+  calc ((Mf_CLC φ); sf _⊨ ('[G]ψ))
       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ Ef (sf )(N ), by definition ⊨
-      ↔ {tf | (Mf_CLC φ); tf '⊨ ψ} ∈ (Mf_CLC φ).f.E.E sf G : 
+      ↔ {tf | (Mf_CLC φ); tf _⊨ ψ} ∈ (Mf_CLC φ).f.E.E sf G : 
           by unfold s_entails_CLC
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(N ), by definition Ef.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ 
-        tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
+        tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf _⊨ ψ}) ∈ MC'.f.E.E t G : by
       dsimp [E_f, MC', hG, eq_self_iff_true, if_true] {eta := ff}
       simp only [hG, eq_self_iff_true, if_true] {eta := ff}
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(N ), by ih.
@@ -69,7 +69,7 @@ lemma truth_E_univ {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     by simp only [ih, hG]
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) : by
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
+        have hiff : _⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLC agents) _ _ _ nprfalseCLC _ _ hiff
         rw htilde
@@ -93,17 +93,17 @@ lemma truth_E_univ {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
 lemma truth_E_nuniv {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {G : Set agents} (sf : (Mf_CLC φ).f.states) 
   (hφ : ψ ∈ cl φ) (hφ' : ('[G] ψ) ∈ cl φ)
-  (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
-  ((Mf_CLC φ); sf '⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
+  (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) (hG : G ≠ univ) :
+  ((Mf_CLC φ); sf _⊨ ('[G] ψ)) ↔ (('[G] ψ) ∈ sf) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
       -- M f , sf ⊨ ψ
-  calc ((Mf_CLC φ); sf '⊨ ('[G]ψ))
+  calc ((Mf_CLC φ); sf _⊨ ('[G]ψ))
       -- ↔ {sf ∈ Sf | M f , sf ⊨ ψ} ∈ Ef (sf )(G ), by definition ⊨
-      ↔ {tf | (Mf_CLC φ); tf '⊨ ψ} ∈ (Mf_CLC φ).f.E.E sf G : 
+      ↔ {tf | (Mf_CLC φ); tf _⊨ ψ} ∈ (Mf_CLC φ).f.E.E sf G : 
           by unfold s_entails_CLC
       -- ↔ ∀t ∈ SC′, sf = tf and  ̃φ{sf ∈Sf |M f ,sf ⊨ψ} ∈ EC′(t)(G ), by definition Ef .
   ... ↔ ∀ t, (sf = s_f cl φ t) → 
-          tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf '⊨ ψ}) ∈ MC'.f.E.E t G : by
+          tilde MC'.f.states (phi_X_set {sf | (Mf_CLC φ); sf _⊨ ψ}) ∈ MC'.f.E.E t G : by
         dsimp [E_f, MC']
         simp only [hG, if_false] {eta := ff}
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃φ{sf ∈Sf |ψ∈sf } ∈ EC′(t)(G ), by ih.
@@ -112,7 +112,7 @@ lemma truth_E_nuniv {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
       by simp only [ih]
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
   ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G :  by
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
+        have hiff : _⊢ ((phi_X_set {sf : (Mf_CLC φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLC agents) _ _ _ nprfalseCLC _ _ hiff
         rw htilde
@@ -136,8 +136,8 @@ lemma truth_E_nuniv {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
 -- Truth Lemma: case Kiψ ⇒ : (M f , sf ⊨ Kiψ ⇒ Kiψ ∈ sf ) :
 lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {i : agents} (sf : (Mf_CLC φ).f.states) 
-  (hφ' : (_K i ψ) ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((Mf_CLC φ); sf '⊨ (_K i ψ)) → ((_K i ψ) ∈ sf) :=  by
+  (hφ' : (_K i ψ) ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) :
+  ((Mf_CLC φ); sf _⊨ (_K i ψ)) → ((_K i ψ) ∈ sf) :=  by
   obtain ⟨s, hs⟩ := s_f_to_s sf
   -- 1. Let M f , sf ⊨ Kiψ.
   intro h
@@ -146,7 +146,7 @@ lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   -- 3. ∀tf ∈ Sf , sf ∼fi tf ⇒ ψ ∈ tf := 2, by ih.
   simp only [ih] at h
   -- 4. Assume by contradiction that Kiψ ∉ sf .
-  by_contradiction hnin
+  by_contra hnin
   -- 5. ¬Kiψ ∈ s:= 4, because s is maximally consistent.
   have hnin : _K i ψ ∉ s,     from (s_n_contains @hs) (hφ') hnin
   have hnk : (_¬ _K i ψ) ∈ s:= not_in_from_notin s.2 hnin
@@ -155,20 +155,20 @@ lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   -- 7. Σ ∪ {¬ψ} is consistent.
   have hcon : ax_consistent (Γ ∪ {_¬ ψ}):= by
       -- 7.1. Assume by contradiction Σ ∪ {¬ψ} is inconsistent.
-      by_contradiction hncon
+      by_contra hncon
       -- 7.2. ⊢ (∧χ∈Σ χ) → ψ:= 7.1, by propositional logic.
       obtain ⟨ψs, ⟨hΓ, hax⟩⟩ := inconsistent_prove_neg hncon
       -- 7.3. ⊢ Ki((∧χ∈Σ χ) → ψ):= 7.2, by Axiom RN.
-      have hKimp : '⊢ (_K i ((finite_conjunction ψs) _→ ψ)):= by
+      have hKimp : _⊢ (_K i ((finite_conjunction ψs) _→ ψ)):= by
         apply axCLC.RN
         apply @cut (formCLC agents)
         exact hax
         exact dne
       -- 7.4. ⊢ (Ki(∧χ∈Σ χ)) → (Kiψ):= 7.3, by Axiom K.
-      have hKimp : '⊢ ((_K i (finite_conjunction ψs)) _→ K' i ψ)
+      have hKimp : _⊢ ((_K i (finite_conjunction ψs)) _→ K' i ψ)
         from by apply axCLC.MP axCLC.K hKimp
       -- 7.5. ⊢ (∧χ∈Σ Kiχ) → (Kiψ):= 7.4, by propositional logic and Axiom RN.
-      have hKimp : '⊢ ((finite_conjunction (List.map (_K i) ψs)) _→ _K i (ψ)):= by
+      have hKimp : _⊢ ((finite_conjunction (List.map (_K i) ψs)) _→ _K i (ψ)):= by
         apply @cut (formCLC agents)
         apply @knows_conjunction agents (formCLC agents)
         exact hKimp
@@ -213,7 +213,7 @@ lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
       intro hkt
       split
       { -- Assume by contradiction that K i χ ∈ tf, and K i χ ∉ sf.
-        by_contradiction hnks
+        by_contra hnks
         apply contra_contains_pr_false t.2 hkt.1
         rw ht
         -- Then K i (¬ K i χ) ∈ s, by Axiom 5.
@@ -231,8 +231,8 @@ lemma truth_K_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
 -- Truth Lemma: case Kiψ ⇐ : (Kiψ ∈ sf ⇒ M f , sf ⊨ Kiψ) :
 lemma truth_K_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {i : agents} (sf : (Mf_CLC φ).f.states) 
-  (hφ : ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((_K i ψ) ∈ sf) → ((Mf_CLC φ); sf '⊨ (_K i ψ)) :=  by
+  (hφ : ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) :
+  ((_K i ψ) ∈ sf) → ((Mf_CLC φ); sf _⊨ (_K i ψ)) :=  by
   -- 1. Let Kiψ ∈ sf .
   intro h
   -- 2. ∀tf ∈ Sf, sf ∼fi tf ⇒ Kiψ ∈ tf := 1, by definition ∼fi .
@@ -248,7 +248,7 @@ lemma truth_K_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     { apply max_ax_contains_by_set_proof t.2 hfaK.1 axCLC.T, }
     { exact hφ,}
   -- 4. ∀tf ∈ Sf , sf ∼fi tf ⇒ M f , tf ⊨ ψ:= 3, by ih.
-  have hent : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → ((Mf_CLC φ); tf '⊨ ψ)
+  have hent : ∀ tf, tf ∈ (Mf_CLC φ).f.rel i sf → ((Mf_CLC φ); tf _⊨ ψ)
     from λ tf htf, (ih tf).mpr (hfa tf htf)
   -- 5. M f , sf ⊨ Kiψ, by the definition of ⊨:= 4.
   exact hent
@@ -263,7 +263,7 @@ lemma not_everyone_knows_consistent_list {agents : Type}
   finite_conjunction (List.map (λ (i : agents), _K i φ) is) ∈ s := by
   induction is with i is ih
   { apply max_ax_contains_taut s.2 prtrue, }
-  { simp only [List.mem_cons_iff, forall_eq_or_imp] at hfa
+  { simp only [List.mem_cons, forall_eq_or_imp] at hfa
     apply max_ax_contains_by_set_proof_2h s.2 _ (ih hfa.right) (p4 _ _)
     exact max_ax_contains_by_set_proof s.2 (not_in_from_notin s.2 hfa.left) dne, }
 
@@ -271,7 +271,7 @@ lemma not_everyone_knows_consistent {agents : Type} [hN : Fintype agents] [ha : 
   {φ : formCLC agents} {G : Set (agents)} 
   {s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states}
   (h : (_¬ _E G φ) ∈ s) : ∃ i ∈ G, (_¬ (_K i φ)) ∈ s := by
-  by_contradiction hfa
+  by_contra hfa
   simp at hfa
   apply in_from_not_notin s.2 h
   apply max_ax_contains_by_set_proof s.2 _ dni
@@ -288,7 +288,7 @@ lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   ⊢' ((phi_X_set Γ) →' E' G (phi_X_set Γ)) := by
   let MC' := canonical_model_CL agents (formCLC agents) nprfalseCLC
   -- 9.1 By contradiction assume ¬ ((phi_X_set Σ) → E G (phi_X_set Σ)) is consistent.
-  by_contradiction
+  by_contra
   -- 9.2 ∃s ∈ SC', ¬ ((phi_X_set Σ) → E G (phi_X_set Σ)) ∈ s:= 9.1.
   obtain ⟨s', hmax, hsn⟩ := exists_max_ax_consistent_neg_mem h
   have hs : ∃ s : (canonical_model_CL agents (formCLC agents) nprfalseCLC).f.states, s = ⟨s', hmax⟩
@@ -325,7 +325,7 @@ lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   have hnkc : _ ∈ s
     from by apply max_ax_contains_by_set_proof s.2 hnkc (by apply nk_disjunction i)
   have huf : ∃ uf ∈ Γᶜ, (¬' (K' i (¬' (phi_s_f uf)))) ∈ s:= by
-      by_contradiction hfa
+      by_contra hfa
       simp only [exists_prop, not_exists, not_and] at hfa
       apply in_from_not_notin s.2 hnkc
       apply nk_phi_X_list_exists i
@@ -345,7 +345,7 @@ lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     split
     -- ⇒ ∃ χ, K i χ ∈ tf ∧ K i χ ∉ uf.
     { intro hxtf
-      by_contradiction hxuf
+      by_contra hxuf
       -- ⊢ K i χ → ¬ phi uf .
       have haxkimp : ⊢' (K' i χ →' ¬' (phi_s_f uf)):= by
         obtain ⟨nχ, hnχ, hiffnχ⟩ := 
@@ -368,7 +368,7 @@ lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
       apply contra_contains_pr_false s.2 hskk hsnkk, }
     -- ⇐ ∃ χ, K i χ ∈ uf ∧ K i χ ∉ tf.
     { intro hxuf
-      by_contradiction hxtf
+      by_contra hxtf
       -- ⊢ ¬ K i χ → ¬ phi uf.
       have haximp : ⊢' ((¬' (K' i χ)) →' ¬' (phi_s_f uf)):= notin_nphi_s_f hxuf
       -- ⊢ (¬ K i ¬ phi uf) → ¬ K i ¬ K i χ, by propositional logic and axiom K.
@@ -392,17 +392,17 @@ lemma phi_set_imp_e {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     -- and there is a path tf ~fi uf (from 9.9), uf ~cG vf (from 9.8).
   have hvf' : ψ ∈ vf:= by
   apply htfΓ _ (i :: is) _ (uf :: ufs)
-  { exact and.intro htu hufvf, }
-  { simp only [List.mem_cons_iff, forall_eq_or_imp]
-    exact and.intro hi his, }
+  { exact And.intro htu hufvf, }
+  { simp only [List.mem_cons, forall_eq_or_imp]
+    exact And.intro hi his, }
   -- Contradiction from 9.8 & 9.10.
   exact hvf hvf'
 
 -- Case CGψ ⇒ (M f , sf ⊨ CGψ ⇒ GGψ ∈ sf) :
 lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {sf : (Mf_CLC φ).f.states} {G : Set (agents)} 
-  (hcl : _C G ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((Mf_CLC φ); sf '⊨ (_C G ψ)) → (_C G ψ) ∈ sf := by
+  (hcl : _C G ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) :
+  ((Mf_CLC φ); sf _⊨ (_C G ψ)) → (_C G ψ) ∈ sf := by
   -- 1. Let M f , sf ⊨ CGψ.
   intro h
   -- 2. ∀ tf, sf ∼f CG tf → M f , tf ⊨ ψ:= 1, by definition ⊨
@@ -417,7 +417,7 @@ lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     apply mem_set_of_eq.mpr
     exact h
   -- 6. ⊢ φsf → φΣ := 5, by propositional logic.
-  have haxsfΓ : '⊢ ((phi_s_f sf) _→ (phi_X_set Γ))
+  have haxsfΓ : _⊢ ((phi_s_f sf) _→ (phi_X_set Γ))
     from ax_phi_s_f_imp_phi_X_set_of_mem hsfΓ
   -- 7. G ≠ ∅ ⇒ ∀ sf ∈ Σ, ψ ∈ sf, by definition Σ:= 4.
   have hψΓ : (∃ i, i ∈ G) → ∀ sf ∈ Γ, ψ ∈ sf:= by
@@ -426,7 +426,7 @@ lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     simp only [mem_set_of_eq, mem_mk, subtype.val_eq_coe, forall_exists_index, and_imp] at hsf
     exact hsf sf [i] (by simp only [hi, List.mem_singleton, forall_eq]) [] rfl
   -- 8. G ≠ ∅ ⇒ ⊢ φΣ → ψ:= 7, by propositional logic.
-  have haxΓψ  : (∃ i, i ∈ G) → '⊢ ((phi_X_set Γ) _→ ψ):= by
+  have haxΓψ  : (∃ i, i ∈ G) → _⊢ ((phi_X_set Γ) _→ ψ):= by
     intro hi
     apply @cut (formCLC agents)
     apply iff_l
@@ -437,10 +437,10 @@ lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
       exact hsf, }
     exact p5 _ _
   -- 9. ⊢ φΣ → EGφΣ.
-  have haxE : '⊢ ((phi_X_set Γ) _→ _E G (phi_X_set Γ))
+  have haxE : _⊢ ((phi_X_set Γ) _→ _E G (phi_X_set Γ))
     from phi_set_imp_e (by simp only [Γ, forall_exists_index, and_imp])
   -- 10. ⊢ φΣ → CGψ:= 8 & 9, by Axiom RC.
-  have haxC : '⊢ ((phi_X_set Γ) _→ _C G ψ):=  by
+  have haxC : _⊢ ((phi_X_set Γ) _→ _C G ψ):=  by
     apply axCLC.RC
     cases (em (G = ∅)) with hempty hnempty
     { apply axCLC.MP axCLC.Prop1
@@ -466,8 +466,8 @@ lemma truth_C_lr {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
 lemma truth_C_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   {φ ψ : formCLC agents} {sf : (Mf_CLC φ).f.states} {G : Set (agents)} 
   (hcl : ψ ∈ cl φ) (hcl' : _C G ψ ∈ cl φ) (hcl'' : ∀ i ∈ G, (_K i (_C G ψ)) ∈ cl φ)
-  (ih : ∀ tf, ((Mf_CLC φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  (_C G ψ) ∈ sf → ((Mf_CLC φ); sf '⊨ (_C G ψ)) := by
+  (ih : ∀ tf, ((Mf_CLC φ); tf _⊨ ψ) ↔ (ψ ∈ tf)) :
+  (_C G ψ) ∈ sf → ((Mf_CLC φ); sf _⊨ (_C G ψ)) := by
   -- 1. Let CGψ ∈ sf, and tf be some world such that sf ∼f CG tf.
   intro h tf htf
   obtain ⟨is, his, sfs, hsftf⟩ := htf
@@ -500,12 +500,12 @@ lemma truth_C_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
     have hv : ψ ∈ v
       from by apply @max_ax_contains_by_set_proof _ (@formula_axCLC _ hN) _ _ _ v.2 hcv 
         (@c_imp _ _ hN (@formula_axCLC _ hN) _ _ ψ G i hi)
-    exact and.intro hv hcv
+    exact And.intro hv hcv
   -- 3. This proof is by induction on length of the path. 
   induction' sfs with uf sfs ihC
   all_goals { cases is with i is his, }, -- to unfold C_path we need to unfold the is too
   any_goals { exact false.rec _ hsftf, },  -- must be at least one i ∈ is, as there is a C_path
-  any_goals { simp only [List.mem_cons_iff, forall_eq_or_imp] at his, unfold C_path at hsftf, }
+  any_goals { simp only [List.mem_cons, forall_eq_or_imp] at his, unfold C_path at hsftf, }
   { -- 3.1 Base case : Path := sf ~i tf. 
     -- 3.1.1. ψ ∈ tf:= 2, because C G ψ ∈ sf (from 1), and sf ~i tf (from 3.1).
     have := (hsfrel sf tf i his.1 h hsftf).1
@@ -523,7 +523,7 @@ lemma truth_C_rl {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
 ----------------------------------------------------------
 lemma truth_lemma_CLC {agents : Type} [ha : Nonempty agents] [hN : Fintype agents]
   (φ ψ : formCLC agents) (sf : (Mf_CLC φ).f.states) (hφ : ψ ∈ cl φ) :
-  ((Mf_CLC φ); sf '⊨ ψ) ↔ (ψ ∈ sf) := by
+  ((Mf_CLC φ); sf _⊨ ψ) ↔ (ψ ∈ sf) := by
   -- This proof is by induction on φ.
   induction' ψ fixing ha hN ψ with n ψ χ _ _ ψ χ _ _, -- sf needs to vary for the modal operators
   all_goals
@@ -600,7 +600,7 @@ lemma truth_lemma_CLC {agents : Type} [ha : Nonempty agents] [hN : Fintype agent
 -- Completeness
 ----------------------------------------------------------
 theorem completenessCLC {agents : Type} [ha : Nonempty agents] [hN : Fintype agents] 
-  (φ : formCLC agents) : ('⊨ φ) → '⊢ φ := by
+  (φ : formCLC agents) : (_⊨ φ) → _⊢ φ := by
   -- rw from contrapositive
   rw ←not_imp_not
   -- assume ¬ ⊢ φ

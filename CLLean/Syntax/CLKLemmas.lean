@@ -88,7 +88,7 @@ lemma everyone_knows_imp_knows  {agents form : Type} [hN : Fintype agents]
   apply finite_conj_imp
   simp only [List.mem_map, Finset.mem_to_list, Finite.mem_to_finset]
   apply Exists.intro i
-  exact and.intro hi rfl
+  exact And.intro hi rfl
 
 lemma K_everyone  {agents form : Type} [hN : Fintype agents] 
   [pf : Pformula_ax form] [kf : Kformula agents form] 

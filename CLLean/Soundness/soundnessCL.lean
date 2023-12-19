@@ -8,7 +8,6 @@ Given completeness we also prove that CL does not prove ⊥
 -/
 
 import CLLean.Semantics.semanticsCL
-local attribute [instance] classical.prop_decidable
 
 open Set
 
@@ -16,76 +15,83 @@ open Set
 -- Soundness
 ----------------------------------------------------------
 
-theorem soundnessCL {agents : Type} (φ : formCL agents) : '⊢ φ → '⊨ φ := by
+theorem soundnessCL {agents : Type} (φ : formCL agents) : _⊢ φ → _⊨ φ := by
   intro h
   induction h
   -- case Prop1
-  { intro m s h1 h2
-    exact h1, }
+  · intro m s h1 h2
+    exact h1
   -- case Prop2
-  { intro m s h1 h2 h3
+  · intro m s h1 h2 h3
     apply h1
-      { exact h3,}
-      { apply h2
-        exact h3 }, }
+    · exact h3
+    · apply h2
+      exact h3
   -- case Prop3
-  { intro m s h1 h2
-    by_contradiction hf
-    exact (h1 hf) (h2 hf), }
+  · intro m s h1 h2
+    by_contra hf
+    simp [s_entails_CL] at *
+    exact (h1 hf) (h2 hf)
   -- case Prop4
-  { intro m s h1 h2
-    exact and.intro h1 h2, }
+  · intro m s h1 h2
+    simp [s_entails_CL] at *
+    exact And.intro h1 h2
   -- case Prop5
-  { intro m s h1
-    exact h1.left, }
+  · intro m s h1
+    exact h1.left
   -- case Prop6
-  { intro m s h1
-    exact h1.right, }
+  · intro m s h1
+    exact h1.right
   -- case Prop7
-  { intro m s h1 h2
-    by_contradiction hf
-    exact h1 hf h2, }
+  · intro m s h1 h2
+    by_contra hf
+    simp [s_entails_CL] at *
+    exact h1 hf h2
   -- case ⊥
-  { intro m s h1
-    exact m.f.E.liveness s h h1, }
+  · intro m s h1
+    simp [s_entails_CL] at *
+    exact m.f.E.liveness s _ h1
   -- case ⊤
-  { intro m s
+  · intro m s
     simp [s_entails_CL]
-    exact m.f.E.safety s h, }
+    exact m.f.E.safety s _
   -- case N
-  { intro m s h1
+  · intro m s h1
     apply m.f.E.N_max
-    by_contradiction
-    exact h1 h, }
+    by_contra h
+    simp [s_entails_CL] at *
+    exact h1 h
   -- case M
-  { intro m s
-    apply m.f.E.mono s h_G _ {t | m; t '⊨ h_φ}
+  · intro m s
+    apply m.f.E.mono s _ _ { t | (s_entails_CL m t _) }
     intro t h1
-    exact h1.left, }
+    exact h1.left
   -- case S
-  { intro m s h1
-    exact m.f.E.superadd s h_G h_F _ _ h1.left h1.right h_hInt, }
+  · intro m s h1
+    exact m.f.E.superadd s _ _ _ _ h1.left h1.right (by assumption)
   -- case MP
-  { intro m s
-    apply h_ih_hImp
-    exact h_ih_hL m s, }
+  case MP hL hImp ih =>
+    intro m s
+    apply hImp
+    exact ih m s
   -- case Eq
-  { intro m s
-    have heq : {t | m; t '⊨ h_φ} = {t | m; t '⊨ h_ψ}:= by
+  case Eq ih =>
+    intro m s
+    have heq : {t | (s_entails_CL m t _) } = {t | (s_entails_CL m t _) }:= by
         apply Set.ext
         intro u
-        apply iff.intro
-        { intro hu
-          exact (h_ih m u).left hu, }
-        { intro hu
-          exact (h_ih m u).right hu, }
-    apply and.intro
-    { intro h1
+        apply Iff.intro
+        · intro hu
+          exact (ih m u).left hu
+        · intro hu
+          exact (ih m u).right hu
+    apply And.intro
+    · intro h1
       simp only [s_entails_CL, ←heq] at *
-      exact h1, }
-    { intro h1
+      exact h1
+    · intro h1
       simp only [s_entails_CL, heq] at *
-      exact h1, }, }
+      exact h1
 
 ----------------------------------------------------------
 -- CL does not prove ⊥
@@ -95,8 +101,8 @@ inductive single : Type
   | one : single
 
 lemma univ_single : (Set.univ : Set single) = {single.one} :=  by
-  rw eq_comm
-  rw Set.eq_univ_iff_forall
+  rw [eq_comm]
+  rw [Set.eq_univ_iff_forall]
   intro x
   cases x
   simp
@@ -111,47 +117,46 @@ def m_ex {agents : Type} : modelCL agents :=
   { states := single
     hs := single_nonempty
     E  :=  
-    { E := λ s G, {{single.one}}
-      liveness :=  by
+    { E := λ s G => {{single.one}}
+      liveness := by
         intro _ _ hf
         simp at hf
-        rw Set.ext_iff at hf
+        rw [Set.ext_iff] at hf
         simp at hf
-        apply hf single.one
-        refl
       safety := by
-          intro _ _, simp at *
+          intro _ _
+          simp at *
           exact univ_single
       N_max := by
-          intro _ _ hxc, simp at *
-          rw ←univ_single at *
+          intro s X hxc
+          simp at *
+          rw [←univ_single] at *
           have hcond : {single.one} ≠ (∅ : Set single)
-
-            { intro hf
-              rw Set.ext_iff at hf
-              simp at *
-              apply hf single.one
-              refl, }
-          simp [hcond] at *, by_contradiction
-          have hex : ∃ x, x ∈ X:= nonempty_def.mp (ne_empty_iff_nonempty.mp hxc)
-          cases hex with s hs
+          · intro hf
+            rw [Set.ext_iff] at hf
+            simp at *
+          simp [hcond] at *
+          by_contra
+          have hex : ∃ x, x ∈ X := nonempty_def.mp (nonempty_iff_ne_empty.mpr hxc)
+          cases hex
           cases s
-          rw ←singleton_subset_iff at hs
-          rw ←univ_single at hs
-          exact h (univ_subset_iff.mp hs)
+          case _ h s hs =>
+            rw [←singleton_subset_iff] at hs
+            rw [←univ_single] at hs
+            exact h (univ_subset_iff.mp hs)
       mono := by
           intro _ _ _ _ hxy hx
           simp [←univ_single] at *
-          rw hx at hxy
+          rw [hx] at hxy
           exact univ_subset_iff.mp hxy
       superadd := by
         intro _ _ _ _ _ hX hY hGF
         simp at *
-        simp[hX, hY]
-  v := λ _, {}, }
+        simp [hX, hY] } },
+  v := λ _ => {}, }
 
 
-lemma nprfalseCL {agents : Type} : ¬ ('⊢ (_⊥ : formCL agents)) := by
+lemma nprfalseCL {agents : Type} : ¬ (_⊢ (_⊥ : formCL agents)) := by
   -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
   apply (mt (soundnessCL (@formCL.bot agents)))
   -- assume by contradiction : ⊨ ⊥

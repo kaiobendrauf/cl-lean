@@ -211,7 +211,7 @@ lemma s_f_contains {agents form : Type} {m : modelCL agents} [hm : set_like m.f.
   {cl : form → Finset (form)} {φ ψ : form} (sf : (S_f m cl φ)) (s : m.f.states)
   (hs : ∀ {x}, x ∈ sf ↔ x ∈ s ∧ x ∈ cl φ) :
   ψ ∈ s → ψ ∈ cl(φ) → ψ ∈ sf :=
-λ h1 h2, hs.mpr (and.intro h1 h2)
+λ h1 h2, hs.mpr (And.intro h1 h2)
 
 -- (ψ ∉ s) ∨ (ψ ∉ cl(φ)) → ψ ∉ sf
 lemma s_f_n_contains {agents form : Type} {m : modelCL agents} [hm : set_like m.f.states form] 
@@ -224,7 +224,7 @@ lemma s_n_contains {agents form : Type} {m : modelCL agents} [hm : set_like m.f.
   (hs : ∀ {x}, x ∈ sf ↔ x ∈ s ∧ x ∈ cl φ) (hcl : ψ ∈ cl φ):
   ψ ∉ sf → ψ ∉ s := by
   intro h
-  by_contradiction hf
+  by_contra hf
   exact h (hs.mpr ⟨hf, hcl⟩)
 
 -- ψ ∈ cl φ ⇒ ((∀ sf, ψ ∉ sf) ⇔ (⊢ ψ ↔ ⊥)) when M = canonical model
@@ -239,7 +239,7 @@ lemma S_f_empty_iff_false_sf {agents form : Type} [ha : Nonempty agents]
   intro s hf
   have hsf := @s_to_s_f _ _ (canonical_model_CL agents form hnpr) _ cl φ s
   cases hsf with sf hsf
-  apply hempty sf (hsf.mpr (and.intro hf hψ))
+  apply hempty sf (hsf.mpr (And.intro hf hψ))
 
 -- x ∉ sf ⇒ ∃ y ∈ sf, ⊢ (y ↔ ¬ x) when M = canonical model
 lemma s_f_closed {agents form : Type} [ha : Nonempty agents]
@@ -252,9 +252,9 @@ lemma s_f_closed {agents form : Type} [ha : Nonempty agents]
   have hns := s_f_to_s sf
   cases hns with s hns
   have hn : ψ ∉ s:= by
-      by_contradiction hf
+      by_contra hf
       apply hnf
-      exact hns.mpr (and.intro hf hψcl)
+      exact hns.mpr (And.intro hf hψcl)
   -- ¬ψ ∈ s:= hs, because v is maximally consistent.
   have hnx : ((¬' ψ) ∈ s) := not_in_from_notin s.2 hn
   -- ∃χ, (⊢ χ ↔ ¬ψ) ∧ (χ ∈ cl(φ)), because cl is closed under single negations.
@@ -263,7 +263,7 @@ lemma s_f_closed {agents form : Type} [ha : Nonempty agents]
   have hs : χ ∈ s
     from by apply max_ax_contains_by_set_proof s.2 hnx (iff_r hχ.2)
   -- χ ∈ sf := 7 & 8, by definition Sf.
-  have hsf : χ ∈ sf := hns.mpr (and.intro hs hχ.1)
+  have hsf : χ ∈ sf := hns.mpr (And.intro hs hχ.1)
   apply Exists.intro χ
   split
   { exact hsf, }
@@ -367,7 +367,7 @@ lemma phi_X_list_contains {agents form : Type} [pf : Pformula form]
   {sfs : List (S_f m cl φ)} {sf : (S_f m cl φ)} (hsf : sf ∈ sfs) :
   (phi_s_f sf) ∈ phi_X_list sfs := by
   induction sfs with hd sfs ih
-  {by_contradiction, simp at *, exact hsf, }
+  {by_contra, simp at *, exact hsf, }
   { cases hsf
     { simp[hsf, phi_X_list], }
     { simp[phi_X_list] at *
@@ -392,7 +392,7 @@ lemma phi_X_list_append {agents form : Type} [pf : Pformula form]
   (X Y : List (S_f m cl φ)) :
   phi_X_list (X ++ Y) ⊆ phi_X_list X ++ phi_X_list Y := by
   induction X with hd X ih
-  { simp only [phi_X_list, List.cons_append, List.cons_subset, List.mem_cons_iff
+  { simp only [phi_X_list, List.cons_append, List.cons_subset, List.mem_cons
                 eq_self_iff_true, true_or, true_and]
     exact List.subset_cons_of_subset (phi_s_f hd) ih, }
 end
@@ -426,7 +426,7 @@ lemma phi_X_list_conj_contains {agents form : Type} [pf : Pformula_ax form]
           apply iff_l
           apply phi_s_f_conj_contains
           apply hψ
-          simp only [List.mem_cons_iff, eq_self_iff_true, true_or]
+          simp only [List.mem_cons, eq_self_iff_true, true_or]
           exact p5 _ _, }
         { exact contra_explosion, }, }
       { have hψ' : ∀ sf, sf ∈ X → ψ ∈ sf:= by
@@ -453,7 +453,7 @@ lemma phi_X_list_exists {agents form : Type} [ha : Nonempty agents]
   { simp only [phi_X_list, finite_disjunction]
     apply max_ax_contains_taut s.2 iden, }
   { simp only [phi_X_list, finite_disjunction] at *
-    simp only [List.mem_cons_iff, subtype.val_eq_coe, List.mem_cons_iff] at hfa
+    simp only [List.mem_cons, subtype.val_eq_coe, List.mem_cons] at hfa
     apply max_ax_contains_by_set_proof s.2 _ (iff_r demorgans'''')
     apply max_ax_contains_by_set_proof_2h s.2 _ _ (p4 _ _)
     { apply not_in_from_notin s.2
@@ -477,7 +477,7 @@ lemma nk_phi_X_list_exists {agents form : Type} [ha : Nonempty agents]
   { unfold phi_X_list finite_disjunction
     apply max_ax_contains_taut s.2 iden, }
   { unfold phi_X_list finite_disjunction
-    simp only [List.mem_cons_iff, s_f_eq, subtype.val_eq_coe] at hfa
+    simp only [List.mem_cons, s_f_eq, subtype.val_eq_coe] at hfa
     apply max_ax_contains_by_set_proof s.2 _ (iff_r demorgans'''')
     apply max_ax_contains_by_set_proof_2h s.2 _ _ (p4 _ _)
     { apply not_in_from_notin s.2
@@ -625,7 +625,7 @@ lemma phi_X_set_exists {agents form : Type} [ha : Nonempty agents]
   {X : Set (S_f (canonical_model_CL agents form hnpr) cl φ)} 
   {s : (canonical_model_CL agents form hnpr).f.states} (h : phi_X_set X ∈ s) : 
   ∃ tf ∈ X, phi_s_f tf ∈ s := by
-  by_contradiction hfa
+  by_contra hfa
   simp only [exists_prop, not_exists, not_and] at hfa
   apply in_from_not_notin s.2 h
   apply phi_X_list_exists
@@ -670,7 +670,7 @@ lemma univ_disjunct_provability {agents form : Type} [ha : Nonempty agents]
   (hnpr : ¬ ⊢' (⊥' : form)) (cl : form → Finset (form)) (φ : form) :
   ⊢' (phi_X_set (univ : Set (S_f (canonical_model_CL agents form hnpr) cl φ))) := by
   -- 1. By contradiction, assume that ⊬ phi Sf
-  by_contradiction
+  by_contra
   -- 2.∃t ∈ SC′, ¬ phi Sf ∈ t, because ¬ phi Sf is consistent:= 1.
   obtain ⟨t', hexn, htn⟩ := exists_max_ax_consistent_neg_mem h
   have ht : ∃ t : (canonical_model_CL agents form hnpr).f.states, t = ⟨t', hexn⟩
@@ -715,7 +715,7 @@ lemma unique_s_f {agents form : Type} [ha : Nonempty agents]
   {sf tf : (S_f (canonical_model_CL agents form hnpr) cl φ)} (hneq : sf ≠ tf) :
   ⊢' (phi_s_f sf →' ¬' (phi_s_f tf)) := by
   -- 1. Assume by contradiction ⊬ phi sf → ¬ phi tf
-  by_contradiction
+  by_contra
   -- 2. ∃u ∈ SC′, ¬(phi sf → ¬ phi tf) ∈ u, because ¬(phi sf → ¬ phi tf) is consistent:= 1.
   obtain ⟨u', hexn, hun⟩ := exists_max_ax_consistent_neg_mem h
   have hu : ∃ u : (canonical_model_CL agents form hnpr).f.states, u = ⟨u', hexn⟩
@@ -745,13 +745,13 @@ lemma unique_s_f {agents form : Type} [ha : Nonempty agents]
   have hcontra : ⊢' phi_s_f sf ∧' phi_s_f tf →' ⊥':= by
     cases hun with hxf hxf
     { cases hneq' with hnf hnf
-      { by_contradiction
+      { by_contra
         exact hnf hxf, }
       { apply unique_s_f_helper hcl hxf hnf, }, }
     { cases hneq' with hnf hnf
       { apply cut (iff_l and_switch)
         apply unique_s_f_helper hcl hxf hnf,}
-      { by_contradiction
+      { by_contra
         exact hnf hxf, }, }
   -- 12. ⊥ ∈ u, by propositional logic:= 4 _∧ 11, which contradicts the consistency of u.
   exact ax_neg_contains_pr_false u.2 hand hcontra
@@ -977,14 +977,14 @@ lemma phi_X_list_unique {agents form : Type} [ha : Nonempty agents]
       { simp only [phi_X_list, finite_disjunction]
         exact mp _ _ (p1 _ _) iden, }
       { simp only [phi_X_list, finite_disjunction, List.nodup_cons, List.disjoint_cons_left
-                    and_imp, List.disjoint_cons_right, List.mem_cons_iff] at *
+                    and_imp, List.disjoint_cons_right, List.mem_cons] at *
         -- ⊢ phi tfs → ¬ phi sf ⇒ ⊢ phi sf → ¬ phi tfs
         apply contrapos.mp
         apply cut (dne)
         apply or_cases
         -- ⊢ phi tf → ¬ phi sf 
         { apply unique_s_f hcl
-          by_contradiction
+          by_contra
           simp only [h, eq_self_iff_true, true_or, not_true, false_and] at hdis
           exact hdis, }
         -- ⊢ phi tfs' → ¬ phi sf (proved with ihtfs)
@@ -1009,7 +1009,7 @@ lemma phi_X_finset_unique {agents form : Type} [ha : Nonempty agents]
   rw List.disjoint_left
   intro f hf
   simp only [Finset.mem_to_list, ax_and] at *
-  by_contradiction
+  by_contra
   exact Finset.eq_empty_iff_forall_not_mem.mp hXY f (Finset.mem_inter_of_mem hf h)
   repeat {exact Finset.nodup_to_list _, }
 
@@ -1045,7 +1045,7 @@ lemma phi_X_list_inter {agents form : Type} [ha : Nonempty agents]
         apply cut _ (p1 _ _)
         apply imp_finite_disjunction_subset
         apply phi_X_list_subset
-        simp only [List.cons_subset, List.mem_inter, List.mem_cons_iff, eq_self_iff_true, true_or
+        simp only [List.cons_subset, List.mem_inter, List.mem_cons, eq_self_iff_true, true_or
                     true_and, List.nil_subset, and_true]
         exact h, }
       { apply cut

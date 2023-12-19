@@ -148,7 +148,7 @@ lemma iff_iden {form : Type} [pf : Pformula_ax form] {φ : form} :
   ⊢' (φ ↔' φ) := 
 mp _ _ (mp _ _ (p4 _ _) iden) iden
 
--- Motivation: corresponds to Lean's `iff.intro`
+-- Motivation: corresponds to Lean's `Iff.intro`
 lemma ax_iff_intro {form : Type} [pf : Pformula_ax form] {φ ψ : form}
   (h1 : ⊢' (φ →' ψ)) (h2 : ⊢' (ψ →' φ)) : ⊢' (φ ↔' ψ) := by
   apply MP' h2
@@ -869,7 +869,7 @@ lemma finite_conj_forall_iff {form : Type} [pf : Pformula_ax form]
       { apply φs_ih.mp
         intro x hx
         apply h
-        simp only [hx, List.mem_cons_iff, or_true], }, }
+        simp only [hx, List.mem_cons, or_true], }, }
     { intro h x hx
       cases hx
       { simp only [hx, eq_self_iff_true, ax_and] at *
@@ -881,7 +881,7 @@ lemma finite_conj_forall_iff {form : Type} [pf : Pformula_ax form]
 lemma finite_conj_forall_imp {form : Type} [pf : Pformula_ax form] {φs : List form} : 
   (∀ x ∈ φs, ⊢' ((finite_conjunction φs) →' x)) := by
   induction φs
-  { simp only [List.not_mem_nil, forall_false_left, implies_true_iff], }
+  { simp only [List.not_mem_nil, IsEmpty.forall_iff, implies_true_iff], }
   { intro x hx
     unfold finite_conjunction
     cases hx
@@ -968,7 +968,7 @@ lemma imp_finite_disjunction {form : Type} [pf : Pformula_ax form]
   (ψ : form) (φs : List (form)) (h : ψ ∈ φs) :
   ⊢' (ψ →' finite_disjunction φs) := by
   induction φs with φ φs ih
-  { by_contradiction, simp at *, exact h, }
+  { by_contra, simp at *, exact h, }
   { simp [finite_disjunction] at *
     cases em (φ = ψ) with hf hf
     { rw hf at *
@@ -1081,7 +1081,7 @@ lemma demorans_fin_dis {form : Type} [pf : Pformula_ax form]
     apply ax_iff_intro
     { apply imp_and_and_imp
       apply ax_and.mpr
-      exact and.intro iden (iff_l ih), }
+      exact And.intro iden (iff_l ih), }
     { apply imp_and_and_imp
       apply ax_and.mpr
-      exact and.intro iden (iff_r ih), }, }
+      exact And.intro iden (iff_r ih), }, }

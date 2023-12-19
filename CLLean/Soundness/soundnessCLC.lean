@@ -20,7 +20,7 @@ open Set
 ---------------------- Soundness ----------------------
 
 theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) : 
-  '⊢ φ → '⊨ φ := by
+  _⊢ φ → _⊨ φ := by
   intro h
   induction' h
 
@@ -38,12 +38,12 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
 
   -- Prop 3
   { intro m s h1 h2
-    by_contradiction hf
+    by_contra hf
     exact (h1 hf) (h2 hf), }
 
   -- Prop 4
   { intro m s h1 h2
-    exact and.intro h1 h2, }
+    exact And.intro h1 h2, }
 
   -- Prop 5
   { intro m s h1
@@ -55,7 +55,7 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
 
   -- Prop 7
   { intro m s h1 h2
-    by_contradiction hf
+    by_contra hf
     exact h1 hf h2, }
 
   -- Bot
@@ -70,21 +70,21 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
   -- N
   { intro m s h1
     apply m.f.E.N_max
-    by_contradiction
+    by_contra
     exact h1 h, }
 
   -- M
   { intro m s
-    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ _∧ φ_1)}
-      {t : m.f.states | m; t '⊨ φ}
+    apply m.f.E.mono s G {t : m.f.states | m; t _⊨ (φ _∧ φ_1)}
+      {t : m.f.states | m; t _⊨ φ}
     intro t h1
     unfold s_entails_CLC at h1
     exact h1.left, }
 
   -- S
   { intro m s h1
-    exact m.f.E.superadd s G F {t : m.f.states | m; t '⊨ φ} 
-      {t : m.f.states | m; t '⊨ φ_1} h1.left h1.right hInt, }
+    exact m.f.E.superadd s G F {t : m.f.states | m; t _⊨ φ} 
+      {t : m.f.states | m; t _⊨ φ_1} h1.left h1.right hInt, }
 
   -- MP
   { intro m s
@@ -93,16 +93,16 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
 
   -- Eq
   { intro m s
-    have heq: {t : m.f.states | m; t '⊨ φ} = {t : m.f.states | m; t '⊨ φ_1}
+    have heq: {t : m.f.states | m; t _⊨ φ} = {t : m.f.states | m; t _⊨ φ_1}
     { apply Set.ext
       intro u
       cases (ih m u)
-      apply iff.intro
+      apply Iff.intro
       { intro hu
         exact left hu, }
       { intro hu
         exact right hu } }
-    apply and.intro
+    apply And.intro
     { intro h1
       simp only [s_entails_CLC, ←heq] at *
       exact h1, }
@@ -154,10 +154,10 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
       { split
         { show ∀ a, a ∈ (i :: js) → a ∈ G
           simp
-          exact and.intro hi hjs, }
+          exact And.intro hi hjs, }
         { apply Exists.intro (t :: us)
           unfold C_path
-          exact and.intro hts htu, }, }, }, }
+          exact And.intro hts htu, }, }, }, }
 
   -- RN
   { intro m s t hst
@@ -170,7 +170,7 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
     cases hC with ss hC
     unfold global_valid valid_m s_entails_CLC at *
     induction' is with i is ih_is
-    { by_contradiction
+    { by_contra
       apply hC, }
     { have ih' := ih
       specialize ih m s hs
@@ -245,7 +245,7 @@ def m_ex {agents : Type} : modelECL agents  :=
               simp at *
               apply hf single.one
               refl, }
-          simp [hcond] at *, by_contradiction
+          simp [hcond] at *, by_contra
           have hex: ∃ x, x ∈ X:= nonempty_def.mp (ne_empty_iff_nonempty.mp hxc)
           cases hex with s hs
           cases s

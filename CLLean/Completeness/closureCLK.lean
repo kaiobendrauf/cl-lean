@@ -45,7 +45,7 @@ noncomputable def cl {agents : Type} :
   repeat { simp [φ_ih_φ, φ_ih_ψ], }
 
 lemma cl_closed_single_neg {agents : Type} (φ x : formCLK agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) := by
+  ∃ ψ, (ψ ∈ cl φ ∧ _⊢ (ψ _↔ (_¬ x))) := by
   induction φ
   repeat
     { unfold cl at *
@@ -277,7 +277,7 @@ lemma subformula.in_cl_sub {agents : Type}
   repeat { apply or.elim hcl, all_goals { intro hcl, }, }
   any_goals { rw hcl.1 at *, rw hcl.2 at *, }
   any_goals { rw h at *, }
-  any_goals { solve1 { by_contradiction, exact hcl, }, }
+  any_goals { solve1 { by_contra, exact hcl, }, }
   any_goals { simp only [cl, φ_ih_φ hcl, Finset.mem_union, true_or, or_true], }
   any_goals { simp only [cl, φ_ih_ψ hcl, Finset.mem_union, true_or, or_true], }
   any_goals { simp only [cl, Finset.mem_union, cl_contains_phi, true_or, or_true], }

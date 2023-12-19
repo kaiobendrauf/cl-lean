@@ -80,7 +80,7 @@ lemma set_proof_imp {form : Type} [pf : Pformula_ax form]
     apply Exists.intro []
     split
     { intro χ hχ
-      by_contradiction
+      by_contra
       apply List.not_mem_nil _ hχ, }
     { apply imp_if_imp_imp
       exact hψ, }, }
@@ -116,7 +116,7 @@ lemma max_ax_contains_phi_or_neg  {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (φ : form) :
   φ ∈ Γ ∨ (¬' φ) ∈ Γ := by
   rw or_iff_not_and_not
-  by_contradiction hf
+  by_contra hf
   have h1 : set_proves Γ (¬' φ):= by
       apply inconsistent_prove_neg
       apply hΓ.right (Γ ∪ {φ})
@@ -175,7 +175,7 @@ lemma max_ax_contains_phi_xor_neg {form : Type} [pf : Pformula_ax form]
       { apply hax
         apply Exists.intro [φ, ¬'φ]
         split
-        { simp only [List.mem_cons_iff, List.mem_singleton, forall_eq_or_imp, forall_eq]
+        { simp only [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
           split
           { exact hφΓ' }
           { exact mem_of_subset_of_mem hΓ.left hnφΓ, }, }
@@ -190,7 +190,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
   apply h
   apply Exists.intro []
   split
-  { simp only [List.not_mem_nil, forall_false_left, implies_true_iff], }
+  { simp only [List.not_mem_nil, IsEmpty.forall_iff, implies_true_iff], }
   { simp only [finite_conjunction_nil, ax_not_bot_imp]
     exact hf, }
 
@@ -204,10 +204,10 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
     simp [ax_consistent, set_proves]
     intro φs
     cases φs with φ φs
-    { simp only [List.not_mem_nil, forall_false_left, implies_true_iff, finite_conjunction_nil
+    { simp only [List.not_mem_nil, IsEmpty.forall_iff, implies_true_iff, finite_conjunction_nil
                   ax_not_bot_imp, forall_true_left]
       exact h, }
-    { simp only [List.mem_cons_iff, forall_eq_or_imp, false_and, forall_false_left], }, }
+    { simp only [List.mem_cons, forall_eq_or_imp, false_and, IsEmpty.forall_iff], }, }
 
 /-- A singleton Set is consistent iff the theory is consistent and the formula is not disprovable.
 -/
@@ -291,7 +291,7 @@ lemma lindenbaum {form : Type} [pf : Pformula_ax form]
 lemma listempty {form : Type} {φs : List form} {Γ : Set form} : 
   (∀ φ ∈ φs, φ ∈ Γ) → Γ = ∅ → φs = [] :=  by
   intro h1 h2
-  by_contradiction h3
+  by_contra h3
   have h4 := List.length_pos_of_ne_nil
   have h5 := List.exists_mem_of_length_pos
   cases h5 (h4 h3) with φ h5
@@ -305,7 +305,7 @@ lemma max_ax_exists {form : Type} [pf : Pformula_ax form]
     cases h1 with L h1
     have h2 := listempty h1.left
     simp at h2
-    by_contradiction h4
+    by_contra h4
     apply hnprfalseCL
     apply mp
     exact h1.right
@@ -337,7 +337,7 @@ lemma mem_max_consistent_iff_proves {form : Type} [pf : Pformula_ax form]
   intro h
   cases max_ax_contains_phi_or_neg hΓ φ
   { exact h_1, }
-  { by_contradiction hf
+  { by_contra hf
     apply not_ax_consistent_of_proves_bot _ (hΓ.1)
     cases h with φs hφs
     apply Exists.intro (¬' φ :: φs)
@@ -428,7 +428,7 @@ lemma max_ax_contains_by_set_proof_2h {form : Type} [pf : Pformula_ax form] {φ 
   simp only [set_proves]
   apply Exists.intro [ψ, φ]
   split
-  { simp only [List.mem_cons_iff, List.mem_singleton, forall_eq_or_imp, forall_eq]
+  { simp only [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
     split, repeat {assumption}}
 
   { simp[finite_conjunction]
@@ -492,12 +492,12 @@ lemma ex_empty_proves_false {form : Type} [pf : Pformula_ax form] {φ ψ χ : fo
 lemma not_in_from_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form} 
   (hΓ : max_ax_consistent Γ) (h : φ ∉ Γ) : ¬' φ ∈ Γ := by
   cases ((max_ax_contains_phi_xor_neg hΓ.1).mp hΓ φ).left
-  by_contradiction hf, exact h h_1
+  by_contra hf, exact h h_1
   exact h_1
 
 lemma in_from_not_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form} 
   (hΓ : max_ax_consistent Γ) (h : φ ∈ Γ) : ¬' φ ∉ Γ := by
-  by_contradiction hf
+  by_contra hf
   exact contra_contains_pr_false hΓ h hf
 
 lemma complement_from_contra {form : Type} [pf : Pformula_ax form] {φ : form} :

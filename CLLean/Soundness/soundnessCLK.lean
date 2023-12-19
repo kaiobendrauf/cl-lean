@@ -20,7 +20,7 @@ open Set
 ---------------------- Soundness ----------------------
 
 theorem soundnessCLK {agents: Type} (φ : formCLK agents) : 
-  '⊢ φ → '⊨ φ := by
+  _⊢ φ → _⊨ φ := by
   intro h
   induction' h
 
@@ -38,12 +38,12 @@ theorem soundnessCLK {agents: Type} (φ : formCLK agents) :
 
   -- Prop 3
   { intro m s h1 h2
-    by_contradiction hf
+    by_contra hf
     exact (h1 hf) (h2 hf), }
 
   -- Prop 4
   { intro m s h1 h2
-    exact and.intro h1 h2, }
+    exact And.intro h1 h2, }
 
   -- Prop 5
   { intro m s h1
@@ -55,7 +55,7 @@ theorem soundnessCLK {agents: Type} (φ : formCLK agents) :
 
   -- Prop 7
   { intro m s h1 h2
-    by_contradiction hf
+    by_contra hf
     exact h1 hf h2, }
 
   -- Bot
@@ -70,21 +70,21 @@ theorem soundnessCLK {agents: Type} (φ : formCLK agents) :
   -- N
   { intro m s h1
     apply m.f.E.N_max
-    by_contradiction
+    by_contra
     exact h1 h, }
 
   -- M
   { intro m s
-    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ _∧ φ_1)}
-      {t : m.f.states | m; t '⊨ φ}
+    apply m.f.E.mono s G {t : m.f.states | m; t _⊨ (φ _∧ φ_1)}
+      {t : m.f.states | m; t _⊨ φ}
     intro t h1
     unfold s_entails_CLK at h1
     exact h1.left, }
 
   -- S
   { intro m s h1
-    exact m.f.E.superadd s G F {t : m.f.states | m; t '⊨ φ} 
-      {t : m.f.states | m; t '⊨ φ_1} h1.left h1.right hInt, }
+    exact m.f.E.superadd s G F {t : m.f.states | m; t _⊨ φ} 
+      {t : m.f.states | m; t _⊨ φ_1} h1.left h1.right hInt, }
 
   -- MP
   { intro m s
@@ -93,16 +93,16 @@ theorem soundnessCLK {agents: Type} (φ : formCLK agents) :
 
   -- Eq
   { intro m s
-    have heq: {t : m.f.states | m; t '⊨ φ} = {t : m.f.states | m; t '⊨ φ_1}
+    have heq: {t : m.f.states | m; t _⊨ φ} = {t : m.f.states | m; t _⊨ φ_1}
     { apply Set.ext
       intro u
       cases (ih m u)
-      apply iff.intro
+      apply Iff.intro
       { intro hu
         exact left hu, }
       { intro hu
         exact right hu } }
-    apply and.intro
+    apply And.intro
     { intro h1
       simp only [s_entails_CLK, ←heq] at *
       exact h1, }
@@ -184,7 +184,7 @@ def m_ex {agents : Type} : modelECL agents  :=
               simp at *
               apply hf single.one
               refl, }
-          simp [hcond] at *, by_contradiction
+          simp [hcond] at *, by_contra
           have hex: ∃ x, x ∈ X:= nonempty_def.mp (ne_empty_iff_nonempty.mp hxc)
           cases hex with s hs
           cases s
