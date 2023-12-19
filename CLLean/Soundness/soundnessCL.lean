@@ -169,7 +169,7 @@ def m_ex {agents : Type} : modelCL agents :=
   v := λ _, {}, }
 
 
-lemma nprfalseCL {agents : Type} : ¬ ('⊢ ('⊥ : formCL agents)) :=
+lemma nprfalseCL {agents : Type} : ¬ ('⊢ (_⊥ : formCL agents)) :=
 begin
   -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
   apply (mt (soundnessCL (@formCL.bot agents)))

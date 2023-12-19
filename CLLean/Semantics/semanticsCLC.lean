@@ -33,14 +33,14 @@ def s_entails_CLC {agents : Type} (m : modelECL agents) :
   | s (imp φ ψ) := (s_entails_CLC s φ) → (s_entails_CLC s ψ)
   | s (and φ ψ) := (s_entails_CLC s φ) ∧ (s_entails_CLC s ψ)
   | s ('[G] φ)   := {t : m.f.states | s_entails_CLC t φ} ∈ m.f.E.E (s) (G)
-  | s ('K i φ)   := ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC t φ
-  | s ('C G φ)   := ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → 
+  | s (_K i φ)   := ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC t φ
+  | s (_C G φ)   := ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → 
                     s_entails_CLC t φ
 
 notation m `;` s `'⊨` φ := s_entails_CLC m s φ
 
 lemma not_s_entails_imp {agents: Type} (m : modelECL agents) (s : m.f.states) (φ : formCLC agents) :
-  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ ('¬ φ)) :=
+  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) :=
 begin
   split
   repeat {intro h1 h2, exact h1 h2}
@@ -55,7 +55,7 @@ begin
     show s_entails_CLC m s '⊤
       simp only [s_entails_CLC, forall_false_left], }
   { unfold finite_conjunction
-    show s_entails_CLC m s (φ '∧ finite_conjunction φs) ↔ _
+    show s_entails_CLC m s (φ _∧ finite_conjunction φs) ↔ _
       simp [s_entails_CLC, List.mem_cons_iff, forall_eq_or_imp, and.congr_right_iff]
       intro h
       exact ih, }

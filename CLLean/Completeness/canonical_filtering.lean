@@ -785,7 +785,7 @@ begin
   obtain ⟨χ, ⟨hχ, hψχ⟩⟩ : ∃ (χ : form), χ ∈ tf ∧ ⊢'(χ ↔' ¬' ψ)
     from s_f_closed hcl htf (Finset.subset_iff.mp (s_f_subset_cl _) hsf)
   -- 10. {ψ, χ} ⊆ sf ∪ tf := 4 & 9.
-  -- 11. φsf ∧ φtf → ⊥, by propositional logic:= 5, 8 '∧ 10.
+  -- 11. φsf ∧ φtf → ⊥, by propositional logic:= 5, 8 _∧ 10.
   apply contra_con_cons hψχ
   exact (sf.1.1).mem_to_list.mpr hsf
   exact (tf.1.1).mem_to_list.mpr hχ
@@ -844,7 +844,7 @@ begin
       { by_contradiction
         exact hnf hxf, }, }
   end
-  -- 12. ⊥ ∈ u, by propositional logic:= 4 '∧ 11, which contradicts the consistency of u.
+  -- 12. ⊥ ∈ u, by propositional logic:= 4 _∧ 11, which contradicts the consistency of u.
   exact ax_neg_contains_pr_false u.2 hand hcontra
 end
 
@@ -911,7 +911,7 @@ begin
   apply iff_cut
   apply or_cut_l
   exact contra_fin_disjunct_psi_and_not hcl hψ tfs htfs
-   -- ↔ ψ ∧ ((∨ {tf |'¬ψ∈tf } φtf ) ∨ (∨ {sf |ψ∈sf } φsf )), by propositional logic.
+   -- ↔ ψ ∧ ((∨ {tf |_¬ψ∈tf } φtf ) ∨ (∨ {sf |ψ∈sf } φsf )), by propositional logic.
   apply iff_cut
   exact distr_or_and
   -- ↔ ψ ∧ (∨ {sf ∈ Sf } φsf ), because {tf | ¬ ψ ∈ tf } ∪ {sf | ψ ∈ sf } = Sf.
@@ -1010,7 +1010,7 @@ begin
       have hin : (¬' (['∅] (¬' ψ))) ∈ s
         from by apply max_ax_contains_by_set_proof s.2 h (iff_l univ_iff_empty)
       -- 1.2.3. ¬∃χ,  ̃χ ⊆  ̃¬ψ : [∅]χ ∈ s:= proof by contradiction
-        -- else by definition E we would have [∅]'¬ψ ∈ s, which contradicts with 1.2.2.
+        -- else by definition E we would have [∅]_¬ψ ∈ s, which contradicts with 1.2.2.
       have hne : ¬ ∃ χ , (tilde ((canonical_model_CL agents form hnpr).f.states) χ) ⊆ 
         (tilde ((canonical_model_CL agents form hnpr).f.states) (¬' ψ)) ∧ (['∅] χ) ∈ s:= 
       begin

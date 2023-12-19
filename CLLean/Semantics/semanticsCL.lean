@@ -21,14 +21,14 @@ def s_entails_CL {agents : Type} (m : modelCL agents) :
   m.f.states → formCL agents → Prop
   | s bot      := false
   | s (var n)  := s ∈ m.v n
-  | s (φ '→ ψ) := (s_entails_CL s φ) → (s_entails_CL s ψ)
-  | s (φ '∧ ψ) := (s_entails_CL s φ) ∧ (s_entails_CL s ψ)
+  | s (φ _→ ψ) := (s_entails_CL s φ) → (s_entails_CL s ψ)
+  | s (φ _∧ ψ) := (s_entails_CL s φ) ∧ (s_entails_CL s ψ)
   | s ('[G] φ) := {t : m.f.states | s_entails_CL t φ} ∈ m.f.E.E (s) (G)
 
 notation m `;` s `'⊨` φ := s_entails_CL m s φ
 
 lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ : formCL agents) :
-  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ ('¬ φ)) :=
+  (¬ (m; s '⊨ φ)) ↔ (m; s '⊨ (_¬ φ)) :=
 begin
   split
   repeat {intro h1 h2, exact h1 h2}

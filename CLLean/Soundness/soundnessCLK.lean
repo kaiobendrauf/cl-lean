@@ -76,7 +76,7 @@ begin
 
   -- M
   { intro m s
-    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ '∧ φ_1)}
+    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ _∧ φ_1)}
       {t : m.f.states | m; t '⊨ φ}
     intro t h1
     unfold s_entails_CLK at h1

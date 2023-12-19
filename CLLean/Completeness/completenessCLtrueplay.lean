@@ -40,8 +40,8 @@ def s_entails_CLtrue {agents : Type} (m : modelCLtrue agents) :
   m.f.states → formCL agents → Prop
   | s bot      := false
   | s (var n)  := s ∈ m.v n
-  | s (φ '→ ψ) := (s_entails_CLtrue s φ) → (s_entails_CLtrue s ψ)
-  | s (φ '∧ ψ) := (s_entails_CLtrue s φ) ∧ (s_entails_CLtrue s ψ)
+  | s (φ _→ ψ) := (s_entails_CLtrue s φ) → (s_entails_CLtrue s ψ)
+  | s (φ _∧ ψ) := (s_entails_CLtrue s φ) ∧ (s_entails_CLtrue s ψ)
   | s ('[G] φ) := {t : m.f.states | s_entails_CLtrue t φ} ∈ m.f.E.E (s) (G)
 
 notation m `;` s `'⊨` φ := s_entails_CLtrue m s φ
@@ -125,7 +125,7 @@ begin
 
   -- M
   { intro m s
-    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ '∧ φ_1)}
+    apply m.f.E.mono s G {t : m.f.states | m; t '⊨ (φ _∧ φ_1)}
       {t : m.f.states | m; t '⊨ φ}
     intro t h1
     unfold s_entails_CLtrue at h1
@@ -261,11 +261,11 @@ end
 ----------------------------------------------------------
 noncomputable def cl {agents : Type} : 
   formCL agents → Finset (formCL agents)
-|  '⊥      := {'⊥, '¬ '⊥}
-| (var n)  := {var n, '¬ (var n), '⊥, '¬ '⊥}
-| (φ '→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = '⊥) {(imp φ '⊥)} {(imp φ ψ), '¬ (imp φ ψ)} )
-| (φ '∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), '¬ (and φ ψ)}
-| ('[G] φ) := cl φ ∪ {('[G] φ), '¬ '[G] φ} 
+|  _⊥      := {_⊥, _¬ _⊥}
+| (var n)  := {var n, _¬ (var n), _⊥, _¬ _⊥}
+| (φ _→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = _⊥) {(imp φ _⊥)} {(imp φ ψ), _¬ (imp φ ψ)} )
+| (φ _∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), _¬ (and φ ψ)}
+| ('[G] φ) := cl φ ∪ {('[G] φ), _¬ '[G] φ} 
 
 ----------------------------------------------------------
 -- Lemmas about cl
@@ -280,7 +280,7 @@ begin
 end
 
 @[simp] lemma cl_contains_bot {agents : Type} (φ : formCL agents) :
-  '⊥ ∈ cl φ :=
+  _⊥ ∈ cl φ :=
 begin
   induction φ
   repeat { unfold cl, simp, }
@@ -289,7 +289,7 @@ begin
 end
 
 lemma cl_closed_single_neg {agents : Type} (φ x : formCL agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ '↔ ('¬ x))) :=
+  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) :=
 begin
   induction φ
   repeat
@@ -297,11 +297,11 @@ begin
       simp only [Finset.union_insert, Finset.insert_union, Finset.union_assoc, Finset.mem_insert
                   Finset.mem_union, Finset.mem_singleton] at hx
       cases hx
-      { apply Exists.intro ('¬ x)
+      { apply Exists.intro (_¬ x)
         simp only [hx, Finset.mem_insert, Finset.mem_union, Finset.mem_singleton, eq_self_iff_true
                     false_or, true_or, or_true, true_and] at *
         apply @iff_iden (formCL agents) _ _, }, }
-  { apply Exists.intro ('⊥)
+  { apply Exists.intro (_⊥)
     simp only [hx, Finset.mem_insert, eq_self_iff_true, Finset.mem_singleton, or_false, true_and]
     apply MP
     apply MP
@@ -318,7 +318,7 @@ begin
       simp only [hx, Finset.mem_insert, eq_self_iff_true, false_and, Finset.mem_singleton
                   false_or, true_and]
       apply @iff_iden (formCL agents) _ _, }
-    { apply Exists.intro ('⊥)
+    { apply Exists.intro (_⊥)
       simp only [hx, Finset.mem_insert, eq_self_iff_true, Finset.mem_singleton, or_false
                   false_or, true_and]
       apply MP
@@ -344,7 +344,7 @@ begin
       apply Finset.mem_union_right
       exact hψ.1
       exact hψ.2, }
-      { apply Exists.intro (φ_φ '∧ φ_ψ)
+      { apply Exists.intro (φ_φ _∧ φ_ψ)
         simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true
                     true_or, true_and]
         exact @iff_dni (formCL agents) _ _, }, }
@@ -380,10 +380,10 @@ begin
       { simp only [h, if_false, Finset.union_insert, Finset.union_assoc, Finset.mem_insert
                     Finset.mem_union, Finset.mem_singleton, not_false_iff] at *
         cases hx
-        { apply Exists.intro ('¬ (φ_φ '→ φ_ψ))
+        { apply Exists.intro (_¬ (φ_φ _→ φ_ψ))
           simp only [hx, eq_self_iff_true, or_true, true_and]
           exact @iff_iden (formCL agents) _ _, }
-        { apply Exists.intro (φ_φ '→ φ_ψ)
+        { apply Exists.intro (φ_φ _→ φ_ψ)
           simp only [hx, eq_self_iff_true, true_or, true_and]
           exact @iff_dni (formCL agents) _ _, }, }, }, }
   { cases hx
@@ -406,17 +406,17 @@ end
 inductive subformula {agents : Type} : formCL agents → formCL agents → Prop
 | refl            {φ}     : subformula φ φ
 | trans           {φ ψ χ} : subformula φ ψ → subformula ψ χ → subformula φ χ
-| and_left        {φ ψ}   : subformula φ (φ '∧ ψ)
-| and_right       {φ ψ}   : subformula ψ (φ '∧ ψ)
-| imp_left        {φ ψ}   : subformula φ (φ '→ ψ)
-| imp_right       {φ ψ}   : subformula ψ (φ '→ ψ)
+| and_left        {φ ψ}   : subformula φ (φ _∧ ψ)
+| and_right       {φ ψ}   : subformula ψ (φ _∧ ψ)
+| imp_left        {φ ψ}   : subformula φ (φ _→ ψ)
+| imp_right       {φ ψ}   : subformula ψ (φ _→ ψ)
 | effectivity {G} {φ}     : subformula φ ('[G] φ)
 
 ----------------------------------------------------------
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
 lemma subformula.cl_subset_and_left {agents : Type}
-  {φ ψ : formCL agents} : cl φ ⊆ cl (φ '∧ ψ) :=
+  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _∧ ψ) :=
 begin
   intro x h
   induction φ
@@ -428,7 +428,7 @@ begin
 end
 
 lemma subformula.cl_subset_and_right {agents : Type} 
-  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ '∧ ψ) :=
+  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _∧ ψ) :=
 begin
   intro x h
   induction φ
@@ -439,7 +439,7 @@ begin
 end
 
 lemma subformula.cl_subset_imp_left {agents : Type}
-  {φ ψ : formCL agents} : cl φ ⊆ cl (φ '→ ψ) :=
+  {φ ψ : formCL agents} : cl φ ⊆ cl (φ _→ ψ) :=
 begin
   intro x h
   induction φ
@@ -450,7 +450,7 @@ begin
 end
 
 lemma subformula.cl_subset_imp_right {agents : Type}
-  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ '→ ψ) :=
+  {φ ψ : formCL agents} : cl ψ ⊆ cl (φ _→ ψ) :=
 begin
   intro x h
   induction φ
@@ -594,7 +594,7 @@ begin
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) :
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) '↔ ψ)
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff
         rw htilde
@@ -647,7 +647,7 @@ begin
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
   ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G : 
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) '↔ ψ)
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CL φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCL agents) _ _ _ nprfalseCLtrue _ _ hiff
         rw htilde

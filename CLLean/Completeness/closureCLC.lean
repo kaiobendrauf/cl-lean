@@ -20,19 +20,19 @@ open Set formCLC axCLC
 ----------------------------------------------------------
 noncomputable def cl_C {agents : Type} [hN : Fintype agents] (G : Set (agents)) 
   (φ : formCLC agents) : Finset (formCLC agents) :=
-Finset.image (λ i, 'K (i) ('C G φ)) (toFinset G) ∪ 
-  Finset.image (λ i, ('¬ 'K (i) ('C G φ))) (toFinset G)
+Finset.image (λ i, _K (i) (_C G φ)) (toFinset G) ∪ 
+  Finset.image (λ i, (_¬ _K (i) (_C G φ))) (toFinset G)
 
 noncomputable def cl {agents : Type} [hN : Fintype agents] : 
   formCLC agents → Finset (formCLC agents)
-|  '⊥      := {'⊥, '¬ '⊥}
-| (var n)  := {var n, '¬ (var n), '⊥, '¬ '⊥}
-| (φ '→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = '⊥) {(imp φ '⊥)} {(imp φ ψ), '¬ (imp φ ψ)} )
-| (φ '∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), '¬ (and φ ψ)}
-| ('[G] φ) := cl φ ∪ {('[G] φ), '¬ '[G] φ} ∪ 
-              {('C (G) ('[G] φ)), '¬ ('C (G) ('[G] φ))} ∪ cl_C G ('[G] φ)
-| ('K i φ) := cl φ ∪ {('K i φ), '¬ ('K i φ)}
-| ('C G φ) := cl φ ∪ {('C G φ), '¬ ('C G φ)} ∪ cl_C G φ
+|  _⊥      := {_⊥, _¬ _⊥}
+| (var n)  := {var n, _¬ (var n), _⊥, _¬ _⊥}
+| (φ _→ ψ) := cl φ ∪ cl ψ ∪ (ite (ψ = _⊥) {(imp φ _⊥)} {(imp φ ψ), _¬ (imp φ ψ)} )
+| (φ _∧ ψ) := cl φ ∪ cl ψ ∪ {(and φ ψ), _¬ (and φ ψ)}
+| ('[G] φ) := cl φ ∪ {('[G] φ), _¬ '[G] φ} ∪ 
+              {(_C (G) ('[G] φ)), _¬ (_C (G) ('[G] φ))} ∪ cl_C G ('[G] φ)
+| (_K i φ) := cl φ ∪ {(_K i φ), _¬ (_K i φ)}
+| (_C G φ) := cl φ ∪ {(_C G φ), _¬ (_C G φ)} ∪ cl_C G φ
 
 ----------------------------------------------------------
 -- Lemmas about cl
@@ -47,7 +47,7 @@ begin
 end
 
 @[simp] lemma cl_contains_bot {agents : Type} [hN : Fintype agents] (φ : formCLC agents) :
-  '⊥ ∈ cl φ :=
+  _⊥ ∈ cl φ :=
 begin
   induction φ
   any_goals { unfold cl, simp, }
@@ -56,7 +56,7 @@ begin
 end
 
 lemma cl_C_contains_KC {agents : Type} [hN : Fintype agents] {φ ψ : formCLC agents} 
-  {G : Set agents} {i : agents} (hi : i ∈ G) (h : 'C G ψ ∈ cl φ) : 'K i ('C G ψ) ∈ cl φ :=
+  {G : Set agents} {i : agents} (hi : i ∈ G) (h : _C G ψ ∈ cl φ) : _K i (_C G ψ) ∈ cl φ :=
 begin
   induction φ
   any_goals 
@@ -88,7 +88,7 @@ end
 
 lemma cl_closed_single_neg {agents : Type} [hN : Fintype agents] 
   (φ x : formCLC agents) (hx : x ∈ cl φ) :
-  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ '↔ ('¬ x))) :=
+  ∃ ψ, (ψ ∈ cl φ ∧ '⊢ (ψ _↔ (_¬ x))) :=
 begin
   induction φ
   repeat
@@ -96,11 +96,11 @@ begin
       simp only [Finset.union_insert, Finset.insert_union, Finset.union_assoc, Finset.mem_insert
                   Finset.mem_union, Finset.mem_singleton] at hx
       cases hx
-      { apply Exists.intro ('¬ x)
+      { apply Exists.intro (_¬ x)
         simp only [hx, Finset.mem_insert, Finset.mem_union, Finset.mem_singleton, eq_self_iff_true
                     false_or, true_or, or_true, true_and] at *
         apply @iff_iden (formCLC agents) _ _, }, }
-  { apply Exists.intro ('⊥)
+  { apply Exists.intro (_⊥)
     simp only [hx, Finset.mem_insert, eq_self_iff_true, Finset.mem_singleton, or_false, true_and]
     apply MP
     apply MP
@@ -117,7 +117,7 @@ begin
       simp only [hx, Finset.mem_insert, eq_self_iff_true, false_and, Finset.mem_singleton
                   false_or, true_and]
       apply @iff_iden (formCLC agents) _ _, }
-    { apply Exists.intro ('⊥)
+    { apply Exists.intro (_⊥)
       simp only [hx, Finset.mem_insert, eq_self_iff_true, Finset.mem_singleton, or_false
                   false_or, true_and]
       apply MP
@@ -143,7 +143,7 @@ begin
       apply Finset.mem_union_right
       exact hψ.1
       exact hψ.2, }
-      { apply Exists.intro (φ_φ '∧ φ_ψ)
+      { apply Exists.intro (φ_φ _∧ φ_ψ)
         simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true
                     true_or, true_and]
         exact @iff_dni (formCLC agents) _ _, }, }
@@ -179,14 +179,14 @@ begin
       { simp only [h, if_false, Finset.union_insert, Finset.union_assoc, Finset.mem_insert
                     Finset.mem_union, Finset.mem_singleton, not_false_iff] at *
         cases hx
-        { apply Exists.intro ('¬ (φ_φ '→ φ_ψ))
+        { apply Exists.intro (_¬ (φ_φ _→ φ_ψ))
           simp only [hx, eq_self_iff_true, or_true, true_and]
           exact @iff_iden (formCLC agents) _ _, }
-        { apply Exists.intro (φ_φ '→ φ_ψ)
+        { apply Exists.intro (φ_φ _→ φ_ψ)
           simp only [hx, eq_self_iff_true, true_or, true_and]
           exact @iff_dni (formCLC agents) _ _, }, }, }, }
   { cases hx
-    {  apply Exists.intro ('¬ ('C φ_G '[φ_G] φ_φ))
+    {  apply Exists.intro (_¬ (_C φ_G '[φ_G] φ_φ))
       simp only [hx, Finset.mem_insert, Finset.mem_union, Finset.mem_singleton, eq_self_iff_true
                   true_or, or_true, true_and]
       exact @iff_iden (formCLC agents) _ _, }
@@ -206,7 +206,7 @@ begin
                   false_or, true_or, true_and]
       exact @iff_dni (formCLC agents) _ _, }
     cases hx
-    { apply Exists.intro ('C φ_G '[φ_G] φ_φ)
+    { apply Exists.intro (_C φ_G '[φ_G] φ_φ)
         simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true, Finset.mem_union
                     false_or, true_or, true_and]
         exact @iff_dni (formCLC agents) _ _, }
@@ -214,12 +214,12 @@ begin
       simp only [Finset.mem_union, Finset.mem_image, mem_to_finset, exists_prop] at hx
       cases hx
       { cases hx with i hi
-        apply Exists.intro ('¬ 'K i ('C φ_G ('[φ_G]φ_φ)))
+        apply Exists.intro (_¬ _K i (_C φ_G ('[φ_G]φ_φ)))
         simp only [hi.left, ←hi.right, Finset.mem_union, eq_self_iff_true, Finset.mem_image
                     mem_to_finset, and_true, exists_prop, exists_eq_right, or_true, true_and]
         exact @iff_iden (formCLC agents) _ _, }
       { cases hx with i hi
-        apply Exists.intro ('K i ('C φ_G ('[φ_G]φ_φ)))
+        apply Exists.intro (_K i (_C φ_G ('[φ_G]φ_φ)))
         simp only [hi.left, ←hi.right, Finset.mem_union, Finset.mem_image, mem_to_finset
                     eq_self_iff_true, and_true, exists_prop, exists_eq_right, exists_false
                     or_false, or_true, true_and]
@@ -232,7 +232,7 @@ begin
       apply Finset.mem_union_left
       exact hψ.1
       exact hψ.2, }
-    { apply Exists.intro ('K φ_a φ_φ)
+    { apply Exists.intro (_K φ_a φ_φ)
       simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true, true_or, true_and]
       exact @iff_dni (formCLC agents) _ _, }, }
   { cases hx
@@ -245,7 +245,7 @@ begin
       exact hψ.1
       exact hψ.2, }
     cases hx
-    { apply Exists.intro (('C φ_G (φ_φ)))
+    { apply Exists.intro ((_C φ_G (φ_φ)))
       simp only [hx, Finset.union_insert, Finset.mem_insert, eq_self_iff_true, Finset.mem_union
                   true_or, true_and]
       exact @iff_dni (formCLC agents) _ _, }
@@ -253,12 +253,12 @@ begin
       simp only [Finset.mem_union, Finset.mem_image, mem_to_finset, exists_prop] at hx
       cases hx
       { cases hx with i hi
-        apply Exists.intro ('¬ 'K i ('C φ_G φ_φ))
+        apply Exists.intro (_¬ _K i (_C φ_G φ_φ))
         simp only [hi.left, ←hi.right, Finset.mem_union, eq_self_iff_true, Finset.mem_image
                     mem_to_finset, and_true, exists_prop, exists_eq_right, or_true, true_and]
         exact @iff_iden (formCLC agents) _ _, }
       { cases hx with i hi
-        apply Exists.intro ('K i ('C φ_G φ_φ))
+        apply Exists.intro (_K i (_C φ_G φ_φ))
         simp only [hi.left, ←hi.right, Finset.mem_union, Finset.mem_image, mem_to_finset
                     eq_self_iff_true, and_true, exists_prop, exists_eq_right, exists_false
                     or_false, or_true, true_and]
@@ -271,19 +271,19 @@ end
 inductive subformula {agents : Type} : formCLC agents → formCLC agents → Prop
 | refl            {φ}     : subformula φ φ
 | trans           {φ ψ χ} : subformula φ ψ → subformula ψ χ → subformula φ χ
-| and_left        {φ ψ}   : subformula φ (φ '∧ ψ)
-| and_right       {φ ψ}   : subformula ψ (φ '∧ ψ)
-| imp_left        {φ ψ}   : subformula φ (φ '→ ψ)
-| imp_right       {φ ψ}   : subformula ψ (φ '→ ψ)
+| and_left        {φ ψ}   : subformula φ (φ _∧ ψ)
+| and_right       {φ ψ}   : subformula ψ (φ _∧ ψ)
+| imp_left        {φ ψ}   : subformula φ (φ _→ ψ)
+| imp_right       {φ ψ}   : subformula ψ (φ _→ ψ)
 | effectivity {G} {φ}     : subformula φ ('[G] φ)
-| knows       {i} {φ}     : subformula φ ('K i φ)
-| common_know {G} {φ}     : subformula φ ('C G φ)
+| knows       {i} {φ}     : subformula φ (_K i φ)
+| common_know {G} {φ}     : subformula φ (_C G φ)
 
 ----------------------------------------------------------
 -- if φ is a subformula of ψ, then cl φ ⊆ cl ψ
 ----------------------------------------------------------
 lemma subformula.cl_subset_and_left {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ '∧ ψ) :=
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _∧ ψ) :=
 begin
   intro x h
   induction φ
@@ -295,7 +295,7 @@ begin
 end
 
 lemma subformula.cl_subset_and_right {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ '∧ ψ) :=
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _∧ ψ) :=
 begin
   intro x h
   induction φ
@@ -306,7 +306,7 @@ begin
 end
 
 lemma subformula.cl_subset_imp_left {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ '→ ψ) :=
+  {φ ψ : formCLC agents} : cl φ ⊆ cl (φ _→ ψ) :=
 begin
   intro x h
   induction φ
@@ -317,7 +317,7 @@ begin
 end
 
 lemma subformula.cl_subset_imp_right {agents : Type} [hN : Fintype agents]
-  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ '→ ψ) :=
+  {φ ψ : formCLC agents} : cl ψ ⊆ cl (φ _→ ψ) :=
 begin
   intro x h
   induction φ
@@ -339,7 +339,7 @@ begin
 end
 
 lemma subformula.cl_subset_knows {agents : Type} [hN : Fintype agents]
-  {φ : formCLC agents} {i : agents}  : cl φ ⊆ cl ('K i φ) :=
+  {φ : formCLC agents} {i : agents}  : cl φ ⊆ cl (_K i φ) :=
 begin
   intro x h
   induction φ
@@ -350,7 +350,7 @@ begin
 end
 
 lemma subformula.cl_subset_common_know {agents : Type} [hN : Fintype agents]
-  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl ('C G φ) :=
+  {φ : formCLC agents} {G : Set (agents)} : cl φ ⊆ cl (_C G φ) :=
 begin
   intro x h
   induction φ

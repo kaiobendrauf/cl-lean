@@ -74,7 +74,7 @@ begin
       -- ↔ ∃t ∈ SC′, sf = tf and  ̃ψ ∈ EC′(t)(N ), by Lemma 6.
   ... ↔ ∃ t, (sf = s_f cl φ t) ∧ tilde MC'.f.states ψ ∈ MC'.f.E.E t (univ) :
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) '↔ ψ)
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLK agents) _ _ _ nprfalseCLK _ _ hiff
         rw htilde
@@ -127,7 +127,7 @@ begin
       -- ↔ ∀t ∈ SC′, sf = tf ⇒  ̃ψ ∈ EC′(t)(G ), by Lemma 6.
   ... ↔ ∀ t, (sf = s_f cl φ t) →  tilde MC'.f.states ψ ∈ MC'.f.E.E t G : 
       begin
-        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) '↔ ψ)
+        have hiff : '⊢ ((phi_X_set {sf : (Mf_CLK φ).f.states | ψ ∈ sf}) _↔ ψ)
           from phi_X_contains_iff_psi (cl_closed_single_neg φ) (hφ)
         have htilde := @tilde_ax_iff _ (formCLK agents) _ _ _ nprfalseCLK _ _ hiff
         rw htilde
@@ -157,8 +157,8 @@ end
 -- Truth Lemma: case Kiψ ⇒ : (M f , sf ⊨ Kiψ ⇒ Kiψ ∈ sf ) :
 lemma truth_K_lr {agents : Type} [ha : Nonempty agents]
   {φ ψ : formCLK agents} {i : agents} (sf : (Mf_CLK φ).f.states) 
-  (hφ' : ('K i ψ) ∈ cl φ) (ih : ∀ tf, ((Mf_CLK φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  ((Mf_CLK φ); sf '⊨ ('K i ψ)) → (('K i ψ) ∈ sf) := 
+  (hφ' : (_K i ψ) ∈ cl φ) (ih : ∀ tf, ((Mf_CLK φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
+  ((Mf_CLK φ); sf '⊨ (_K i ψ)) → ((_K i ψ) ∈ sf) := 
 begin
   obtain ⟨s, hs⟩ := s_f_to_s sf
   -- 1. Let M f , sf ⊨ Kiψ.
@@ -170,19 +170,19 @@ begin
   -- 4. Assume by contradiction that Kiψ ∉ sf .
   by_contradiction hnin
   -- 5. ¬Kiψ ∈ s:= 4, because s is maximally consistent.
-  have hnin : 'K i ψ ∉ s,     from (s_n_contains @hs) (hφ') hnin
-  have hnk : ('¬ 'K i ψ) ∈ s:= not_in_from_notin s.2 hnin
+  have hnin : _K i ψ ∉ s,     from (s_n_contains @hs) (hφ') hnin
+  have hnk : (_¬ _K i ψ) ∈ s:= not_in_from_notin s.2 hnin
   -- 6. Consider the Set Σ = {χ | Kiχ ∈ s}.
-  let Γ := {χ | 'K i χ ∈ s }
+  let Γ := {χ | _K i χ ∈ s }
   -- 7. Σ ∪ {¬ψ} is consistent.
-  have hcon : ax_consistent (Γ ∪ {'¬ ψ}):=
+  have hcon : ax_consistent (Γ ∪ {_¬ ψ}):=
     begin
       -- 7.1. Assume by contradiction Σ ∪ {¬ψ} is inconsistent.
       by_contradiction hncon
       -- 7.2. ⊢ (∧χ∈Σ χ) → ψ:= 7.1, by propositional logic.
       obtain ⟨ψs, ⟨hΓ, hax⟩⟩ := inconsistent_prove_neg hncon
       -- 7.3. ⊢ Ki((∧χ∈Σ χ) → ψ):= 7.2, by Axiom RN.
-      have hKimp : '⊢ ('K i ((finite_conjunction ψs) '→ ψ)):=
+      have hKimp : '⊢ (_K i ((finite_conjunction ψs) _→ ψ)):=
       begin
         apply axCLK.RN
         apply @cut (formCLK agents)
@@ -190,17 +190,17 @@ begin
         exact dne
       end
       -- 7.4. ⊢ (Ki(∧χ∈Σ χ)) → (Kiψ):= 7.3, by Axiom K.
-      have hKimp : '⊢ (('K i (finite_conjunction ψs)) '→ K' i ψ)
+      have hKimp : '⊢ ((_K i (finite_conjunction ψs)) _→ K' i ψ)
         from by apply axCLK.MP axCLK.K hKimp
       -- 7.5. ⊢ (∧χ∈Σ Kiχ) → (Kiψ):= 7.4, by propositional logic and Axiom RN.
-      have hKimp : '⊢ ((finite_conjunction (List.map ('K i) ψs)) '→ 'K i (ψ)):=
+      have hKimp : '⊢ ((finite_conjunction (List.map (_K i) ψs)) _→ _K i (ψ)):=
       begin 
         apply @cut (formCLK agents)
         apply @knows_conjunction agents (formCLK agents)
         exact hKimp
       end
       -- 7.6. (∧χ∈Σ Kiχ) ∈ s, by definition Σ:= 6.
-      have hin : (finite_conjunction (List.map ('K i) ψs)) ∈ s:=
+      have hin : (finite_conjunction (List.map (_K i) ψs)) ∈ s:=
       begin
         apply max_ax_contains_conj s.2
         intro φ hφ
@@ -209,7 +209,7 @@ begin
         exact mem_set_of_eq.mp (hΓ χ hχ.1)
       end
       -- 7.7. Kiψ ∈ s:= 7.5 & 7.6.
-      have hK : 'K i ψ ∈ s 
+      have hK : _K i ψ ∈ s 
         from by apply max_ax_contains_by_set_proof s.2 hin hKimp
       -- 7.8. Contradiction from 5 and 7.7.
       exact hnin hK
@@ -221,7 +221,7 @@ begin
     from exists_apply_eq_apply _ _
   rw union_subset_iff at hsub
   -- Note that ¬ψ ∈ t.
-  have hnψ : ('¬ ψ) ∈ t:= 
+  have hnψ : (_¬ ψ) ∈ t:= 
   begin 
     rw ht
     apply singleton_subset_iff.mp hsub.2
@@ -245,9 +245,9 @@ begin
       { by_contradiction hnks
         apply contra_contains_pr_false t.2 hkt.1
         rw ht
-        have hknks : 'K i ('¬ 'K i x) ∈ s.val
+        have hknks : _K i (_¬ _K i x) ∈ s.val
           from max_ax_contains_by_set_proof s.2 (not_in_from_notin s.2 hnks) axCLK.Five
-        have hnkΓ : ('¬ 'K i x) ∈ Γ:= hknks
+        have hnkΓ : (_¬ _K i x) ∈ Γ:= hknks
         exact mem_of_mem_of_subset hnkΓ hsub.1, }
       { exact hkt.2, }, }
   end
@@ -260,12 +260,12 @@ end
 lemma truth_K_rl {agents : Type} [ha : Nonempty agents]
   {φ ψ : formCLK agents} {i : agents} (sf : (Mf_CLK φ).f.states) 
   (hφ : ψ ∈ cl φ) (ih : ∀ tf, ((Mf_CLK φ); tf '⊨ ψ) ↔ (ψ ∈ tf)) :
-  (('K i ψ) ∈ sf) → ((Mf_CLK φ); sf '⊨ ('K i ψ)) := 
+  ((_K i ψ) ∈ sf) → ((Mf_CLK φ); sf '⊨ (_K i ψ)) := 
 begin
   -- 1. Let Kiψ ∈ sf .
   intro h
   -- 2. ∀tf ∈ Sf, sf ∼fi tf ⇒ Kiψ ∈ tf := 1, by definition ∼fi .
-  have hfaK : ∀ tf, tf ∈ (Mf_CLK φ).f.rel i sf → 'K i ψ ∈ tf
+  have hfaK : ∀ tf, tf ∈ (Mf_CLK φ).f.rel i sf → _K i ψ ∈ tf
     from λ _ htf, (Set.ext_iff.mp htf ψ).mp h
   -- 3. ∀tf ∈ Sf , sf ∼fi tf ⇒ ψ ∈ tf := 2, by Axiom T.
   have hfa : ∀ tf, tf ∈ (Mf_CLK φ).f.rel i sf → ψ ∈ tf:=

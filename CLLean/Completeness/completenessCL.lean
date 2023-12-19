@@ -73,12 +73,12 @@ begin
     have hE : (M).f.E.E = λ s, λ G : Set agents, _
       from rfl
     
-    -- It is sufficient to consider the case when G ⊂ N, because ⊢ '[N]φ ↔ '¬ '[∅]'¬ φ
+    -- It is sufficient to consider the case when G ⊂ N, because ⊢ '[N]φ ↔ _¬ '[∅]_¬ φ
     cases Set.eq_or_ssubset_of_subset (Set.subset_univ G) with hG hG
     -- Case G = N 
 
     { -- ⊢ [N]φ ↔ ¬ [∅] ¬ φ
-      have hempty : axCL (('[univ] φ) '↔ '¬ ('[∅]('¬ φ))):= 
+      have hempty : axCL (('[univ] φ) _↔ _¬ ('[∅](_¬ φ))):= 
         @univ_iff_empty agents (formCL agents) _ _ _
       simp [hG] at *, clear hG
 
@@ -87,15 +87,15 @@ begin
       { -- M s ⊨ [N] φ ⇒ '[N] φ ∈ s
         intro h
         simp [s_entails_CL, hE] at h
-        have hnin : ('[∅] ('¬ φ)) ∉ s:=
+        have hnin : ('[∅] (_¬ φ)) ∉ s:=
         begin
-          apply h ('¬ φ)
+          apply h (_¬ φ)
           apply @eq.subset _ _ {t : (M_CL agents).f.states | (M_CL agents); t '⊨ φ}ᶜ
           simp [ih]
           exact complement_from_contra
         end
         
-        have hin : ('¬ '[∅]'¬ φ) ∈ s:= not_in_from_notin s.2 hnin
+        have hin : (_¬ '[∅]_¬ φ) ∈ s:= not_in_from_notin s.2 hnin
 
         apply max_ax_contains_by_set_proof s.2 hin (MP (Prop6) hempty), }
 
@@ -106,19 +106,19 @@ begin
   
         simp [Set.subset_def] at hsubseteq
 
-        have himp : ∀ (x : M.f.states), ψ ∈ x → ('¬ φ) ∈ x:=
+        have himp : ∀ (x : M.f.states), ψ ∈ x → (_¬ φ) ∈ x:=
           λ t ht, not_in_from_notin t.2 (hsubseteq t ht)
       
-        have hin : ('¬ '[∅] '¬ φ) ∈ s
+        have hin : (_¬ '[∅] _¬ φ) ∈ s
           from by apply max_ax_contains_by_set_proof s.2 h (MP (Prop5) hempty)
 
-        have hnin : ('[∅] '¬ φ) ∉ s:= 
+        have hnin : ('[∅] _¬ φ) ∉ s:= 
           λ hf, contra_contains_pr_false s.2 hf hin
 
-        have hax : axCL (ψ '→ ('¬ φ)):=
+        have hax : axCL (ψ _→ (_¬ φ)):=
           ax_imp_from_ex himp
 
-        have hin' : ('[∅] '¬ φ) ∈ s
+        have hin' : ('[∅] _¬ φ) ∈ s
         { apply max_ax_contains_by_set_proof s.2 hf
           apply @derived_monoticity_rule agents (formCL agents)
           exact hax, }
@@ -148,9 +148,9 @@ begin
         -- ∃ψ˜ ⊆ φ˜ : '[G]ψ ∈ s:= hih, by definition ψ˜
         have hGψ : ('[G]ψ) ∈ s:= hψ.right
         -- ⊢ ψ → φ, since ψ˜ ⊆ φ˜ in hψih 
-        have himp : axCL (ψ '→ φ):= ax_imp_from_ex hψih
+        have himp : axCL (ψ _→ φ):= ax_imp_from_ex hψih
         -- ⊢ '[G]ψ → '[G]φ:= himp, by the derived monoticity rule
-        have hGimp : axCL (('[G] ψ) '→ ('[G] φ)):= 
+        have hGimp : axCL (('[G] ψ) _→ ('[G] φ)):= 
           @derived_monoticity_rule agents (formCL agents) _ _ _ _ _ himp
         -- '[G]φ ∈ s:= hGimp and hGψ
         apply max_ax_contains_by_set_proof s.2 hGψ hGimp, }
