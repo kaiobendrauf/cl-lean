@@ -1,14 +1,14 @@
 /-
 Authors: Kai Obendrauf
 Adapted from the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
-who's work followed the textbook "Dynamic Epistemic Logic" by 
+who's work followed the textbook "Dynamic Epistemic Logic" by
 Hans van Ditmarsch, Wiebe van der Hoek, and Barteld Kooi
 
 This file defines proofs from a Set, consistency and maximal consistency.
 It proves sever lemmas related to the above definitions, including Lindenbaums Lemma.
 -/
 
-import CLLean.Syntax.formula 
+import CLLean.Syntax.formula
 import CLLean.Syntax.propLemmas
 
 import Mathlib.Data.List.Basic
@@ -16,7 +16,7 @@ import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Finite
 import Mathlib.Order.Zorn
 
-open Set 
+open Set Logic
 
 ----------------------------------------------------------
 -- Set Proofs
@@ -26,14 +26,15 @@ def set_proves {form : Type} [pf : Pformula_ax form] (Γ : Set (form)) (φ : for
 ∃ (φs : List (form)), (∀ ψ ∈ φs, ψ ∈ Γ) ∧ ⊢' ((finite_conjunction φs) →' φ)
 
 -- φ ∈ Γ ⇒ Γ proves ⊥
-lemma proves_of_mem {form : Type} [pf : Pformula_ax form] 
-  (Γ : Set (form)) {φ : form} (h : φ ∈ Γ) : 
+lemma proves_of_mem {form : Type} [pf : Pformula_ax form]
+  (Γ : Set (form)) {φ : form} (h : φ ∈ Γ) :
   set_proves Γ φ := by
   apply Exists.intro [φ]
-  split
-  { simp, exact h, }
-  { simp[finite_conjunction]
-    apply imp_and_l iden, }
+  apply And.intro
+  · simp
+    exact h
+  · simp[finite_conjunction]
+    apply imp_and_l iden
 
 -- we always have a Set proof of a tautology
 lemma always_true_of_true {form : Type} [pf : Pformula_ax form] (φ : form) (h :  ⊢' φ)
@@ -50,69 +51,70 @@ def ax_consistent {form : Type} [pf : Pformula_ax form] (Γ : Set form) : Prop :
 ¬ set_proves Γ ⊥'
 
 -- Γ is maximally ax-consistent
-def max_ax_consistent {form : Type} [pf : Pformula_ax form] (Γ : Set form) : Prop := 
+def max_ax_consistent {form : Type} [pf : Pformula_ax form] (Γ : Set form) : Prop :=
 (ax_consistent Γ) ∧ (∀ Γ', Γ ⊂ Γ' → ¬ (ax_consistent Γ'))
 
 ----------------------------------------------------------
--- Lemmas about (Maximal) Consistency 
+-- Lemmas about (Maximal) Consistency
 ----------------------------------------------------------
 
 -- If Γ proves ⊥ it must be inconsistent
-lemma not_ax_consistent_of_proves_bot {form : Type} [pf : Pformula_ax form] 
+lemma not_ax_consistent_of_proves_bot {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} (h : set_proves Γ ⊥') : ¬ (ax_consistent Γ) := by
   simp only [ax_consistent, not_not]
   exact h
 
 -- consistent Γ ⇒ ⊥ ∉ Γ
-lemma bot_not_mem_of_ax_consistent {form : Type} [pf : Pformula_ax form] 
+lemma bot_not_mem_of_ax_consistent {form : Type} [pf : Pformula_ax form]
  (Γ : Set form) (hΓ : ax_consistent Γ) : (⊥') ∉ Γ :=
-λ h, not_ax_consistent_of_proves_bot (proves_of_mem Γ h) hΓ
+λ h => not_ax_consistent_of_proves_bot (proves_of_mem Γ h) hΓ
 
--- Γ ∪ {φ} proves ψ ⇒  Γ proves φ → ψ 
-lemma set_proof_imp {form : Type} [pf : Pformula_ax form] 
+-- Γ ∪ {φ} proves ψ ⇒  Γ proves φ → ψ
+lemma set_proof_imp {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} {φ ψ : form} (h : set_proves (Γ ∪ {φ}) (ψ)) :
   set_proves Γ (φ →' ψ) :=  by
-  cases h with φs h
-  cases h with hΓ h
+  cases' h with φs h
+  cases' h with hΓ h
   revert ψ
-  induction φs with χ φs ih
-  { intro ψ hψ
+  induction' φs with χ φs ih
+  · intro ψ hψ
     apply Exists.intro []
-    split
-    { intro χ hχ
+    apply And.intro
+    · intro χ hχ
       by_contra
-      apply List.not_mem_nil _ hχ, }
-    { apply imp_if_imp_imp
-      exact hψ, }, }
-  { intro ψ hψ
+      apply List.not_mem_nil _ hχ
+    · apply imp_if_imp_imp
+      exact hψ
+  · intro ψ hψ
     simp [set_proves] at *
-    cases ih hΓ.right (and_right_imp.mp hψ) with φs' ih
-    cases ih with ihl ihr
-    cases hΓ.left
-    { rw h at *
+    cases' ih hΓ.right (and_right_imp.mp hψ) with φs' ih
+    cases' ih with ihl ihr
+    cases' hΓ.left with h
+    · rw [h] at ihr
       apply Exists.intro (φs')
-      split
-      { exact ihl, }
-      { exact imp_imp_iff_imp.mp ihr, }, }
-    { apply Exists.intro (χ :: φs')
-      split
-      { intro θ hθ
+      apply And.intro
+      · exact ihl
+      · exact imp_imp_iff_imp.mp ihr
+    · apply Exists.intro (χ :: φs')
+      rename_i h
+      apply And.intro
+      · intro θ hθ
         cases hθ
-        { rw hθ
-          exact h, }
-        { exact ihl θ hθ, }, }
-      { apply imp_conj_imp_imp.mpr
-        exact imp_shift.mp ihr, }, },}
+        · exact h
+        · rename_i hθ
+          exact ihl θ hθ
+      · apply imp_conj_imp_imp.mpr
+        exact imp_shift.mp ihr
 
 -- if Γ ∪ {φ} is inconsistent then Γ must prove ¬ φ
-lemma inconsistent_prove_neg {form : Type} [pf : Pformula_ax form] 
+lemma inconsistent_prove_neg {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} {φ : form} (hnax : ¬ ax_consistent (Γ ∪ {φ})) :
   set_proves Γ (¬' φ) := by
   simp only [ax_consistent, not_not] at hnax
   exact set_proof_imp hnax
 
 -- maximally consistent Γ ⇒ φ ∈ Γ ∨ (¬ φ) ∈ Γ
-lemma max_ax_contains_phi_or_neg  {form : Type} [pf : Pformula_ax form] 
+lemma max_ax_contains_phi_or_neg  {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (φ : form) :
   φ ∈ Γ ∨ (¬' φ) ∈ Γ := by
   rw or_iff_not_and_not
@@ -131,7 +133,7 @@ lemma max_ax_contains_phi_or_neg  {form : Type} [pf : Pformula_ax form]
   cases h2 with φs' h2
   apply hΓ.left
   apply Exists.intro (φs ++ φs')
-  split
+  apply And.intro
   { intro ψ hψ
     cases hψ
     {exact h1.left ψ hψ, }
@@ -142,17 +144,17 @@ lemma max_ax_contains_phi_or_neg  {form : Type} [pf : Pformula_ax form]
 end
 
 -- maximally consistent Γ ⇔ φ ∈ Γ xor (¬ φ) ∈ Γ
-lemma max_ax_contains_phi_xor_neg {form : Type} [pf : Pformula_ax form] 
+lemma max_ax_contains_phi_xor_neg {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} (hax : ax_consistent Γ) :
   max_ax_consistent Γ ↔ ∀ φ, (φ ∈ Γ ∨ (¬' φ) ∈ Γ) ∧ ¬(φ ∈ Γ ∧ (¬' φ) ∈ Γ) := by
-  split
+  apply And.intro
   { intro hΓ φ
-    split
+    apply And.intro
     { exact max_ax_contains_phi_or_neg hΓ φ, }
     { intro hf
       apply hΓ.left
       apply Exists.intro [φ, ¬' φ]
-      split
+      apply And.intro
       { intro ψ hψ
         simp at hψ
         cases hψ
@@ -162,7 +164,7 @@ lemma max_ax_contains_phi_xor_neg {form : Type} [pf : Pformula_ax form]
          exact hf.right, }, }
       { exact fin_conj_simp φ, }, }, }
   { intro h
-    split
+    apply And.intro
     { exact hax, }
     { intro Γ' hΓ hax
       have hΓ : Γ ⊆ Γ' ∧ ¬ Γ' ⊆ Γ:= hΓ
@@ -174,22 +176,22 @@ lemma max_ax_contains_phi_xor_neg {form : Type} [pf : Pformula_ax form]
       { exact hφnΓ hφΓ, }
       { apply hax
         apply Exists.intro [φ, ¬'φ]
-        split
+        apply And.intro
         { simp only [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
-          split
+          apply And.intro
           { exact hφΓ' }
           { exact mem_of_subset_of_mem hΓ.left hnφΓ, }, }
         { apply fin_conj_simp, }, }, }, }
 
 -- Motivation: a lot of places assume `¬ ⊢' ⊥'` so it's worth trying to reduce these assumptions.
-lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form] 
-  {s : Set form} (h : ax_consistent s) : 
+lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
+  {s : Set form} (h : ax_consistent s) :
   ¬ ⊢' (⊥' : form) := by
   intro hf
   unfold ax_consistent set_proves at h
   apply h
   apply Exists.intro []
-  split
+  apply And.intro
   { simp only [List.not_mem_nil, IsEmpty.forall_iff, imp_true_iff], }
   { simp only [finite_conjunction_nil, ax_not_bot_imp]
     exact hf, }
@@ -197,7 +199,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
 /-- An empty Set of formulas is consistent iff the theory is consistent. -/
 @[simp] lemma ax_consistent_empty {form : Type} [pf : Pformula_ax form] :
   ax_consistent (∅ : Set form) ↔ ¬ ⊢' (⊥' : form) := by
-  split; intro h
+  apply And.intro; intro h
   { exact h.not_ax_bot }
   { intro hf
     apply not_ax_consistent_of_proves_bot hf
@@ -214,7 +216,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
 -- Motivation: `comphelper` seemed to be slightly too specific, this is a more general form I found
 @[simp] lemma ax_consistent_singleton {form : Type} [pf : Pformula_ax form] {φ : form} :
   ax_consistent ({φ} : Set form) ↔ ¬ ⊢' (¬' φ) := by
-  split
+  apply And.intro
   { intro h
     simp only [ax_consistent, set_proves, mem_singleton_iff, not_exists, not_and] at h
     have := h [φ] (by simp)
@@ -228,7 +230,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [pf : Pformula_ax form]
     exact hφs.right, }
 
 ----------------------------------------------------------
--- Lindenbaum 
+-- Lindenbaum
 ----------------------------------------------------------
 
 /-- Let `c` be a Nonempty chain of sets and `s` a Finite Set, such that each
@@ -275,7 +277,7 @@ lemma ax_consistent_sUnion_chain {form : Type} [pf : Pformula_ax form]
   { simp
     apply L_subset, }
 
-lemma lindenbaum {form : Type} [pf : Pformula_ax form] 
+lemma lindenbaum {form : Type} [pf : Pformula_ax form]
   {Γ : Set form} (hax : ax_consistent Γ) :
   ∃ Γ', max_ax_consistent Γ' ∧ Γ ⊆ Γ' := by
   -- By Zorn's lemma, it suffices to show that the union of a chain of consistent sets of formulas
@@ -288,7 +290,7 @@ lemma lindenbaum {form : Type} [pf : Pformula_ax form]
   { intro c c_cons c_chain Γ hΓ
     exact ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _, Set.subset_sUnion_of_mem⟩, }
 
-lemma listempty {form : Type} {φs : List form} {Γ : Set form} : 
+lemma listempty {form : Type} {φs : List form} {Γ : Set form} :
   (∀ φ ∈ φs, φ ∈ Γ) → Γ = ∅ → φs = [] :=  by
   intro h1 h2
   by_contra h3
@@ -297,7 +299,7 @@ lemma listempty {form : Type} {φs : List form} {Γ : Set form} :
   cases h5 (h4 h3) with φ h5
   exact absurd (h1 φ h5) (Set.eq_empty_iff_forall_not_mem.mp h2 φ)
 
-lemma max_ax_exists {form : Type} [pf : Pformula_ax form] 
+lemma max_ax_exists {form : Type} [pf : Pformula_ax form]
  (hnprfalseCL : ¬  ⊢' (⊥' : form)) : ∃ Γ : Set form, max_ax_consistent Γ := by
   have h1 : ax_consistent ∅:= by
     intro h1
@@ -331,8 +333,8 @@ by simpa using lindenbaum (comphelper hφ)
 -- Lemmas about the contents of Maximally Consistent Sets
 ----------------------------------------------------------
 
--- set_proves Γ φ ↔ φ ∈ Γ 
-lemma mem_max_consistent_iff_proves {form : Type} [pf : Pformula_ax form] 
+-- set_proves Γ φ ↔ φ ∈ Γ
+lemma mem_max_consistent_iff_proves {form : Type} [pf : Pformula_ax form]
   {Γ : Set (form)} (φ : form) (hΓ : max_ax_consistent Γ) : set_proves Γ φ ↔ φ ∈ Γ := by
   intro h
   cases max_ax_contains_phi_or_neg hΓ φ
@@ -341,14 +343,14 @@ lemma mem_max_consistent_iff_proves {form : Type} [pf : Pformula_ax form]
     apply not_ax_consistent_of_proves_bot _ (hΓ.1)
     cases h with φs hφs
     apply Exists.intro (¬' φ :: φs)
-    split
+    apply And.intro
     { intro x hx
       cases hx
       rw ←hx at h_1, exact h_1
       apply hφs.left x hx, }
-    { have hφ :  ⊢' ((finite_conjunction (¬' φ :: φs)) →' (φ)):= 
+    { have hφ :  ⊢' ((finite_conjunction (¬' φ :: φs)) →' (φ)):=
         cut (imp_and_r hφs.right) (iden)
-      have hnφ :  ⊢' ((finite_conjunction (¬' φ :: φs)) →' (¬' φ)):= 
+      have hnφ :  ⊢' ((finite_conjunction (¬' φ :: φs)) →' (¬' φ)):=
         imp_and_l iden
       apply cut
       { exact imp_imp_and hφ hnφ, }
@@ -391,7 +393,7 @@ lemma false_of_always_false {form : Type} [pf : Pformula_ax form] (φ : form)
 lemma false_of_always_false' {form : Type} [pf : Pformula_ax form] (φ : form)
   (h : ∀ (Γ : Set (form)) (hΓ : max_ax_consistent Γ), φ ∉ Γ) :
   ⊢' (φ ↔' ⊥') := by
-  apply ax_and.mpr, split
+  apply ax_and.mpr, apply And.intro
   { apply (false_of_always_false φ)
     intro Γ hΓ hf
     apply h
@@ -401,19 +403,19 @@ lemma false_of_always_false' {form : Type} [pf : Pformula_ax form] (φ : form)
   { exact explosion, }
 
 -- If Set maximally consistent containing φ ⊆ ∅ ⇒ ⊢ (φ ↔ ⊥)
-lemma set_empty_iff_false {form : Type} [pf : Pformula_ax form] {φ : form} 
+lemma set_empty_iff_false {form : Type} [pf : Pformula_ax form] {φ : form}
   (hempty : {Γ : {Γ : Set form | max_ax_consistent Γ} | φ ∈ Γ.val} ⊆ ∅) :  ⊢' (φ ↔' ⊥') := by
   refine false_of_always_false' φ (λ Γ hΓ h, hempty _)
     { exact ⟨Γ, hΓ⟩ }
     { exact h }
 
 -- For maximall consistent Γ, φ ∈ Γ and ⊢ (φ → ψ) ⇒ ψ ∈ Γ
-lemma max_ax_contains_by_set_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} 
+lemma max_ax_contains_by_set_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form}
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hproves :  ⊢' (φ →' ψ)) : ψ ∈ Γ := by
   rw ←(mem_max_consistent_iff_proves ψ hΓ)
   simp[set_proves]
   apply Exists.intro [φ]
-  split
+  apply And.intro
   { simp, exact hin, }
 
   { simp[finite_conjunction]
@@ -421,15 +423,15 @@ lemma max_ax_contains_by_set_proof {form : Type} [pf : Pformula_ax form] {φ ψ 
     exact hproves, }
 
 -- For maximall consistent Γ, φ ∈ Γ and ψ ∈ Γ and ⊢ (φ → ψ → χ) ⇒ χ ∈ Γ
-lemma max_ax_contains_by_set_proof_2h {form : Type} [pf : Pformula_ax form] {φ ψ χ : form} 
-  {Γ : Set form} (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ) 
+lemma max_ax_contains_by_set_proof_2h {form : Type} [pf : Pformula_ax form] {φ ψ χ : form}
+  {Γ : Set form} (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ)
   (hproves :  ⊢' (φ →' (ψ →' χ))) : χ ∈ Γ := by
   rw ←(mem_max_consistent_iff_proves χ hΓ)
   simp only [set_proves]
   apply Exists.intro [ψ, φ]
-  split
+  apply And.intro
   { simp only [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
-    split, repeat {assumption}}
+    apply And.intro, repeat {assumption}}
 
   { simp[finite_conjunction]
     apply cut
@@ -445,7 +447,7 @@ lemma max_ax_contains_taut {form : Type} [pf : Pformula_ax form] {φ : form} {Γ
   exact always_true_of_true φ hproves Γ
 
 -- For maximall consistent Γ,  φ ∈ Γ → ψ ∈ Γ ⇒ φ → ψ ∈ Γ
-lemma max_ax_contains_imp_by_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form} 
+lemma max_ax_contains_imp_by_proof {form : Type} [pf : Pformula_ax form] {φ ψ : form}
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (himp : φ ∈ Γ → ψ ∈ Γ) : (φ →' ψ) ∈ Γ := by
   cases (max_ax_contains_phi_or_neg hΓ φ)
 
@@ -483,35 +485,35 @@ lemma ex_empty_proves_false {form : Type} [pf : Pformula_ax form] {φ ψ χ : fo
   have hiff' : ⊢' (φ ↔' χ):= hiff hiffbot
 
   -- χ ∈ s:= hiff
-  have h : χ ∈ Γ:= 
+  have h : χ ∈ Γ:=
     max_ax_contains_by_set_proof hΓ hin (mp _ _ (p5 _ _) hiff')
 
   -- Contradiction from hax and h
   exact ax_neg_contains_pr_false hΓ h hax
 
-lemma not_in_from_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form} 
+lemma not_in_from_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form}
   (hΓ : max_ax_consistent Γ) (h : φ ∉ Γ) : ¬' φ ∈ Γ := by
   cases ((max_ax_contains_phi_xor_neg hΓ.1).mp hΓ φ).left
   by_contra hf, exact h h_1
   exact h_1
 
-lemma in_from_not_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form} 
+lemma in_from_not_notin {form : Type} [pf : Pformula_ax form] {φ : form} {Γ : Set form}
   (hΓ : max_ax_consistent Γ) (h : φ ∈ Γ) : ¬' φ ∉ Γ := by
   by_contra hf
   exact contra_contains_pr_false hΓ h hf
 
 lemma complement_from_contra {form : Type} [pf : Pformula_ax form] {φ : form} :
-  {Γ : {Γ : Set form | max_ax_consistent Γ }| (¬' φ) ∈ Γ.val} = 
+  {Γ : {Γ : Set form | max_ax_consistent Γ }| (¬' φ) ∈ Γ.val} =
   {Γ : {Γ : Set form | max_ax_consistent Γ }| φ ∈ Γ.val}ᶜ := by
   rw (Set.compl_def {Γ : {Γ : Set form | max_ax_consistent Γ }| (φ) ∈ Γ.val})
   apply Set.ext
   intro Γ, simp
   have hxor : _:= (max_ax_contains_phi_xor_neg Γ.2.1).mp Γ.2 φ
-  split
+  apply And.intro
 
   { intro h hf
     apply hxor.right
-    split, exact hf, exact h, }
+    apply And.intro, exact hf, exact h, }
 
   { intro h
     apply not_in_from_notin Γ.2 h, }
@@ -535,8 +537,8 @@ lemma ax_imp_from_ex {form : Type} [pf : Pformula_ax form] {φ ψ : form}
   exact contra_not_imp_false_ax (mp _ _ (p5 _ _) hiffbot)
 
 -- For maximall consistent Γ, ∀ φ ∈ φs, φ ∈ Γ and ∧ φs ∈ Γ
-lemma max_ax_contains_conj {form : Type} [pf : Pformula_ax form] 
-  {Γ : Set form} {φs : List form} (hΓ : max_ax_consistent Γ) 
+lemma max_ax_contains_conj {form : Type} [pf : Pformula_ax form]
+  {Γ : Set form} {φs : List form} (hΓ : max_ax_consistent Γ)
   (hin : ∀ φ ∈ φs, φ ∈ Γ) : finite_conjunction φs ∈ Γ := by
   induction φs with φ φs ih
   { simp only [finite_conjunction_nil]

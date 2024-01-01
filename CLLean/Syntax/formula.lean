@@ -28,7 +28,7 @@ class Pformula (form : Type) :=
 (and : form → form → form)
 (imp : form → form → form)
 
-notation  "⊥'" => Pformula.bot 
+notation  "⊥'" => Pformula.bot
 infix :79 "∧'" => Pformula.and
 infixr:78 "→'" => Pformula.imp
 prefix:80 "¬'" => λ φ => φ →' ⊥'
@@ -132,7 +132,7 @@ class Cformula (agents : outParam Type) [hN : Fintype agents] (form : Type)
 (C : ∀ φ: form, ∀ G: Set (agents), ⊢' ((common_know G φ) →' (E' G (φ ∧' (common_know G φ)))))
 (RC : ∀ φ ψ : form, ∀ G : Set (agents), ⊢' (ψ →' (E' G (φ ∧' ψ))) → ⊢' (ψ →' (common_know G φ)))
 
-def C  {agents : Type} {form : Type} [Fintype agents] [Pformula_ax form] 
+def C  {agents : Type} {form : Type} [Fintype agents] [Pformula_ax form]
   [Kformula agents form] [cf : Cformula agents form] := cf.C
 def RC {agents : Type} {form : Type} [Fintype agents] [Pformula_ax form]
   [Kformula agents form] [cf : Cformula agents form] := cf.RC
