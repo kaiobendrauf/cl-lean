@@ -6,15 +6,15 @@ This file contains proofs for a variety of lemmas for CL.
 
 import CLLean.Syntax.propLemmas
 
-open Set
+open Set Logic
 
 -- ⊢ [G] (φ ∧ ψ) → [G] (ψ ∧ φ)
-lemma ef_and_switch {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
+lemma ef_and_switch {agents form : Type} [Pformula_ax form] [CLformula agents form]
   {φ ψ : form} {G : Set agents} : ⊢' ((['G] (φ ∧' ψ)) →' (['G] (ψ ∧' φ))) :=
 iff_l ((Eq _ _ _) and_switch)
 
 -- ⊢ φ → ψ ⇒ ⊢ [G]φ → [G]ψ
-lemma derived_monoticity_rule {agents form : Type} 
+lemma derived_monoticity_rule {agents form : Type}
   [pf : Pformula_ax form] [clf : CLformula agents form] {φ ψ : form} {G : Set agents} :
   ⊢' (φ →' ψ) → ⊢' ((['G] φ) →' (['G] ψ)) := by
   -- Let ⊢ φ → ψ
@@ -35,16 +35,16 @@ lemma derived_monoticity_rule {agents form : Type}
   exact cut hif hM
 
 -- ⊢ [N] φ ↔ ⊢ ¬ [∅] ¬φ
-lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form] 
-  {φ : form} : ⊢' ((['(univ : Set agents)] φ) ↔' (¬' (['(∅ : Set agents)] (¬' φ)))) :=
+lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformula agents form]
+  {φ : form} : ⊢' ((['(univ : Set agents)] φ) ↔' (¬' (['(∅ : Set agents)] (¬' φ)))) := by
   -- ⇒ by
-  refine ax_and.mpr _
-  split
-  -- ⇒ 
-  { -- Assume [N] φ
+  apply ax_and.mpr
+  apply And.intro
+  -- ⇒
+  · -- Assume [N] φ
     -- Assume by contradiction [∅] ¬φ
     apply by_contra_ax
-    rw ←and_right_imp
+    rw [←and_right_imp]
     apply cut (mp _ _  (p5 _  _) (and_switch))
     apply cut
     --  [N] (φ ∧ ¬φ):= above by axiom (S) : ([N] φ ∧ [∅] ¬φ) → [N]  ∪ ∅(φ ∧ ¬φ)
@@ -54,12 +54,12 @@ lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformu
     simp at *
     --  [N] (⊥):= above by axiom (Eq)
     have hGiff : ⊢' ((['(univ : Set agents)] (φ ∧' (¬' φ))) ↔' (['(univ : Set agents)] ⊥')):= by
-        apply Eq
+        apply clf.Eq
         exact contra_equiv_false
     exact iff_l hGiff
     apply mp
     --Contradiction from axiom (⊥) : ¬[N] ⊥ and above.
     exact contra_imp_imp_false
-    exact Bot _, }
-  -- ⇒ 
-  { exact N _, }
+    exact Bot _
+  -- ⇒
+  · exact N _
