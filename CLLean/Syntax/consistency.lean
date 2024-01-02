@@ -244,53 +244,59 @@ This is useful in combination with Zorn's lemma, if you take `⋃₀ c` as the
 upper bound of a chain of sets.
 -/
 lemma exists_subset_of_finite_of_subset_sUnion_of_chain {α : Type*}
-  (c : Set (Set α)) (hc : is_chain ⊆ c)
+  (c : Set (Set α)) (hc : IsChain (λ a b => a ⊆ b) c)
   (t : Set α) (ht : t ∈ c)
   (s : Set α) (hs : s.Finite) (hsc : s ⊆ ⋃₀ c) : ∃ t ∈ c, s ⊆ t := by
   revert hsc
-  refine hs.induction_on _ _
+  refine' hs.induction_on _ _
   · exact λ  _ => ⟨t, ht, Set.empty_subset _⟩
-  intros x s hxs hs ih hsc
-  -- rintros x s hxs hs ih hsc
-  obtain ⟨⟨u, huc, hxu⟩, hsc⟩ := Set.insert_subset.mp hsc
+  intros x s _ _ ih hsc
+  obtain ⟨⟨u, huc, hxu⟩, hsc⟩ := Set.insert_subset_iff.mp hsc
   obtain ⟨t, htc, hst⟩ := ih hsc
   cases' hc.total huc htc with h h
-  · exact ⟨t, htc, insert_subset.mpr ⟨h hxu, hst⟩⟩
-  · exact ⟨u, huc, insert_subset.mpr ⟨hxu, hst.trans h⟩⟩
+  · exact ⟨t, htc, insert_subset_iff.mpr ⟨h hxu, hst⟩⟩
+  · exact ⟨u, huc, insert_subset_iff.mpr ⟨hxu, hst.trans h⟩⟩
 
 /-- The union of a chain of consistent sets is consistent. -/
-lemma ax_consistent_sUnion_chain {form : Type} [Pformula_ax form]
-  {c : Set (Set form)} (c_cons : ∀ Γ ∈ c, ax_consistent Γ) (c_chain : is_chain (⊆) c)
+lemma ax_consistent_sUnion_chain {form : Type} [pf : Pformula_ax form]
+  {c : Set (Set form)} (c_cons : ∀ Γ ∈ c, ax_consistent Γ) (c_chain : IsChain (λ a b => a ⊆ b) c)
   (Γ : Set form) (hΓ : Γ ∈ c) :
   ax_consistent (⋃₀ c) := by
   -- For consistency, we have to show any Finite subset of axioms L does not imply falsum.
-  unfold ax_consistent set_proves at ⊢ c_cons
+  unfold ax_consistent set_proves at *
   simp
   intro L L_subset
   simp at *
+  have hs : Set.Finite {x | x ∈ L} := by
+    letI := Classical.decEq form
+    convert Set.finite_mem_finset L.toFinset
+    simp
+  have hsc : {x | x ∈ L} ⊆ ⋃₀ c := by
+    apply L_subset
   -- Since L is Finite, it is completely contained in some element of the chain
   -- and each element of the chain is consistent, therefore L does not imply falsum.
   obtain ⟨Γ, hΓc, hΓ⟩ := exists_subset_of_finite_of_subset_sUnion_of_chain c c_chain
-    Γ hΓ {x | x ∈ L} _ _
+    Γ hΓ {x | x ∈ L} hs hsc
   · exact c_cons Γ hΓc L hΓ
-  · letI := classical.dec_eq form
-    convert Set.finite_mem_finset L.toFinset
-    ext; simp
-  · simp
-    apply L_subset
 
 lemma lindenbaum {form : Type} [Pformula_ax form]
   {Γ : Set form} (hax : ax_consistent Γ) :
   ∃ Γ', max_ax_consistent Γ' ∧ Γ ⊆ Γ' := by
   -- By Zorn's lemma, it suffices to show that the union of a chain of consistent sets of formulas
   -- is itself consistent.
-  obtain ⟨Γ', consistent, subset, max⟩ := zorn_nonempty_preorder₀ (ax_consistent) _ Γ hax
-  · refine ⟨Γ', ⟨consistent, _⟩, subset⟩
-    intro Δ hΓΔ hconsΔ
-    rw [←Set.lt_eq_ssubset] at hΓΔ
-    exact hΓΔ.not_le (max Δ hconsΔ hΓΔ.le)
-  · intro c c_cons c_chain Γ hΓ
-    exact ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _ => Set.subset_sUnion_of_mem⟩
+  obtain ⟨Γ', consistent, subset, max⟩ := zorn_nonempty_preorder₀ (ax_consistent)
+    (λ c c_cons c_chain Γ hΓ =>
+    ⟨⋃₀ c, ax_consistent_sUnion_chain c_cons c_chain Γ hΓ, λ _ => Set.subset_sUnion_of_mem⟩)
+    Γ hax
+  apply Exists.intro Γ'
+  apply And.intro
+  · unfold max_ax_consistent
+    apply And.intro consistent
+    intro Γ''  hΓ'' haxΓ''
+    have := max Γ'' haxΓ''
+    rw [Set.ssubset_def] at hΓ''
+    apply hΓ''.right (this hΓ''.left)
+  · exact subset
 
 lemma listempty {form : Type} {φs : List form} {Γ : Set form} :
   (∀ φ ∈ φs, φ ∈ Γ) → Γ = ∅ → φs = [] :=  by
@@ -362,10 +368,10 @@ lemma mem_max_consistent_iff_proves {form : Type} [Pformula_ax form]
 
 
 -- If no maximally consistent Set contains φ ⇒ ⊢ (¬ φ)
-lemma false_of_always_false {form : Type} [Pformula_ax form] (φ : form)
+lemma false_of_always_false {form : Type} [pf: Pformula_ax form] (φ : form)
   (h : ∀ Γ (hΓ : max_ax_consistent Γ), ¬ set_proves Γ φ) :
   ⊢' (¬' φ) := by
-  let Γ := {φ}
+  let Γ : Set (form) := {φ}
   by_cases hφ : ax_consistent Γ
   · obtain ⟨Γ', hΓ', sub⟩ := lindenbaum hφ
     have := h Γ' hΓ'
@@ -378,17 +384,14 @@ lemma false_of_always_false {form : Type} [Pformula_ax form] (φ : form)
       -- we have ⊥, so (φ → ⊥) should also follow
       exact ax_bot_imp pf
     · -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
-      induction xs
-
+      induction' xs with _ _ xs_ih
       · simp [finite_conjunction] at *
         simp [sub] at *
         exact iff_and_top.mp pf
-
       · simp [finite_conjunction] at *
         apply xs_ih
         · exact sub.left
         · exact sub.right.right
-
         · simp [sub.right.left, sub.left] at *
           apply remove_and_imp pf
 
@@ -408,9 +411,9 @@ lemma false_of_always_false' {form : Type} [Pformula_ax form] (φ : form)
 -- If Set maximally consistent containing φ ⊆ ∅ ⇒ ⊢ (φ ↔ ⊥)
 lemma set_empty_iff_false {form : Type} [Pformula_ax form] {φ : form}
   (hempty : {Γ : {Γ : Set form | max_ax_consistent Γ} | φ ∈ Γ.val} ⊆ ∅) :  ⊢' (φ ↔' ⊥') := by
-  refine false_of_always_false' φ (λ Γ hΓ h => hempty _)
-    · exact ⟨Γ, hΓ⟩
-    · exact h
+  apply false_of_always_false' φ (λ Γ hΓ h => hempty _)
+  · aesop
+  · simp
 
 -- For maximall consistent Γ, φ ∈ Γ and ⊢ (φ → ψ) ⇒ ψ ∈ Γ
 lemma max_ax_contains_by_set_proof {form : Type} [Pformula_ax form] {φ ψ : form}
