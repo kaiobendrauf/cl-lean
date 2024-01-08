@@ -32,17 +32,17 @@ Finset.attach (Finset.filter
   (Finset.powerset (cl φ)))
 
 /-- Allows us to write `φ ∈ sf` instead of `φ ∈ sf.1.1` -/
-instance S_f.SetLike {agents form : Type} (m : modelCL agents) [hm : SetLike m.f.states form]
+protected instance S_f.SetLike {agents form : Type} (m : modelCL agents) [hm : SetLike m.f.states form]
   (cl : form → Finset (form)) (φ : form) :
   SetLike (S_f m cl φ) (form) :=
 { coe            := λ sf => sf.1.1
   coe_injective' := λ x y h => Subtype.coe_injective (Subtype.coe_injective (by simpa using h)) }
 
 -- Sf is  Finite
-noncomputable instance S_f.Fintype {agents form : Type}
+protected noncomputable instance S_f.Fintype {agents form : Type}
   (m : modelCL agents) [hm : SetLike m.f.states form]
   (cl : form → Finset (form)) (φ : form) : Fintype (S_f m cl φ) :=
-additive.Fintype
+inferInstanceAs (Fintype (Additive _))
 
 @[simp] lemma mem_mk {agents form : Type} [Nonempty agents]
   [Pformula_ax form] [CLformula agents form]
