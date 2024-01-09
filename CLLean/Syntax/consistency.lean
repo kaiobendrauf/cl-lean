@@ -31,9 +31,9 @@ lemma proves_of_mem {form : Type} [Pformula_ax form]
   set_proves Γ φ := by
   apply Exists.intro [φ]
   apply And.intro
-  · simp
+  · simp only [List.mem_singleton, forall_eq]
     exact h
-  · simp[finite_conjunction]
+  · simp only [finite_conjunction]
     apply imp_and_l iden
 
 -- we always have a Set proof of a tautology
@@ -86,7 +86,8 @@ lemma set_proof_imp {form : Type} [Pformula_ax form]
     · apply imp_if_imp_imp
       exact hψ
   · intro ψ hψ
-    simp [set_proves] at *
+    simp only [union_singleton, mem_insert_iff, set_proves, Bool.not_eq_true, List.mem_cons,
+      forall_eq_or_imp, finite_conjunction_cons] at *
     cases' ih hΓ.right (and_right_imp.mp hψ) with φs' ih
     cases' ih with ihl ihr
     cases' hΓ.left with h
@@ -135,7 +136,7 @@ lemma max_ax_contains_phi_or_neg  {form : Type} [Pformula_ax form]
   apply Exists.intro (φs ++ φs')
   apply And.intro
   · intro ψ hψ
-    simp at hψ
+    simp only [List.mem_append] at hψ
     cases' hψ with hψ hψ
     · exact h1.left ψ hψ
     · exact h2.left ψ hψ
@@ -156,7 +157,8 @@ lemma max_ax_contains_phi_xor_neg {form : Type} [Pformula_ax form]
       apply Exists.intro [φ, ¬' φ]
       apply And.intro
       · intro ψ hψ
-        simp at hψ
+        simp only [Bool.not_eq_true, List.mem_cons, List.mem_singleton, List.find?_nil,
+          List.not_mem_nil, or_false] at hψ
         cases' hψ with hψ hψ
         · rw [hψ]
           exact hf.left
@@ -180,7 +182,8 @@ lemma max_ax_contains_phi_xor_neg {form : Type} [Pformula_ax form]
         · simp only [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
           apply And.intro
           · exact hφΓ'
-          · simp
+          · simp only [List.find?_nil, List.not_mem_nil, IsEmpty.forall_iff, implies_true,
+              and_true]
             exact mem_of_subset_of_mem hΓ.left hnφΓ
         · apply fin_conj_simp
 
@@ -205,11 +208,11 @@ lemma ax_consistent.not_ax_bot {form : Type} [Pformula_ax form]
     exact h.not_ax_bot
   · intros h hf
     apply not_ax_consistent_of_proves_bot hf
-    simp [ax_consistent, set_proves]
+    simp only [ax_consistent, set_proves, mem_empty_iff_false, imp_false, not_exists, not_and]
     intro φs
     cases' φs with φ φs
-    · simp [List.not_mem_nil, IsEmpty.forall_iff, imp_true_iff, finite_conjunction_nil,
-                  ax_not_bot_imp, forall_true_left]
+    · simp only [List.find?_nil, List.not_mem_nil, not_false_eq_true, implies_true,
+        finite_conjunction_nil, ax_not_bot_imp, forall_true_left]
       exact h
     · simp only [List.mem_cons, forall_eq_or_imp, false_and, IsEmpty.forall_iff]
 
@@ -221,7 +224,7 @@ lemma ax_consistent.not_ax_bot {form : Type} [Pformula_ax form]
   apply Iff.intro
   · intro h
     simp only [ax_consistent, set_proves, mem_singleton_iff, not_exists, not_and] at h
-    have := h [φ] (by simp)
+    have := h [φ] (by simp only [List.mem_singleton, imp_self, implies_true])
     simp only [finite_conjunction_cons, finite_conjunction_nil] at *
     exact mt (ax_iff_mp (ax_imp_congr_left ax_and_top_iff)).2 this
   · intro hφ hφs
@@ -264,13 +267,13 @@ lemma ax_consistent_sUnion_chain {form : Type} [pf : Pformula_ax form]
   ax_consistent (⋃₀ c) := by
   -- For consistency, we have to show any Finite subset of axioms L does not imply falsum.
   unfold ax_consistent set_proves at *
-  simp
+  simp only [mem_sUnion, not_exists, not_and]
   intro L L_subset
-  simp at *
+  simp only [not_exists, not_and] at c_cons
   have hs : Set.Finite {x | x ∈ L} := by
     letI := Classical.decEq form
     convert Set.finite_mem_finset L.toFinset
-    simp
+    simp only [List.mem_toFinset]
   have hsc : {x | x ∈ L} ⊆ ⋃₀ c := by
     apply L_subset
   -- Since L is Finite, it is completely contained in some element of the chain
@@ -312,12 +315,12 @@ lemma max_ax_exists {form : Type} [Pformula_ax form]
     unfold set_proves at h1
     cases' h1 with L h1
     have h2 := listempty h1.left
-    simp at h2
+    simp only [forall_true_left] at h2
     by_contra
     apply hnprfalseCL
     apply mp
     exact h1.right
-    aesop
+    simp only [h2, finite_conjunction_nil, explosion]
   have h2 := lindenbaum h1
   cases' h2 with Γ h2
   cases' h2 with h2 h3
@@ -334,7 +337,7 @@ ax_consistent_singleton.mpr (mt (mp _ _ dne) h)
 lemma exists_max_ax_consistent_neg_mem {form : Type} [Pformula_ax form]
   {φ : form} (hφ : ¬ ⊢' φ) :
   ∃ (Γ : Set form), max_ax_consistent Γ ∧ ¬' φ ∈ Γ :=
-by simpa using lindenbaum (comphelper hφ)
+by simpa only [singleton_subset_iff] using lindenbaum (comphelper hφ)
 
 
 ----------------------------------------------------------
@@ -378,21 +381,22 @@ lemma false_of_always_false {form : Type} [pf: Pformula_ax form] (φ : form)
     rw [mem_max_consistent_iff_proves φ hΓ'] at this
     have := sub (Set.mem_singleton φ)
     contradiction
-  · simp [ax_consistent] at hφ
+  · simp only [ax_consistent, not_not] at hφ
     rcases hφ with ⟨(List.nil | ⟨x, xs⟩), sub, pf⟩
     · unfold finite_conjunction at pf
       -- we have ⊥, so (φ → ⊥) should also follow
       exact ax_bot_imp pf
     · -- we have (φ ∧ φ ... ∧ φ) → ⊥, so (φ → ⊥) should also follow
       induction' xs with _ _ xs_ih
-      · simp [finite_conjunction] at *
-        simp [sub] at *
+      · simp only [List.mem_singleton, mem_singleton_iff, forall_eq, finite_conjunction] at *
+        rw [sub] at pf
         exact iff_and_top.mp pf
-      · simp [finite_conjunction] at *
+      · simp only [Bool.not_eq_true, List.mem_cons, mem_singleton_iff, forall_eq_or_imp,
+        finite_conjunction, and_imp] at *
         apply xs_ih
         · exact sub.left
         · exact sub.right.right
-        · simp [sub.right.left, sub.left] at *
+        · simp only [sub.left, sub.right.left, forall_true_left, true_and] at *
           apply remove_and_imp pf
 
 -- If no maximally consistent Set contains φ ⇒ ⊢ (φ ↔ ⊥)
@@ -412,19 +416,21 @@ lemma false_of_always_false' {form : Type} [Pformula_ax form] (φ : form)
 lemma set_empty_iff_false {form : Type} [Pformula_ax form] {φ : form}
   (hempty : {Γ : {Γ : Set form | max_ax_consistent Γ} | φ ∈ Γ.val} ⊆ ∅) :  ⊢' (φ ↔' ⊥') := by
   apply false_of_always_false' φ (λ Γ hΓ h => hempty _)
-  · aesop
-  · simp
+  · intro _ hΓ _
+    apply Subtype.mk
+    exact hΓ
+  · simp only [coe_setOf, mem_setOf_eq, imp_self, implies_true, forall_const]
 
 -- For maximall consistent Γ, φ ∈ Γ and ⊢ (φ → ψ) ⇒ ψ ∈ Γ
 lemma max_ax_contains_by_set_proof {form : Type} [Pformula_ax form] {φ ψ : form}
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hproves :  ⊢' (φ →' ψ)) : ψ ∈ Γ := by
   rw [←(mem_max_consistent_iff_proves ψ hΓ)]
-  simp[set_proves]
+  rw [set_proves]
   apply Exists.intro [φ]
   apply And.intro
-  · simp
+  · simp only [List.mem_singleton, forall_eq]
     exact hin
-  · simp[finite_conjunction]
+  · simp only [finite_conjunction]
     rw [iff_and_top]
     exact hproves
 
@@ -433,13 +439,12 @@ lemma max_ax_contains_by_set_proof_2h {form : Type} [Pformula_ax form] {φ ψ χ
   {Γ : Set form} (hΓ : max_ax_consistent Γ) (hinφ : φ ∈ Γ) (hinψ : ψ ∈ Γ)
   (hproves :  ⊢' (φ →' (ψ →' χ))) : χ ∈ Γ := by
   rw [←(mem_max_consistent_iff_proves χ hΓ)]
-  simp only [set_proves]
+  rw [set_proves]
   apply Exists.intro [ψ, φ]
   apply And.intro
-  · simp [List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq]
-    apply And.intro
-    repeat {assumption}
-  · simp [finite_conjunction]
+  · simp only [Bool.not_eq_true, List.mem_cons, List.mem_singleton, forall_eq_or_imp, forall_eq,
+      List.find?_nil, List.not_mem_nil, IsEmpty.forall_iff, implies_true, hinψ, hinφ, and_true]
+  · simp only [finite_conjunction]
     apply cut
     apply mp _ _ (p6 _ _) and_commute
     rw [iff_and_top, and_right_imp]
@@ -468,7 +473,7 @@ lemma ax_neg_contains_pr_false {form : Type} [Pformula_ax form] {φ : form} {Γ 
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hax :  ⊢' (¬' φ)) : false := by
   have hbot : (⊥') ∈ Γ:=
     max_ax_contains_by_set_proof hΓ hin (contra_iff_false_ax_not.mp hax)
-  simp
+  simp only
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot
 
 -- For maximall consistent Γ, φ ∈ Γ and ¬ φ ∈ Γ ⇒ false
@@ -476,7 +481,7 @@ lemma contra_contains_pr_false {form : Type} [Pformula_ax form] {φ : form} {Γ 
   (hΓ : max_ax_consistent Γ) (hin : φ ∈ Γ) (hnin : (¬' φ) ∈ Γ) : false := by
   have hbot : (⊥') ∈ Γ:=
     max_ax_contains_by_set_proof_2h hΓ hnin hin contra_imp_imp_false
-  simp
+  simp only
   apply bot_not_mem_of_ax_consistent Γ hΓ.left hbot
 
 lemma ex_empty_proves_false {form : Type} [Pformula_ax form] {φ ψ χ : form} {Γ : Set form}
@@ -507,7 +512,7 @@ lemma in_from_not_notin {form : Type} [Pformula_ax form] {φ : form} {Γ : Set f
   (hΓ : max_ax_consistent Γ) (h : φ ∈ Γ) : ¬' φ ∉ Γ := by
   by_contra hf
   have := contra_contains_pr_false hΓ h hf
-  simp at this
+  simp only at this
 
 lemma complement_from_contra {form : Type} [Pformula_ax form] {φ : form} :
   {Γ : {Γ : Set form | max_ax_consistent Γ }| (¬' φ) ∈ Γ.val} =
@@ -515,7 +520,7 @@ lemma complement_from_contra {form : Type} [Pformula_ax form] {φ : form} :
   rw [(Set.compl_def {Γ : {Γ : Set form | max_ax_consistent Γ }| (φ) ∈ Γ.val})]
   apply Set.ext
   intro Γ
-  simp
+  simp only [coe_setOf, mem_setOf_eq]
   have hxor : _:= (max_ax_contains_phi_xor_neg Γ.2.1).mp Γ.2 φ
   apply Iff.intro
   · intro h hf
@@ -534,8 +539,8 @@ lemma ax_imp_from_ex {form : Type} [Pformula_ax form] {φ ψ : form}
     λ t => in_from_not_notin t.2 (himp' t)
 
   have hempty : {Γ : {Γ : Set form | max_ax_consistent Γ } | (¬' (ψ →' φ)) ∈ Γ.val} ⊆ ∅:= by
-    simp[Set.subset_empty_iff, Set.eq_empty_iff_forall_not_mem]
-    simp at himpneg
+    simp only [coe_setOf, mem_setOf_eq, subset_empty_iff, eq_empty_iff_forall_not_mem,
+      Subtype.forall] at *
     exact himpneg
 
   have hiffbot :  ⊢' ((¬' (ψ →' φ)) ↔' ⊥'):=
@@ -548,7 +553,7 @@ lemma max_ax_contains_conj {form : Type} [Pformula_ax form]
   {Γ : Set form} {φs : List form} (hΓ : max_ax_consistent Γ)
   (hin : ∀ φ ∈ φs, φ ∈ Γ) : finite_conjunction φs ∈ Γ := by
   induction' φs with φ φs ih
-  · simp [finite_conjunction_nil]
+  · rw [finite_conjunction_nil]
     exact max_ax_contains_taut hΓ iden
   · unfold finite_conjunction
     apply max_ax_contains_by_set_proof_2h hΓ (hin φ (List.mem_cons_self φ φs))

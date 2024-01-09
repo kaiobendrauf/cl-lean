@@ -1,12 +1,12 @@
 /-
 Authors: Kai Obendrauf
-Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly 
+Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the defintions of semantic entailment and validity for CL.
 -/
 
-import CLLean.Syntax.syntaxCL 
+import CLLean.Syntax.syntaxCL
 import CLLean.Semantics.model
 
 open Logic formCL Set
@@ -39,7 +39,7 @@ lemma not_s_entails_imp {agents: Type} (m : modelCL agents) (s : m.f.states) (φ
 ----------------------------------------------------------
 
 -- φ is valid in a model M = (f,v), if it is entailed by every state of the model
-def valid_m {agents: Type} (m : modelCL agents) (φ : formCL agents) := 
+def valid_m {agents: Type} (m : modelCL agents) (φ : formCL agents) :=
   ∀ s : m.f.states, m; s _⊨ φ
 
 notation m "_⊨" φ => valid_m m  φ

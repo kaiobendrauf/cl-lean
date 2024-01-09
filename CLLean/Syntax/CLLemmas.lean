@@ -49,9 +49,9 @@ lemma univ_iff_empty {agents form : Type} [pf : Pformula_ax form] [clf : CLformu
     apply cut
     --  [N] (φ ∧ ¬φ):= above by axiom (S) : ([N] φ ∧ [∅] ¬φ) → [N]  ∪ ∅(φ ∧ ¬φ)
     apply (S _ _ _ _)
-    simp
+    simp only [inter_empty]
     apply cut
-    simp at *
+    simp only [union_empty]
     --  [N] (⊥):= above by axiom (Eq)
     have hGiff : ⊢' ((['(univ : Set agents)] (φ ∧' (¬' φ))) ↔' (['(univ : Set agents)] ⊥')):= by
         apply clf.Eq

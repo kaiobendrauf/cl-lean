@@ -55,8 +55,9 @@ lemma s_entails_CLK_conjunction {agents : Type} {m : modelECL agents} {s : m.f.s
   case cons φ φs ih =>
     unfold finite_conjunction
     show s_entails_CLK m s (φ _∧ finite_conjunction φs) ↔ _
-    simp [s_entails_CLK, List.mem_cons, forall_eq_or_imp]
-    intro h
+    simp only [s_entails_CLK, Bool.not_eq_true, List.mem_cons, forall_eq_or_imp,
+      and_congr_right_iff]
+    intro _
     exact ih
 
 ----------------------------------------------------------

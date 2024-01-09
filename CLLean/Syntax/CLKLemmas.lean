@@ -58,7 +58,7 @@ lemma nk_disjunction {agents form : Type} [pf : Pformula_ax form] [kf : Kformula
   apply cut
   apply iff_l
   apply demorans_fin_con
-  simp
+  simp only [List.map_map]
   exact iden
 
 lemma everyone_empty {agents form : Type} [hN : Fintype agents]
@@ -66,13 +66,15 @@ lemma everyone_empty {agents form : Type} [hN : Fintype agents]
   {G : Set (agents)} (hG : G = ∅ ):
   ⊢' (E' G φ) := by
   rw [hG]
-  simp [explosion]
+  simp only [toFinite_toFinset, toFinset_empty, Finset.toList_empty, List.map_nil,
+    finite_conjunction_nil, explosion]
 
 lemma everyone_knows_pr  {agents form : Type} [hN : Fintype agents]
   [pf : Pformula_ax form] [kf : Kformula agents form]
   {φ : form} {G : Set (agents)} (h : ⊢' φ) : ⊢' (E' G φ) := by
   apply finite_conj_forall_iff.mp
-  simp
+  simp only [List.mem_map, Finset.mem_toList, Finite.mem_toFinset, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂]
   intros _ _
   apply RN
   exact h
@@ -82,7 +84,7 @@ lemma everyone_knows_imp_knows  {agents form : Type} [hN : Fintype agents]
   {G : Set (agents)} {i : agents} (hi : i ∈ G) :
   ⊢' ((E' G φ) →' (K' i φ)) := by
   apply finite_conj_imp
-  simp
+  simp only [List.mem_map, Finset.mem_toList, Finite.mem_toFinset]
   apply Exists.intro i
   exact And.intro hi rfl
 

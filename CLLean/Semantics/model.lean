@@ -2,10 +2,10 @@
 Authors: Kai Obendrauf
 Following the paper "A Modal Logic for Coalitional Power in Games" by Mark Pauly
 the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
-and the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+and the paper "Coalition Logic with Individual, Distributed and Common Knowledge
 by Thomas Ågotnes and Natasha Alechina.
 
-This file contains the structure definitions for frames and models for CL and CLK. 
+This file contains the structure definitions for frames and models for CL and CLK.
 Note that CLC uses CLK frames and models.
 -/
 

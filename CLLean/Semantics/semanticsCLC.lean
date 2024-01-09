@@ -1,13 +1,13 @@
 /-
 Authors: Kai Obendrauf
-Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge
 by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the defintions of semantic entailment and validity for CL.
 -/
 
-import CLLean.Syntax.syntaxCLC 
+import CLLean.Syntax.syntaxCLC
 import CLLean.Semantics.model
 
 open Logic formCLC Set
@@ -33,7 +33,7 @@ def s_entails_CLC {agents : Type} (m : modelECL agents) (s : m.f.states) :
   | (.and φ ψ) => (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
   | (_[G] φ)   => {t : m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
   | (.K i φ)   => ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
-  | (.C G φ)   => ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) → 
+  | (.C G φ)   => ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) →
                     s_entails_CLC m t φ
 
 notation m ";" s "_⊨" φ => s_entails_CLC m s φ
@@ -46,8 +46,8 @@ lemma not_s_entails_imp {agents: Type} (m : modelECL agents) (s : m.f.states) (�
     simp only [s_entails_CLC] at *
     exact h1 h2
 
-lemma s_entails_CLC_conjunction {agents : Type} {m : modelECL agents} {s : m.f.states} 
-  {φs : List (formCLC agents)} : 
+lemma s_entails_CLC_conjunction {agents : Type} {m : modelECL agents} {s : m.f.states}
+  {φs : List (formCLC agents)} :
   (m; s _⊨ (finite_conjunction φs)) ↔ ∀ φ ∈ φs, m; s _⊨ φ := by
   induction φs
   case nil =>
@@ -57,8 +57,9 @@ lemma s_entails_CLC_conjunction {agents : Type} {m : modelECL agents} {s : m.f.s
   case cons φ φs ih =>
     unfold finite_conjunction
     change s_entails_CLC m s (φ _∧ finite_conjunction φs) ↔ _
-    simp [s_entails_CLC, List.mem_cons, forall_eq_or_imp]
-    intro h
+    simp only [s_entails_CLC, Bool.not_eq_true, List.mem_cons, forall_eq_or_imp,
+      and_congr_right_iff]
+    intro _
     exact ih
 
 ----------------------------------------------------------
@@ -66,7 +67,7 @@ lemma s_entails_CLC_conjunction {agents : Type} {m : modelECL agents} {s : m.f.s
 ----------------------------------------------------------
 
 -- φ is valid in a model M = (f,v), if it is entailed by every state of the model
-def valid_m {agents : Type} (m: modelECL agents) (φ : formCLC agents) := 
+def valid_m {agents : Type} (m: modelECL agents) (φ : formCLC agents) :=
   ∀ s : m.f.states, m; s _⊨ φ
 
 notation m "_⊨" φ => valid_m m φ

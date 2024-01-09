@@ -34,11 +34,11 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
   -- case Prop3
   · intro m s h1 h2
     by_contra hf
-    simp [s_entails_CLC] at *
+    simp only [s_entails_CLC, imp_false] at *
     exact (h1 hf) (h2 hf)
   -- case Prop4
   · intro m s h1 h2
-    simp [s_entails_CLC] at *
+    simp only [s_entails_CLC] at *
     exact And.intro h1 h2
   -- case Prop5
   · intro m s h1
@@ -49,21 +49,21 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
   -- case Prop7
   · intro m s h1 h2
     by_contra hf
-    simp [s_entails_CLC] at *
+    simp only [s_entails_CLC, imp_false] at *
     exact h1 hf h2
   -- case ⊥
   · intro m s h1
-    simp [s_entails_CLC] at *
+    simp only [s_entails_CLC, setOf_false] at *
     exact m.f.E.liveness s _ h1
   -- case ⊤
   · intro m s
-    simp [s_entails_CLC]
+    simp only [s_entails_CLC, IsEmpty.forall_iff, setOf_true]
     exact m.f.E.safety s _
   -- case N
   · intro m s h1
     apply m.f.E.N_max
     by_contra h
-    simp [s_entails_CLC] at *
+    simp only [s_entails_CLC, imp_false] at *
     exact h1 h
   -- case M
   · intro m s
@@ -116,7 +116,7 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
     rename_i ψ G
     rw [s_entails_CLC_conjunction]
     intro ψ hψ
-    simp at hψ
+    simp only [List.mem_map, Finset.mem_toList, Finite.mem_toFinset] at hψ
     cases' hψ with i hi
     cases' hi with hi hψ
     rw [←(hψ)]
@@ -127,7 +127,7 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
       apply Exists.intro [i]
       · constructor
         · show ∀ a, a ∈ [i] → a ∈ G
-          simp
+          simp only [List.mem_singleton, forall_eq]
           exact hi
         · apply Exists.intro []
           unfold C_path
@@ -140,7 +140,7 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
       constructor
       · constructor
         · show ∀ a, a ∈ (i :: js) → a ∈ G
-          simp
+          simp only [Bool.not_eq_true, List.mem_cons, forall_eq_or_imp]
           exact And.intro hi hjs
         · apply Exists.intro (t :: us)
           unfold C_path
@@ -152,22 +152,23 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
   -- RC
   · intro m s hs t hC
     rename_i ψ χ G h ih
-    simp at h ih
+    simp only at h ih
     cases' hC with is hC
     cases' hC with his hC
     cases' hC with ss hC
-    simp [global_valid, valid_m, s_entails_CLC] at ih
+    simp only [global_valid, valid_m, s_entails_CLC] at ih
     induction' is with i is ih_is generalizing s ss
     · by_contra
-      simp [C_path] at hC
+      simp only [C_path] at hC
     · specialize ih m s hs
       rw [s_entails_CLC_conjunction] at ih
       specialize ih (_K i (ψ _∧ χ))
-      simp [s_entails_CLC] at ih
+      simp only [List.mem_map, Finset.mem_toList, Finite.mem_toFinset, formCLC.K.injEq, and_true,
+        exists_eq_right, s_entails_CLC] at ih
       cases' ss with u ss
-      · simp at his
+      · simp only [Bool.not_eq_true, List.mem_cons, forall_eq_or_imp] at his
         exact (ih his.left t hC).left
-      · simp[C_path] at *
+      · simp only [Bool.not_eq_true, List.mem_cons, forall_eq_or_imp, C_path] at *
         specialize ih_is u
         apply ih_is
         · exact (ih his.left u hC.left).right
@@ -185,7 +186,7 @@ lemma univ_single : (Set.univ: Set single) = {single.one} :=  by
   rw [eq_comm, Set.eq_univ_iff_forall]
   intro x
   cases x
-  simp
+  simp only [mem_singleton_iff]
 
 instance single_nonempty : Nonempty single :=  by
   apply exists_true_iff_nonempty.mp
@@ -193,25 +194,22 @@ instance single_nonempty : Nonempty single :=  by
   exact trivial
 
 instance single_finite : Fintype single :=  by
-  refine {elems := {single.one}, complete := (by simp)}
+  refine {elems := {single.one}, complete := (by simp only [Finset.mem_singleton, forall_const])}
 
 def e_ex {agents : Type} : playable_effectivity_struct agents single :=
 { E := λ _ _ => {{single.one}}
   liveness :=  by
     intros _ _ hf
-    simp [Set.ext_iff] at hf
+    simp only [mem_singleton_iff, ext_iff, mem_empty_iff_false, iff_true, forall_const] at hf
 
   safety:= by
       intro _ _
-      simp at *
+      simp only [mem_singleton_iff]
       exact univ_single
 
   N_max := by
       intros s X hxc
-      simp[←univ_single] at *
-      have hcond : {single.one} ≠ (∅: Set single) := by
-        simp[Set.ext_iff]
-      simp [hcond] at *
+      simp only [← univ_single, mem_singleton_iff, compl_univ_iff] at *
       by_contra
       rename_i h
       have hex: ∃ x, x ∈ X := nonempty_def.mp (Set.nonempty_iff_ne_empty.mpr hxc)
@@ -221,13 +219,13 @@ def e_ex {agents : Type} : playable_effectivity_struct agents single :=
       exact h (univ_subset_iff.mp hs)
   mono := by
       intro _ _ _ _ hxy hx
-      simp [←univ_single] at *
+      simp only [← univ_single, mem_singleton_iff] at *
       rw [hx] at hxy
       exact univ_subset_iff.mp hxy
   superadd := by
     intro _ _ _ _ _ hX hY _
-    simp at *
-    simp[hX, hY] }
+    simp only [mem_singleton_iff] at *
+    simp only [hX, hY, inter_self] }
 
 def m_ex {agents : Type} : modelECL agents  :=
 { f :=
@@ -235,13 +233,13 @@ def m_ex {agents : Type} : modelECL agents  :=
     hs := single_nonempty
     E  :=  truly_playable_from_finite e_ex
     rel := λ _ s => {s}
-    rfl := by simp
+    rfl := by simp only [mem_singleton_iff, forall_const, implies_true]
     sym := by
       intro i s t _
-      simp at *
+      simp only [mem_singleton_iff]
     trans := by
       intro i s t u _ _
-      simp at * }
+      simp only [mem_singleton_iff] }
   v := λ _ => {} }
 
 
@@ -249,6 +247,6 @@ lemma nprfalseCLC {agents : Type} [hN : Fintype agents] :
   ¬ (axCLC (formCLC.bot : formCLC agents )) := by
   apply (mt (soundnessCLC (@formCLC.bot agents)))
   intro hf
-  simp[global_valid, valid_m, s_entails_CLC] at hf
+  simp only [global_valid, valid_m, s_entails_CLC] at hf
   apply hf (m_ex)
   exact single.one

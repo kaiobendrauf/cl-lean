@@ -2,16 +2,16 @@
 Authors: Kai Obendrauf
 Following the papers:
   - "A Modal Logic for Coalitional Power in Games" by Mark Pauly
-  - "Coalition Logic with Individual, Distributed and Common Knowledge" 
+  - "Coalition Logic with Individual, Distributed and Common Knowledge"
     by Thomas Ågotnes and Natasha Alechina
   - "Strategic Games and Truly Playable Effectivity Functions"
     by Valentin Groanko, Wojciech Jamroga and Paolo Turrini
 
 This file contains definitions for effectivity structures, N-maximality, regularity.
 We define structures for truly, semi- and playable effectivity structure.
-A playable effectivity structure can be created from from a semi-playable one which 
+A playable effectivity structure can be created from from a semi-playable one which
 is regular and N-maximal.
-A truly playable effectivity structure can be created from from a playable one with a 
+A truly playable effectivity structure can be created from from a playable one with a
 Finite domain.
 -/
 
@@ -22,7 +22,7 @@ open Set
 ----------------------------------------------------------
 -- Effectivity Structures Type
 ----------------------------------------------------------
-@[simp] def effectivity_struct (agents states : Type) := 
+@[simp] def effectivity_struct (agents states : Type) :=
   states → (Set agents) → (Set (Set (states)))
 
 ----------------------------------------------------------
@@ -61,7 +61,7 @@ structure semi_playable_effectivity_struct (agents states : Type) :=
                       G ∪ F ⊂ univ → X ∈ E (s) (G) → Y ∈ E (s) (F) → G ∩ F = ∅ →
                       X ∩ Y ∈ E (s) (G ∪ F))
 
-structure truly_playable_effectivity_struct (agents states : Type) 
+structure truly_playable_effectivity_struct (agents states : Type)
   extends playable_effectivity_struct agents states :=
 (principal_E_s_empty : ∀ s, ∃ X, X ∈ E s ∅ ∧ ∀ Y, Y ∈ E s ∅ → X ⊆ Y)
 
@@ -69,19 +69,19 @@ structure truly_playable_effectivity_struct (agents states : Type)
 ----------------------------------------------------------
 -- Set Helper Functions
 ----------------------------------------------------------
-lemma empty_subset_univ {α : Type} (h : Nonempty α) : 
-  ∅ ⊂ @univ (α) := 
-by simp [empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
+lemma empty_subset_univ {α : Type} (h : Nonempty α) :
+  ∅ ⊂ @univ (α) :=
+by simp only [empty_ssubset, univ_nonempty]
 
-lemma empty_union_subset_univ {α : Type} (h : Nonempty α) : 
-  ∅ ∪ ∅ ⊂ @univ (α) := 
-by simp [union_self, empty_ssubset, (nonempty_iff_univ_nonempty.mp h)]
+lemma empty_union_subset_univ {α : Type} (h : Nonempty α) :
+  ∅ ∪ ∅ ⊂ @univ (α) :=
+by simp only [union_self, empty_ssubset, univ_nonempty]
 
-lemma intersect_complement {α : Type} (A B : Set α) : 
-  (A ∩ B)ᶜ ∩ B = Aᶜ ∩ B := 
-by simp [compl_inter, inter_distrib_right, compl_inter_self]
+lemma intersect_complement {α : Type} (A B : Set α) :
+  (A ∩ B)ᶜ ∩ B = Aᶜ ∩ B :=
+by simp only [compl_inter, inter_distrib_right, compl_inter_self, union_empty]
 
-lemma show_complement {α : Type} (A B : Set α) (hint : A ∩ B = ∅) (hunion : A ∪ B  = univ) : 
+lemma show_complement {α : Type} (A B : Set α) (hint : A ∩ B = ∅) (hunion : A ∪ B  = univ) :
   A = Bᶜ := by
   ext x
   have huniv : x ∈ univ := mem_univ x
@@ -90,7 +90,7 @@ lemma show_complement {α : Type} (A B : Set α) (hint : A ∩ B = ∅) (hunion 
 
   · intro hx
     by_contra hfalse
-    simp at hfalse
+    simp only [mem_compl_iff, not_not] at hfalse
     have hint' : x ∈ B ∩ A := mem_inter hfalse hx
     rw [inter_comm] at hint' -- x ∈ A ∩ B
     exact eq_empty_iff_forall_not_mem.mp hint x hint'
@@ -105,9 +105,9 @@ lemma show_complement {α : Type} (A B : Set α) (hint : A ∩ B = ∅) (hunion 
 -- Playable from Semi
 ----------------------------------------------------------
 def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty agents]
-  (semi : semi_playable_effectivity_struct agents states) 
-  (hNmax : N_max semi.E) (hReg : regular semi.E) : 
-  playable_effectivity_struct agents states := 
+  (semi : semi_playable_effectivity_struct agents states)
+  (hNmax : N_max semi.E) (hReg : regular semi.E) :
+  playable_effectivity_struct agents states :=
 
 -- E(s) is live : ∅ ∉ E(s)(N)
   have hLiveness : ∀ s : states, ∀ G : Set agents, ∅ ∉ semi.E (s) (G) := by
@@ -118,16 +118,16 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
     -- if G ⊂ N, liveness follows from semi-playability liveness
     case inl h =>
       exact semi.semi_liveness s G h
-    -- if G = N, liveness follows from semi-playable : S ∈ E(s)(∅) 
+    -- if G = N, liveness follows from semi-playable : S ∈ E(s)(∅)
     -- and regularity : S ∈ E(s)(∅) ⇒ ∅ ∉ E(s)(N).
     case inr h =>
       rw [h]
       have hS : univ ∈ semi.E (s) (∅) := semi.semi_safety s ∅ (empty_subset_univ ha)
       have hif : univ ∈ semi.E (s) (∅) → univᶜ ∉ semi.E (s) (∅ᶜ) := hReg s ∅ univ
-      simp[compl_univ, compl_empty] at hif
+      rw [compl_univ, compl_empty] at hif
       exact hif hS
 
-  -- E(s) is safe : S ∈ E(s)(N) 
+  -- E(s) is safe : S ∈ E(s)(N)
   have hSafety : ∀ s : states, ∀ G : Set agents, univ ∈ semi.E (s) (G) := by
     -- asume s and G
     intro s G
@@ -143,7 +143,7 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
       rw [h]
       have h0 : ∅ ∉ semi.E (s) (∅):= semi.semi_liveness s ∅ (empty_subset_univ ha)
       have hif : univᶜ ∉ semi.E (s) (∅) → univ ∈ semi.E (s) (univ):= hNmax s univ
-      simp[compl_univ] at hif
+      rw [compl_univ] at hif
       exact hif h0
 
 -- E(s) is outcome monotonic : ∀X ⊆ Y ⊆ S : X ∈ E(s)(N) ⇒ Y ∈ E(s)(N)
@@ -159,7 +159,7 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
       subst h
       -- Xᶜ ∉ E(s)(∅):= regularity : X ∈ E(s)(N) ⇒ Xᶜ ∉ E(s)(∅), and hX : Xᶜ ∈ E(s)(N)
       have hXc : Xᶜ ∉ semi.E s univᶜ:= hReg s univ X hX
-      simp[compl_univ] at hXc
+      rw [compl_univ] at hXc
       --  Yᶜ ⊆ Xᶜ:= hXY : X ⊆ Y
       have hXYc : Yᶜ ⊆ Xᶜ:= compl_subset_compl.mpr hXY
       -- Yᶜ ∈ E(s)(∅) ⇒ Xᶜ ∈ E(s)(∅):= semi-playable (monotonicity) and hXYc
@@ -176,13 +176,13 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
 -- ∀X, Y ⊆ S : X ∈ E(s)(G) and Y ∈ E(s)(F) ⇒ X ∩Y ∈ E(s)(G∪F)
   have hSuperadd : ∀ s : states, ∀ G F : Set agents, ∀ X Y : Set states,
         X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → G ∩ F = ∅ → X ∩ Y ∈ semi.E (s) (G ∪ F) := by
-  
+
     -- Either F ⊂ N or G ⊂ N (or both). Let F be either F or G
     -- such that F ⊂ N , and let G be the other Set
     have hSuperadd' : ∀ s : states, ∀ G F : Set agents, ∀ X Y : Set states,
-      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) → 
+      G ∩ F = ∅ → G ∪ F = univ → F ⊂ univ → X ∈ semi.E (s) (G) → Y ∈ semi.E (s) (F) →
       X ∩ Y ∈ semi.E (s) (G ∪ F):= by
-      -- Assume some G, F ⊆ N, where G ∩ F = ∅ and G ∪ F = N). Note that G = F. 
+      -- Assume some G, F ⊆ N, where G ∩ F = ∅ and G ∪ F = N). Note that G = F.
       -- Assume X ∈ E(s)(G) and Y ∈ E(s)(F).
       intro s G F X Y hint hunion hF hX hY
 
@@ -195,24 +195,25 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
       -- (X ∩ Y)ᶜ ∈ E(s)(∅), hfalse and above
       have hIntc : ¬(X ∩ Y)ᶜ ∉ semi.E s ∅ :=
         (mt (hNmax s (X ∩ Y))) hfalse
-      simp at hIntc
+      simp only [not_not] at hIntc
 
-      -- ((X ∩ Y)ᶜ ∩ Y ) ∈ E(s)(F):= semi-playability : (X ∩ Y)ᶜ ∈ E(s)(∅) 
+      -- ((X ∩ Y)ᶜ ∩ Y ) ∈ E(s)(F):= semi-playability : (X ∩ Y)ᶜ ∈ E(s)(∅)
       -- and Y ∈ E(s)(F) ⇒ ((X ∩ Y)ᶜ ∩ Y ) ∈ E(s)(∅ ∪ F), hIntc and hY
       -- (Xᶜ ∩ Y) ∈ E(s)(F):= above
       have hIntXc : (X ∩ Y)ᶜ ∩ Y ∈ semi.E s (∅ ∪ F) :=
-        semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp [hF]) hIntc hY (empty_inter F)
-      simp [intersect_complement] at hIntXc
+        semi.semi_superadd s ∅ F (X ∩ Y)ᶜ Y (by simp only [empty_union, hF])
+        hIntc hY (empty_inter F)
+      simp only [intersect_complement, empty_union] at hIntXc
 
       --  Xᶜ ∈ E(s)(F):= semi-playability : (Xᶜ ∩ Y) ∈ E(s)(F) ⇒ Xᶜ ∈ E(s)(F), and hIntXc
       have hXc : Xᶜ ∈ semi.E s F :=
-        semi.semi_mono s F (Xᶜ ∩ Y) Xᶜ hF (by simp) hIntXc
+        semi.semi_mono s F (Xᶜ ∩ Y) Xᶜ hF (by simp only [inter_subset_left]) hIntXc
 
       -- X ∉ E(s)(G):= regularity : Xᶜ ∈ E(s)(F) ⇒ X ∉ E(s)(G)
       -- and hXc, given Fᶜ = G:= hint and hunion
       have hX' : Xᶜᶜ ∉ semi.E s Fᶜ :=
         hReg s F Xᶜ hXc
-      simp [(compl_compl X), ←(show_complement G F hint hunion)] at hX' -- hX' : X ∉ semi.E s G
+      rw [compl_compl, ← (show_complement G F hint hunion)] at hX'  -- hX' : X ∉ semi.E s G
 
       -- Contradiction from hX' and hX
       exact hX' hX
@@ -228,7 +229,7 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
 
       -- Case : G ⊂ N
       case inl h_1 =>
-        simp [inter_comm X Y, inter_comm G F, union_comm G F] at *
+        simp only [inter_comm G F, union_comm G F, inter_comm X Y] at *
         exact hSuperadd' s F G Y X hint h h_1 hY hX
 
       -- Case : F ⊂ N
@@ -238,12 +239,11 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
         -- Case : G = N, F ⊂ N
         case inl h_2 =>
           exact hSuperadd' s G F X Y hint h h_2 hX hY
-        
+
         -- Case : G = N, F = N (impossible)
         case inr h_2 =>
           by_contra
-          simp [h_1, h_2, inter_self (@univ agents)] at *
---          exact hReg s univ X hX (false.rec (Xᶜ ∈ semi.E s univᶜ) hint)
+          simp only [h_1, h_2, inter_self, univ_eq_empty_iff, not_isEmpty_of_nonempty] at *
 
   playable_effectivity_struct.mk semi.E hLiveness hSafety hNmax hMonoticity hSuperadd
 
@@ -253,8 +253,8 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
 ----------------------------------------------------------
 
 @[simp] def truly_playable_from_finite {agents states : Type} [hS : Fintype states]
-  (play : playable_effectivity_struct agents states) : 
-  truly_playable_effectivity_struct agents states := 
+  (play : playable_effectivity_struct agents states) :
+  truly_playable_effectivity_struct agents states :=
 { play with
   principal_E_s_empty := by
     intro s
@@ -265,7 +265,7 @@ def playable_from_semi_Nmax_reg {agents : Type} (states : Type) [ha : Nonempty a
       apply Exists.intro univ
       exact play.safety s ∅
     -- E (s) (∅) has some minimal element because it it Finite
-    have hminimal := 
+    have hminimal :=
       Finset.exists_minimal (Finite.toFinset (Set.toFinite (play.E s ∅))) hnempty
     cases' hminimal with X hminimal
     cases' hminimal with hX hminimal

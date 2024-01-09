@@ -81,7 +81,7 @@ lemma semi_liveness {agents form : Type} [pf : Pformula_ax form] [clf : CLformul
   intro hf
 
   --  ∃φ˜ ⊆ ∅ : [G]φ ∈ s:= hf, by definition EC
-  simp [ne_of_ssubset hG] at hf
+  simp only [ne_of_ssubset hG, ite_false, mem_setOf_eq] at hf
   cases' hf with φ hφ
 
   -- consistent Set (by hf), so {φ} must be inconsistent.
@@ -96,7 +96,7 @@ lemma semi_liveness {agents form : Type} [pf : Pformula_ax form] [clf : CLformul
 
   -- Contradiction from axiom (⊥) : ¬[G]⊥ and h
   have := ax_neg_contains_pr_false s.2 h (Bot _)
-  simp at this
+  simp only at this
 
 
 -- Semi-safety
@@ -107,7 +107,7 @@ lemma semi_safety {agents form : Type}
   -- Let G ⊂ N
   unfold E
   have hG' : G ≠ univ:= ne_of_ssubset hG
-  simp [hG'] at *
+  simp only [ne_eq, hG', not_false_eq_true, ite_false, mem_setOf_eq, subset_univ, true_and] at *
   clear hG'
 
   --  [G]⊤ ∈ s and ⊤˜ = S:= axiom (⊤) : [G]⊤, and definition S
@@ -129,7 +129,7 @@ lemma semi_mono {agents form : Type}
   -- Let G ⊂ N and X ⊆ Y ⊆ S, where X ∈ E(s)(G)
   -- ∃φ˜ ⊆ X : [G]φ ∈ s:= hX, by definition EC
   have hG' : G ≠ univ:= ne_of_ssubset hG
-  simp [hG'] at *
+  simp only [hG', ite_false, mem_setOf_eq, ne_eq, not_false_eq_true] at *
   clear hG'
 
   -- φ ⊆ Y : [G]φ ∈ s, because ˜φ ⊆ X ⊆ Y
@@ -151,7 +151,8 @@ lemma semi_superadd {agents form : Type}
   -- where X ∈ E(s)(G) and Y ∈ E(s)(F)
   -- ∃φ˜ ⊆ X and ∃ψ˜ ⊆ Y , such that [G]φ ∈ s and [F]ψ ∈ s:= 2.4.1, by definition EC
   have hunion' : G ∪ F ≠ univ:= ne_of_ssubset hunion
-  simp [hunion', union_neq_univ_left hunion, union_neq_univ_right hunion] at *
+  simp only [union_neq_univ_left hunion, ite_false, mem_setOf_eq, union_neq_univ_right hunion,
+    ne_eq, hunion', not_false_eq_true, subset_inter_iff] at *
   clear hunion'
   cases' hX with φ hX
   cases' hY with ψ hY
@@ -171,14 +172,14 @@ lemma semi_superadd {agents form : Type}
         unfold tilde
         rw [Set.subset_def]
         intro t ht
-        simp at *
+        simp only [mem_setOf_eq] at *
         apply max_ax_contains_by_set_proof t.2 ht (p5 _ _)
       exact Subset.trans hsubset hX.left
     · have hsubset : tilde (states form) (φ ∧' ψ) ⊆ tilde (states form) ψ:= by
         unfold tilde
         rw [Set.subset_def]
         intro t ht
-        simp at *
+        simp only [mem_setOf_eq] at *
         apply max_ax_contains_by_set_proof t.2 ht (p6 _ _)
       exact Subset.trans hsubset hY.left
   · exact hunionand
@@ -193,16 +194,20 @@ lemma regularity {agents form : Type} [ha : Nonempty agents]
   cases' eq_or_ssubset_of_subset (subset_univ G) with hG hG
   · -- case : G = N
     -- by definition E and first order logic
-    simp [hG, (ne_of_ssubset (empty_subset_univ ha))] at *
+    simp only [hG, ite_true, mem_setOf_eq, compl_univ, (ne_of_ssubset (empty_subset_univ ha)),
+      ite_false, not_exists, not_and] at *
     exact h
   · cases' (Classical.em (G = ∅)) with h_em h_em
     · -- case : G = ∅
       -- by definition E and first order logic
-      simp [(ne_of_ssubset hG), h_em, (ne_of_ssubset (empty_subset_univ ha))] at *
+      simp only [h_em, (ne_of_ssubset (empty_subset_univ ha)), ite_false, mem_setOf_eq,
+        empty_ssubset, univ_nonempty, compl_empty, ite_true, compl_compl, not_forall, not_not,
+        exists_prop] at *
       exact h
     · -- case : G ̸= N and G ̸= N :
       -- Let X ⊆ S, where X ∈ E(s)(G). ∃φ˜ ⊆ X : [G]φ ∈ s, by definition EC
-      simp [(ne_of_ssubset hG), h_em] at *
+      simp only [(ne_of_ssubset hG), ite_false, mem_setOf_eq, h_em, not_false_eq_true,
+        compl_univ_iff, not_exists, not_and] at *
       cases' h with φ h
       cases' h with h_left h_right
       intro ψ hψ
@@ -216,15 +221,15 @@ lemma regularity {agents form : Type} [ha : Nonempty agents]
           apply max_ax_contains_by_set_proof_2h s.2 h_right hf (p4 _ _)
         apply max_ax_contains_by_set_proof s.2 hand
         apply (S _ _ _ _)
-        simp
-      simp at hS
+        simp only [inter_compl_self]
+      simp only [union_compl_self] at hS
       -- (φ ∧ ψ)˜ = ∅, because X and Xᶜ are disjoint, meaning φ˜ and ψ˜ are disjoint
       have hemptyint : tilde (states form) φ ∩ tilde (states form) ψ = ∅ := by
           rw [Set.eq_empty_iff_forall_not_mem]
           intro t hf
           rw [Set.subset_def] at *
           cases' Classical.em (t ∈ X) with h h
-          · simp at hψ hf
+          · simp only [mem_compl_iff, Set.mem_inter_iff] at hψ hf
             apply hψ
             exact hf.right
             exact h
@@ -232,19 +237,19 @@ lemma regularity {agents form : Type} [ha : Nonempty agents]
             apply h_left t hf.left
       have hempty : tilde (states form) (φ ∧' ψ) ⊆ ∅ := by
         intro t hf'
-        simp[tilde, Set.subset_empty_iff, Set.eq_empty_iff_forall_not_mem] at hf'
+        simp only [tilde, mem_setOf_eq] at hf'
         have hφ : φ ∈ t:= by apply max_ax_contains_by_set_proof t.2 hf' (p5 _ _)
         have hψ : ψ ∈ t:= by apply max_ax_contains_by_set_proof t.2 hf' (p6 _ _)
         rw [Set.eq_empty_iff_forall_not_mem] at hemptyint
         apply hemptyint t
-        simp
+        simp only [Set.mem_inter_iff]
         apply And.intro hφ hψ
       -- a maximally consistent Set (by 3.3.6), so {(φ ∧ ψ)} must be inconsistent.
       have hiffbot : ⊢' ((φ ∧' ψ) ↔' ⊥'):= set_empty_iff_false hempty
       -- ⊢ [N](φ ∧ ψ) ↔ [N]⊥:= 3.3.7, by axiom (Eq)
       have hiffNbot : ⊢' ((['univ] (φ ∧' ψ)) ↔' (['univ] ⊥')) :=
         (Eq _ _ _) hiffbot
-      simp at *
+      simp only at *
       -- [N]⊥ ∈ s:= 3.3.7 and 3.3.5.
       have h : (['univ] ⊥') ∈ s:= by
         apply max_ax_contains_by_set_proof s.2 hS
@@ -253,7 +258,7 @@ lemma regularity {agents form : Type} [ha : Nonempty agents]
         apply hiffNbot
       -- Contradiction from axiom (⊥) : ¬[N]⊥ and 3.3.8
       have := ax_neg_contains_pr_false s.2 h (Bot _)
-      simp at this
+      simp only at this
 
 
 -- N maximality
@@ -263,7 +268,8 @@ lemma N_maximality {agents form : Type} [ha : Nonempty agents]
   (s : states form) {X : Set (states form)}
   (h : Xᶜ ∉ E (s) (∅)) : X ∈ E (s) (univ) := by
   unfold E at *
-  simp [(ne_of_ssubset (empty_subset_univ ha))] at *
+  simp only [(ne_of_ssubset (empty_subset_univ ha)), ite_false, mem_setOf_eq, not_exists, not_and,
+    ite_true] at *
   intro φ hX
   exact h φ hX
 
@@ -333,7 +339,7 @@ lemma h_tilde_compl {agents form : Type} [ha : Nonempty agents]
   apply Iff.intro
   · intro hs hf
     have := contra_contains_pr_false s.2 hf hs
-    simp at this
+    simp only at this
   · intro hs
     exact not_in_from_notin s.2 hs
 

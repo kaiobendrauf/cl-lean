@@ -36,11 +36,12 @@ protected instance S_f.SetLike {agents form : Type} (m : modelCL agents) [hm : S
   (cl : form → Finset (form)) (φ : form) :
   SetLike (S_f m cl φ) (form) :=
 { coe            := λ sf => sf.1.1
-  coe_injective' := λ x y h => Subtype.coe_injective (Subtype.coe_injective (by simpa using h)) }
+  coe_injective' := λ x y h => Subtype.coe_injective (Subtype.coe_injective
+                    (by simpa only [Finset.setOf_mem,Finset.coe_inj] using h)) }
 
 -- Sf is  Finite
 protected noncomputable instance S_f.Fintype {agents form : Type}
-  (m : modelCL agents) [hm : SetLike m.f.states form]
+  (m : modelCL agents) [SetLike m.f.states form]
   (cl : form → Finset (form)) (φ : form) : Fintype (S_f m cl φ) :=
 inferInstanceAs (Fintype (Additive _))
 
@@ -67,7 +68,8 @@ noncomputable def s_f {agents form : Type} {m : modelCL agents} [hm : SetLike m.
   fconstructor
   fconstructor
   exact Finset.filter (λ ψ => ψ ∈ s) (cl φ)
-  simp
+  simp only [Finset.setOf_mem, Finset.filter_congr_decidable, Finset.mem_powerset, not_exists,
+    Finset.mem_filter, Finset.filter_subset, Finset.coe_filter, exists_apply_eq_apply, and_self]
   simp only [Finset.mem_attach]
 
 -- get sf from s
@@ -78,7 +80,8 @@ lemma s_to_s_f {agents form : Type} {m : modelCL agents} [hm : SetLike m.f.state
   fconstructor
   fconstructor
   · exact Finset.filter (λ ψ => ψ ∈ s) (cl φ)
-  · simp
+  · simp only [Finset.setOf_mem, Finset.filter_congr_decidable, Finset.mem_powerset, not_exists,
+    Finset.mem_filter, Finset.filter_subset, Finset.coe_filter, exists_apply_eq_apply, and_self]
   · simp only [Finset.mem_attach]
   · intro x
     apply Iff.intro
@@ -98,7 +101,7 @@ lemma s_f_to_s {agents form : Type} {m : modelCL agents} [hm : SetLike m.f.state
   cases' hs with s hs
   apply Exists.intro s
   rw [Set.ext_iff] at hs
-  simp at hs
+  simp only [mem_setOf_eq, Finset.setOf_mem, Finset.mem_coe] at hs
   intro ψ
   specialize hs ψ
   apply Iff.intro
@@ -145,7 +148,9 @@ lemma s_f_ax {agents form : Type} [ha : Nonempty agents]
   ax_consistent {x | x ∈ sf} := by
   cases' (s_f_to_s sf) with s hs
   have hax := s.2.1
-  simp [ax_consistent, set_proves] at *
+  simp only [mem_mk, Finset.setOf_mem, ax_consistent, set_proves,
+    canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, not_exists, not_and,
+    Finset.mem_coe] at *
   intro ψs hψs hcon
   apply hax ψs _ hcon
   intro χ hχs
@@ -165,7 +170,7 @@ lemma s_f_ax {agents form : Type} [ha : Nonempty agents]
     cases' tf with tf_val _
     cases' sf_val
     cases' tf_val
-    aesop
+    simp_all only [Finset.setOf_mem]
   · intro h
     rw [h]
 
@@ -289,21 +294,22 @@ lemma phi_s_f_in_s {agents form : Type} [ha : Nonempty agents]
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → Finset (form)} {φ : form}
   (s : (canonical_model_CL agents form hnpr).f.states):
   phi_s_f ((s_f cl φ s)) ∈ s := by
-  simp[phi_s_f]
+  simp only [phi_s_f, Finset.setOf_mem]
   have hinduct : ∀ fs : List (form),
     (fs ⊆ ((s_f cl φ s).1 : Finset (form)).toList) → finite_conjunction fs ∈ s := by
     intro fs hfs
     induction' fs with f fs ih
     · unfold finite_conjunction
       apply max_ax_contains_taut s.2 prtrue
-    · simp at *
+    · simp only [Finset.setOf_mem, List.cons_subset, Finset.mem_toList,
+      finite_conjunction_cons] at *
       cases' hfs with hf hfs
       have hf_in_s : f ∈ s:= s_f_subset_s cl φ s f hf
       have hfs_in_s : finite_conjunction fs ∈ s:= ih hfs
       apply max_ax_contains_by_set_proof_2h s.2 hf_in_s hfs_in_s
       apply p4
   apply hinduct
-  simp
+  simp only [Finset.setOf_mem, List.Subset.refl]
 
 -- ⊢ phi sf ⇔ ∀ x ∈ sf, ⊢ x
 lemma phi_s_f_forall_iff {agents form : Type} [pf : Pformula_ax form]
@@ -571,8 +577,8 @@ lemma phi_X_finset_disjunct_of_disjuncts {agents form : Type} [pf : Pformula_ax 
 ----------------------------------------------------------
 
 /-- `phi_X_set φ X` is a Finite disjunction of all elements of `X`. -/
-noncomputable def phi_X_set {agents form : Type} [pf : Pformula form]
-  {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
+noncomputable def phi_X_set {agents form : Type} [Pformula form]
+  {m : modelCL agents} [SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   (X : Set (S_f m cl φ)) : form :=
 phi_X_finset (Finite.toFinset (Set.toFinite X))
 
@@ -581,9 +587,10 @@ lemma phi_X_set_subset_Y_imp {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   {X Y : Set (S_f m cl φ)} (hXY : X ⊆ Y) :
   ⊢' ((phi_X_set X) →' (phi_X_set Y)) := by
-  simp[phi_X_set]
+  simp only [phi_X_set]
   apply phi_X_subset_Y_imp
-  exact Finite.to_finset_mono.mpr hXY
+  exact Finite.toFinset_subset_toFinset.mpr hXY
+
 
 -- ⊢ (¬ phi X → phi Y) → phi (X ∪ Y)
 lemma phi_X_set_disjunct {agents form : Type} [pf : Pformula_ax form]
@@ -615,7 +622,8 @@ lemma phi_X_set_disjunct_of_disjuncts {agents form : Type} [pf : Pformula_ax for
     apply phi_X_subset_Y_imp
     apply Finset.subset_iff.mpr
     intro f hf
-    simp only [Finset.mem_union, Finite.mem_to_finset, mem_union_eq] at *
+    simp only [Finite.toFinset_setOf, Finset.mem_univ, forall_true_left, Finset.mem_filter,
+      true_and, Finset.mem_union] at *
     exact hf
 
 -- phi X ∈ s ⇒ ∃ tf, phi tf ∈ s, when M is the defined canonical model

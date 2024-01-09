@@ -16,9 +16,9 @@ lemma c_imp_kc {agents form : Type} [hN : Fintype agents]
   apply C
   apply cut
   apply finite_conj_forall_imp (K' i (φ ∧' (C' G φ)))
-  simp
+  simp only [List.mem_map, Finset.mem_toList, Set.Finite.mem_toFinset]
   apply Exists.intro i
-  simp [hi]
+  simp only [hi, and_self]
   apply mp
   apply K
   apply RN
@@ -32,7 +32,7 @@ lemma c_imp_k {agents form : Type} [hN : Fintype agents]
   apply C
   apply cut
   apply finite_conj_forall_imp (K' i (φ ∧' (C' G φ)))
-  simp
+  simp only [List.mem_map, Finset.mem_toList, Set.Finite.mem_toFinset]
   apply Exists.intro i
   simp only [hi, eq_self_iff_true, and_self]
   apply mp

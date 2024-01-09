@@ -283,7 +283,7 @@ lemma contra_not_imp_false_ax {form : Type} [Pformula_ax form] {φ : form} :
 
 lemma contra_imp_false_not_ax {form : Type} [Pformula_ax form] {φ : form} :
 -- ⊢  φ → ⊥ ⇒ ⊢ ¬ φ
-  ⊢' (φ →' ⊥') → ⊢' (¬' (φ)) := by simp
+  ⊢' (φ →' ⊥') → ⊢' (¬' (φ)) := by simp only [imp_self]
 
 lemma contra_imp_imp_false' {form : Type} [Pformula_ax form] {φ : form} :
 -- ⊢ φ → ¬ φ → ⊥
@@ -292,12 +292,12 @@ lemma contra_imp_imp_false' {form : Type} [Pformula_ax form] {φ : form} :
 lemma contra_iff_false_ax_not {form : Type} [Pformula_ax form] {φ : form} :
 -- ⊢ ¬ φ ↔ ⊢ φ → ⊥
   ⊢' (¬' φ) ↔ ⊢' (φ →' ⊥') :=
-by simp
+by simp only
 
 lemma by_contra_ax {form : Type} [Pformula_ax form] {φ ψ : form} :
 -- ⊢ φ → ψ → ⊥ ⇒ ⊢ φ → ¬ ψ
  ⊢' (φ →' (ψ →' ⊥')) → ⊢' (φ →' (¬' ψ)) :=
-by simp
+by simp only [imp_self]
 
 
 ----------------------------------------------------------
@@ -551,7 +551,7 @@ lemma and_cut_r {form : Type} [Pformula_ax form] {φ ψ χ : form} :
 -- Motivation: for simplication in combination with `ax_iff_mp`
 @[simp] lemma ax_and_top_iff {form : Type} [Pformula_ax form] {φ : form} :
   ⊢' ((φ ∧' ⊤') ↔' φ) :=
-by simpa using @phi_and_true _ _ φ
+by simpa only using @phi_and_true _ _ φ
 
 ----------------------------------------------------------
 -- Simplification Rules
@@ -698,12 +698,12 @@ lemma or_inr {form : Type} [Pformula_ax form] {φ ψ : form} :
 lemma disjunct_rw_iff {form : Type} [Pformula_ax form] {φ ψ : form} :
   ⊢' (((¬' φ) →' ψ) ↔' (finite_disjunction (φ :: [ψ]))) := by
   apply ax_iff_intro
-  · simp [finite_disjunction]
+  · rw [finite_disjunction]
     apply imp_switch
     apply cut1
     exact likemp
     exact contra_explosion
-  · simp [finite_disjunction]
+  · rw [finite_disjunction]
     apply imp_switch
     apply cut1
     exact likemp
@@ -789,7 +789,7 @@ lemma distr_or_and {form : Type} [Pformula_ax form] {φ ψ χ : form} :
 lemma fin_conj_simp {form : Type} [Pformula_ax form] (φ : form) :
 -- ⊢ ¬ finite_conjunction [φ, ¬ φ]
   ⊢' (¬' (finite_conjunction ([φ, ¬' φ]))) := by
-  simp [finite_conjunction]
+  unfold finite_conjunction
   rw [not_and_subst]
   exact not_contra
   exact phi_and_true
@@ -800,10 +800,10 @@ lemma imp_conj_imp_imp {form : Type} [Pformula_ax form]
   ⊢' ((finite_conjunction (φ :: φs)) →' ψ) ↔  ⊢' ((finite_conjunction φs) →' (φ →' ψ)) := by
   constructor
   · intro h
-    simp at h
+    rw [finite_conjunction_cons] at h
     exact and_right_imp.mp h
   · intro h
-    simp
+    rw [finite_conjunction_cons]
     exact and_right_imp.mpr h
 
 lemma fin_conj_s_imp {form : Type} [Pformula_ax form]
@@ -817,7 +817,7 @@ lemma fin_conj_append {form : Type} [Pformula_ax form] {φs φs' : List (form)} 
 --  ⊢ finite_conjunction φs' ∧ finite_conjunction φs ↔ finite_conjunction (φs' ++ φs)
   ⊢' (((finite_conjunction φs') ∧' (finite_conjunction φs)) ↔' (finite_conjunction (φs' ++ φs))) := by
   induction φs'
-  rw [finite_conjunction]
+  unfold finite_conjunction
   exact (mp _ _ (mp _ _ (p4 _ _) (cut (mp _ _ (p6 _ _) and_switch) (mp _ _ (p5 _ _) phi_and_true)))
     (cut (mp _ _ (p6 _ _) phi_and_true) (mp _ _ (p5 _ _) and_switch)))
   rename_i ih
@@ -831,10 +831,10 @@ lemma fin_conj_repeat {form : Type} [Pformula_ax form]
   (∀ ψ ∈ φs, ψ = φ) →  ⊢' (φ →' (finite_conjunction φs)) := by
   intro h1
   induction' φs with _ _ ih
-  simp[finite_conjunction]
+  unfold finite_conjunction
   exact mp _ _ (p1 _ _) prtrue
-  rw [finite_conjunction]
-  simp at *
+  unfold finite_conjunction
+  simp only [Bool.not_eq_true, List.mem_cons, forall_eq_or_imp] at *
   cases' h1 with h1 h2
   subst h1
   exact cut (mp _ _ double_imp (p4 _ _))
@@ -846,14 +846,14 @@ lemma neg_fin_conj_repeat {form : Type} [Pformula_ax form]
   (∀ ψ ∈ φs, ψ = ¬' φ) →  ⊢' (¬' (finite_conjunction φs)) →  ⊢' φ := by
   intro h1 h2
   induction φs
-  simp[finite_conjunction] at h2
+  simp only [finite_conjunction, ax_not_bot_imp] at h2
   have hbot : ⊢' (⊥' : form)
   · apply mp _ _ dne
-    simp
+    rw [ax_not_bot_imp]
     exact h2
   exact absurd hbot (hnpr)
   repeat rw [fin_conj] at *
-  simp at *
+  simp only [Bool.not_eq_true, List.mem_cons, forall_eq_or_imp, finite_conjunction_cons] at *
   cases' h1 with h1 h3
   have h5 := contrapos.mpr (fin_conj_repeat h3)
   subst h1
@@ -863,14 +863,15 @@ lemma neg_fin_conj_repeat {form : Type} [Pformula_ax form]
 lemma finite_conj_forall_iff {form : Type} [Pformula_ax form]
   {φs : List form} : (∀ φ ∈ φs, ⊢' φ) ↔ ⊢' (finite_conjunction φs) := by
   induction' φs with φ φs φs_ih
-  · simp [finite_conjunction]
+  · simp only [List.find?_nil, List.not_mem_nil, IsEmpty.forall_iff, implies_true,
+    finite_conjunction, explosion]
   · unfold finite_conjunction
     constructor
     · intro h
       rw [ax_and]
       constructor
       · apply h
-        simp
+        simp only [Bool.not_eq_true, List.mem_cons, true_or]
       · apply φs_ih.mp
         intro x hx
         apply h
@@ -930,12 +931,12 @@ lemma contra_con_cons {form : Type} [Pformula_ax form]
     {fs gs : List (form)} {x y : form} (hax : ⊢' (y ↔' ¬' x)) (hx : x ∈ fs) (hy : y ∈ gs) :
     ⊢' (¬' ((finite_conjunction fs) ∧' (finite_conjunction gs))) := by
   induction' fs with f fs ihf generalizing gs x y hax
-  . aesop
+  . simp_all only [List.find?_nil, List.not_mem_nil]
   . induction' gs with g gs ihg
-    . aesop
+    . simp_all only [List.mem_cons, List.find?_nil, List.not_mem_nil]
     . cases hx
       · cases hy
-        · simp[finite_conjunction]
+        · unfold finite_conjunction
           apply cut (iff_r and_commute)
           apply imp_and_l
           apply cut (iff_l and_switch)
@@ -946,7 +947,7 @@ lemma contra_con_cons {form : Type} [Pformula_ax form]
           apply iff_l
           exact hax
         case tail hy =>
-          simp[finite_conjunction]
+          unfold finite_conjunction
           apply cut (iff_r and_commute)
           apply cut (iff_l and_switch)
           apply cut (iff_r and_commute)
@@ -978,8 +979,8 @@ lemma imp_finite_disjunction {form : Type} [Pformula_ax form]
   ⊢' (ψ →' finite_disjunction φs) := by
   induction' φs with φ φs ih
   · by_contra
-    simp at *
-  · simp [finite_disjunction] at *
+    simp only [List.find?_nil, List.not_mem_nil] at *
+  · simp only [Bool.not_eq_true, List.mem_cons, finite_disjunction] at *
     cases' em (φ = ψ) with hf hf
     · rw [hf] at *
       rw [←and_right_imp]
@@ -996,8 +997,8 @@ lemma imp_finite_disjunction_subset {form : Type} [Pformula_ax form]
   {φs φs': List (form)} (hsubset : φs ⊆ φs')  :
   ⊢' (finite_disjunction φs →' finite_disjunction φs')  := by
   induction' φs with φ φs ih
-  · simp[finite_disjunction]
-  · simp [finite_disjunction] at *
+  · simp only [finite_disjunction, explosion]
+  · simp only [List.cons_subset, finite_disjunction] at *
     cases' hsubset with hφ hsubset
     specialize ih hsubset
     have hφs' := imp_finite_disjunction φ φs' hφ
@@ -1013,13 +1014,13 @@ lemma disjunct_of_disjuncts {form : Type} [pf: Pformula_ax form] (φs φs': List
   · rw [finite_disjunction]
     apply or_cases
     · apply imp_finite_disjunction_subset
-      simp
-    · simp [finite_disjunction]
+      exact List.subset_append_left _ _
+    · simp only [finite_disjunction]
       have hdne := @dne _ _ (finite_disjunction φs')
       apply cut
       apply hdne
       apply imp_finite_disjunction_subset
-      simp
+      exact List.subset_append_right _ _
   · induction φs
     · simp [finite_disjunction] at *
       apply cut1
@@ -1028,10 +1029,10 @@ lemma disjunct_of_disjuncts {form : Type} [pf: Pformula_ax form] (φs φs': List
     case cons hd φs ih =>
       apply or_cases
       · rw [finite_disjunction]
-        simp
+        simp only
         apply cut
         apply @imp_finite_disjunction form pf _ (hd :: φs)
-        · aesop
+        · simp only [List.mem_cons, true_or]
         apply cut1
         apply contra_imp_imp_false'
         apply explosion
@@ -1041,7 +1042,7 @@ lemma disjunct_of_disjuncts {form : Type} [pf: Pformula_ax form] (φs φs': List
         · apply @cut1 _ _ _ (⊥')
           apply cut
           apply @imp_finite_disjunction_subset form pf _ (hd :: φs)
-          simp
+          simp only [List.subset_cons]
           apply contra_imp_imp_false'
           apply explosion
         · unfold finite_disjunction
@@ -1052,10 +1053,10 @@ lemma disjunc_disjunct {form : Type} [Pformula_ax form]
   ⊢' ((¬' (finite_disjunction φs) →' finite_disjunction φs')
     →' finite_disjunction (φs ++ φs'))  := by
   apply or_cases
-  apply imp_finite_disjunction_subset
-  simp
-  apply imp_finite_disjunction_subset
-  simp
+  · apply imp_finite_disjunction_subset
+    exact List.subset_append_left _ _
+  · apply imp_finite_disjunction_subset
+    exact List.subset_append_right _ _
 
 lemma ax_iff_disjunc_disjunct {form : Type} [Pformula_ax form]
   {φs φs' : List (form)} :
@@ -1085,7 +1086,7 @@ lemma demorans_fin_dis {form : Type} [Pformula_ax form]
   {φs : List (form)} :
   ⊢' ((¬' (finite_disjunction φs)) ↔' ((finite_conjunction (List.map (¬' ·) φs)))) := by
   induction φs
-  · simp [finite_disjunction, finite_conjunction]
+  · simp only [finite_disjunction, finite_conjunction, ax_not_bot_imp, explosion, ax_and_split]
   case _ φ φs ih =>
     simp only [finite_disjunction, finite_conjunction]
     apply iff_cut demorgans''''
