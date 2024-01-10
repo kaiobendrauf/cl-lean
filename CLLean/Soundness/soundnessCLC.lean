@@ -21,7 +21,7 @@ open Set Logic
 theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) :
   _⊢ φ → _⊨ φ := by
   intro h
-  induction' h
+  induction h
   -- case Prop1
   · intro m s h1 _
     exact h1
@@ -146,8 +146,8 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
           unfold C_path
           exact And.intro hts htu
   -- RN
-  · intros m s t hst
-    rename_i _ _ _ ih
+  case RN ih =>
+    intros m _ t _
     apply ih
   -- RC
   · intro m s hs t hC
