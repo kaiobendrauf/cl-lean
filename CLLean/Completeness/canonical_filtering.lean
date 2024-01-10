@@ -16,7 +16,6 @@ Lastly we prove that given that cl is closed under single negations
 -/
 
 import CLLean.Completeness.canonical
-import Mathlib.Tactic.SplitIfs
 
 open Set Logic Classical
 
@@ -1110,8 +1109,6 @@ lemma phi_X_finset_inter {agents form : Type} [ha : Nonempty agents]
   simp only [List.mem_inter_iff, Finset.mem_toList, Finset.mem_inter] at *
   exact hx
 
-set_option maxHeartbeats 4000000
-
 lemma phi_X_set_inter {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form]
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → Finset (form)} {φ : form}
@@ -1326,7 +1323,8 @@ lemma Ef_superadd_helper {agents form : Type} [ha : Nonempty agents]
       repeat
       · apply max_ax_contains_by_set_proof s.2 h
         apply phi_X_set_subset_Y_imp
-        simp only [inter_subset_left]
+        simp only [inter_subset_left, inter_subset_right]
+
   -- 5.2.3.  ̃φX∩Y ∈ EC′ (s)(G ∪ F ):= 5.2.2, because  ̃φX ∩  ̃φY =  ̃φX∩Y .
   rw [h_tilde_eq] at hsuperadd
   exact hsuperadd

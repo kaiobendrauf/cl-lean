@@ -1,6 +1,6 @@
 /-
 Authors: Kai Obendrauf
-Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge
 by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
@@ -53,7 +53,7 @@ notation:1024 "_C"       => formCLC.C
 -- -- Axioms
 -- ----------------------------------------------------------
 -- Proof system for CLC
-inductive axCLC {agents : Type} [hN : Fintype agents] : formCLC agents → Prop 
+inductive axCLC {agents : Type} [hN : Fintype agents] : formCLC agents → Prop
 -- (Prop) Propositional tautologies
 | Prop1 {φ ψ}                 : axCLC (φ _→ (ψ _→ φ))
 | Prop2 {φ ψ χ}               : axCLC ((φ _→ (ψ _→ χ)) _→ ((φ _→ ψ) _→ (φ _→ χ)))
@@ -71,10 +71,10 @@ inductive axCLC {agents : Type} [hN : Fintype agents] : formCLC agents → Prop
 -- (M) [G](φ ∧ ψ) → [G]φ
 | M     {φ ψ} {G}             : axCLC ((_[G] (φ _∧ ψ)) _→ _[G] φ)
 -- (S) ([G]φ ∧ [F]ψ) → [G ∪ F](φ ∧ ψ), when G ∩ F = ∅
-| S     {φ ψ} {G F} 
+| S     {φ ψ} {G F}
         (hInt : G ∩ F = ∅)    : axCLC (((_[G]φ) _∧ (_[F]ψ)) _→ _[G ∪ F] (φ _∧ ψ))
 -- (MP) ⊢ φ, φ → ψ ⇒ ⊢ ψ
-| MP    {φ ψ} 
+| MP    {φ ψ}
         (hImp : axCLC (φ _→ ψ))
         (hL : axCLC φ)        : axCLC (ψ)
 -- (Eq) ⊢ φ ↔ ψ ⇒ ⊢ [G]φ ↔ [G]ψ
@@ -93,7 +93,7 @@ inductive axCLC {agents : Type} [hN : Fintype agents] : formCLC agents → Prop
 -- (RN) ⊢ φ ⇒⊢ Kiφ
 | RN    {φ} {i} (h: axCLC φ)  : axCLC (_K i φ)
 -- (RC) ⊢ ψ → EG(φ ∧ ψ) ⇒⊢ ψ → CGφ
-| RC    {φ ψ} {G} 
+| RC    {φ ψ} {G}
         (h: axCLC (ψ _→ (_E G (φ _∧  ψ))))
                              : axCLC (ψ _→ (_C G φ))
 
