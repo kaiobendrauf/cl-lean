@@ -117,7 +117,7 @@ def m_ex {agents : Type} : modelCL agents :=
   { states := single
     hs := single_nonempty
     E  :=
-    { E := λ s G => {{single.one}}
+    { E := λ _ _ => {{single.one}}
       liveness := by
         intro _ _ hf
         simp only [mem_singleton_iff] at hf

@@ -111,9 +111,8 @@ theorem soundnessCLK {agents: Type} (φ : formCLK agents) :
     intro u hu
     apply ht1
     exact m.f.trans _ _ _ _ (m.f.sym _ _ _ ht) hu
-  -- RN
-  · intros m s t hst
-    rename_i _ _ _ ih
+  case RN ih =>
+    intros m _ t _
     apply ih
 
 ----------------------------------------------------------
