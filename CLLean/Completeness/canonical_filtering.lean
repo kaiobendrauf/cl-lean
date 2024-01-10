@@ -16,6 +16,7 @@ Lastly we prove that given that cl is closed under single negations
 -/
 
 import CLLean.Completeness.canonical
+import Mathlib.Tactic.SplitIfs
 
 open Set Logic Classical
 
@@ -343,7 +344,7 @@ lemma notin_nphi_s_f {agents form : Type} [pf : Pformula_ax form]
   {sf : S_f m cl φ} (h : ψ ∈ sf) : ⊢' ((¬' ψ) →' (¬' (phi_s_f sf))) := by
   unfold phi_s_f
   apply noin_imp_nfin_con
-  simp
+  simp only [Finset.setOf_mem, Finset.mem_toList]
   apply h
 
 -- ∀ ψ ∈ sf ⇒ (⊢ phi sf ↔ (ψ ∧ phi sf))
@@ -374,10 +375,10 @@ lemma phi_X_list_contains {agents form : Type} [pf : Pformula form]
   (phi_s_f sf) ∈ phi_X_list sfs := by
   induction' sfs with hd sfs ih
   · by_contra
-    simp at *
+    simp only [List.find?_nil, List.not_mem_nil] at *
   · cases' hsf with _ _ _ hsf
-    · simp [ih, phi_X_list]
-    · simp[phi_X_list] at *
+    · simp only [phi_X_list, Bool.not_eq_true, List.mem_cons, true_or]
+    · simp only [phi_X_list, Bool.not_eq_true, List.mem_cons] at *
       apply Or.intro_right
       exact ih hsf
 
@@ -387,8 +388,8 @@ lemma phi_X_list_subset {agents form : Type} [pf : Pformula form]
   {sfs sfs' : List (S_f m cl φ)} (h : sfs ⊆ sfs') :
   phi_X_list sfs ⊆ phi_X_list sfs' := by
   induction' sfs with hd sfs ih
-  · simp[phi_X_list]
-  · simp[phi_X_list] at *
+  · simp only [phi_X_list, List.nil_subset]
+  · simp only [List.cons_subset, phi_X_list] at *
     apply And.intro
     · exact phi_X_list_contains h.left
     · exact ih h.right
@@ -399,9 +400,9 @@ lemma phi_X_list_append {agents form : Type} [pf : Pformula form]
   (X Y : List (S_f m cl φ)) :
   phi_X_list (X ++ Y) ⊆ phi_X_list X ++ phi_X_list Y := by
   induction' X with hd X ih
-  · simp [phi_X_list]
-  · simp [phi_X_list, List.cons_append, List.cons_subset, List.eq_or_ne_mem_of_mem,
-          eq_self_iff_true, true_or, true_and]
+  · simp only [List.nil_append, phi_X_list, List.Subset.refl]
+  · simp only [phi_X_list, List.append_eq, List.cons_append, List.cons_subset, Bool.not_eq_true,
+      List.mem_cons, List.mem_append, true_or, true_and]
     exact List.subset_cons_of_subset _ ih
 
 -- ⊢ phi sf ↔ phi {sf}
@@ -439,7 +440,7 @@ lemma phi_X_list_conj_contains {agents form : Type} [pf : Pformula_ax form]
       · have hψ' : ∀ sf, sf ∈ X → ψ ∈ sf:= by
           intro tf htf
           apply hψ
-          simp [htf]
+          simp only [Bool.not_eq_true, List.mem_cons, htf, or_true]
         specialize ih hψ'
         have ih := ax_and.mp ih
         apply imp_imp_and
@@ -508,7 +509,7 @@ lemma phi_X_subset_Y_imp {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   (X Y : Finset (S_f m cl φ)) (hXY : X ⊆ Y) :
   ⊢' ((phi_X_finset X) →' (phi_X_finset Y)) := by
-  simp[phi_X_finset]
+  unfold phi_X_finset
   apply imp_finite_disjunction_subset
   apply phi_X_list_subset
   intro f hf
@@ -520,7 +521,7 @@ lemma phi_X_finset_app_subseteq_un {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   (X Y : Finset (S_f m cl φ)) :
   phi_X_list X.toList ++ phi_X_list Y.toList ⊆ phi_X_list (X ∪ Y).toList := by
-  simp
+  rw [List.append_subset]
   apply And.intro
   · apply phi_X_list_subset
     intro f hf
@@ -539,7 +540,7 @@ lemma phi_X_finset_un_subseteq_app {agents form : Type} [pf : Pformula_ax form]
   have h2 : phi_X_list (X ∪ Y).toList ⊆ phi_X_list (X.toList ++ Y.toList):= by
     apply phi_X_list_subset
     intro f hf
-    simp at *
+    simp only [Finset.mem_toList, Finset.mem_union, List.mem_append] at *
     exact hf
   exact List.Subset.trans h2 (phi_X_list_append X.toList Y.toList)
 
@@ -548,7 +549,7 @@ lemma phi_X_finset_union {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   (X Y : Finset (S_f m cl φ)) :
   ⊢' ((¬' (phi_X_finset X) →' (phi_X_finset Y)) →' (phi_X_finset (X ∪ Y))) := by
-  simp[phi_X_finset]
+  unfold phi_X_finset
   apply cut
   apply disjunc_disjunct
   apply imp_finite_disjunction_subset
@@ -560,7 +561,7 @@ lemma phi_X_finset_disjunct_of_disjuncts {agents form : Type} [pf : Pformula_ax 
   (X Y : Finset (S_f m cl φ)) :
   ⊢' (¬' (phi_X_finset X) →' (phi_X_finset Y)) ↔ ⊢' (phi_X_finset (X ∪ Y)) := by
   have hax := @ax_iff_disjunc_disjunct _ _ (phi_X_list X.toList) (phi_X_list Y.toList)
-  simp[phi_X_finset]
+  unfold phi_X_finset
   apply Iff.intro
   · intro h
     apply MP' (hax.mp h)
@@ -587,7 +588,7 @@ lemma phi_X_set_subset_Y_imp {agents form : Type} [pf : Pformula_ax form]
   {m : modelCL agents} [hm : SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
   {X Y : Set (S_f m cl φ)} (hXY : X ⊆ Y) :
   ⊢' ((phi_X_set X) →' (phi_X_set Y)) := by
-  simp only [phi_X_set]
+  unfold phi_X_set
   apply phi_X_subset_Y_imp
   exact Finite.toFinset_subset_toFinset.mpr hXY
 
@@ -602,7 +603,8 @@ lemma phi_X_set_disjunct {agents form : Type} [pf : Pformula_ax form]
   apply phi_X_finset_union
   apply phi_X_subset_Y_imp
   apply Finset.union_subset
-  repeat · simp
+  repeat
+  · simp only [Finite.toFinset_subset_toFinset, subset_union_left, subset_union_right]
 
 -- ⊢ (¬ phi X → phi Y) ⇔ ⊢ phi (X ∪ Y)
 lemma phi_X_set_disjunct_of_disjuncts {agents form : Type} [pf : Pformula_ax form]
@@ -615,7 +617,8 @@ lemma phi_X_set_disjunct_of_disjuncts {agents form : Type} [pf : Pformula_ax for
     apply MP' ((phi_X_finset_disjunct_of_disjuncts _ _).mp h)
     apply phi_X_subset_Y_imp
     apply Finset.union_subset
-    repeat · simp only [Finite.to_finset_mono, subset_union_left, subset_union_right]
+    repeat
+    · simp only [Finite.toFinset_subset_toFinset, subset_union_left, subset_union_right]
   · intro h
     apply (phi_X_finset_disjunct_of_disjuncts _ _).mpr
     apply MP' h
@@ -639,7 +642,8 @@ lemma phi_X_set_exists {agents form : Type} [ha : Nonempty agents]
   apply phi_X_list_exists
   intro sf hsf
   apply hfa
-  simp only [Finite.mem_to_finset, Finset.mem_toList] at hsf
+  simp only [Finite.toFinset_setOf, Finset.mem_univ, forall_true_left, Finset.mem_toList,
+    Finset.mem_filter, true_and] at hsf
   exact hsf
 
 -- tilde phi ∅ = empty, when M is the defined canonical model
@@ -649,9 +653,10 @@ lemma phi_X_set_exists {agents form : Type} [ha : Nonempty agents]
   tilde ((canonical_model_CL agents form hnpr).f.states)
     (phi_X_set (∅ : Set (S_f (canonical_model_CL agents form hnpr) cl φ))) = ∅ := by
   -- 1.1.1. φ∅ = ⊥, because φ∅ is an empty disjunction, thus  ̃φ∅ =  ̃⊥.
-  simp [phi_X_set, phi_X_finset, phi_X_list, finite_disjunction, tilde]
+  simp only [phi_X_set, phi_X_finset, phi_X_list, finite_disjunction, tilde,
+    Finite.toFinset_empty, Finset.toList_empty]
   -- 1.1.2.  ̃⊥ = ∅, because all s ∈ S are consistent.
-  simp [eq_empty_iff_forall_not_mem]
+  simp only [eq_empty_iff_forall_not_mem, mem_setOf_eq]
   intro s
   exact bot_not_mem_of_ax_consistent s.1 s.2.1
 
@@ -662,7 +667,8 @@ lemma ax_phi_s_f_imp_phi_X_set_of_mem {agents form : Type} [pf : Pformula_ax for
   unfold phi_X_set
   apply imp_finite_disjunction
   apply phi_X_list_contains
-  simpa only [Finset.mem_toList, Finite.mem_to_finset]
+  simpa only [Finite.toFinset_setOf, Finset.mem_univ, forall_true_left, Finset.mem_toList,
+    Finset.mem_filter, true_and]
 
 
 ----------------------------------------------------------
@@ -678,24 +684,23 @@ lemma univ_disjunct_provability {agents form : Type} [ha : Nonempty agents]
   (hnpr : ¬ ⊢' (⊥' : form)) (cl : form → Finset (form)) (φ : form) :
   ⊢' (phi_X_set (univ : Set (S_f (canonical_model_CL agents form hnpr) cl φ))) := by
   -- 1. By contradiction, assume that ⊬ phi Sf
-  by_contra
+  by_contra h
   -- 2.∃t ∈ SC′, ¬ phi Sf ∈ t, because ¬ phi Sf is consistent:= 1.
   obtain ⟨t', hexn, htn⟩ := exists_max_ax_consistent_neg_mem h
-  have ht : ∃ t : (canonical_model_CL agents form hnpr).f.states, t = ⟨t', hexn⟩
-    from exists_apply_eq_apply _ _
+  have ht : ∃ t : (canonical_model_CL agents form hnpr).f.states, t = ⟨t', hexn⟩ :=
+    exists_apply_eq_apply _ _
   cases' ht with t ht_h
   -- 3. ⊢ phi tf → phi Sf , by propositional logic.
-  have himp : ⊢' (phi_s_f (s_f cl φ t) →' phi_X_set univ)
-    from ax_phi_s_f_imp_phi_X_set_of_mem (mem_univ (s_f cl φ t))
+  have himp : ⊢' (phi_s_f (s_f cl φ t) →' phi_X_set univ) :=
+    ax_phi_s_f_imp_phi_X_set_of_mem (mem_univ (s_f cl φ t))
   -- 4. phi tf ∈ t, by propositional logic, because all tf ⊆ t.
   have hphitf : phi_s_f (s_f cl φ t) ∈ t.1:= phi_s_f_in_s t
   -- 5. (phi Sf ∈ t, by propositional logic:= 3 & 4.
-  have ht : phi_X_set univ ∈ t.1
-    from max_ax_contains_by_set_proof t.2 hphitf himp
+  have ht : phi_X_set univ ∈ t.1 := max_ax_contains_by_set_proof t.2 hphitf himp
   -- 6. Contradiction from 2 and 5.
-  apply contra_contains_pr_false t.2 ht
-  simp only [canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, ht_h]
-  exact htn
+  have := contra_contains_pr_false t.2 ht
+  simp only [canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, ht_h] at this
+  exact this htn
 
 -- Lemma 5
 ----------------------------------------------------------
@@ -707,13 +712,13 @@ lemma unique_s_f_helper {agents form : Type} [ha : Nonempty agents]
   {sf tf : (S_f (canonical_model_CL agents form hnpr) cl φ)}
   (hsf : ψ ∈ sf) (htf : ψ ∉ tf) : ⊢' (¬' (phi_s_f sf ∧' phi_s_f tf)) :=  by
   -- 6-9. ∃χ, (⊢ χ ↔ ¬ψ) ∧ χ ∈ tf
-  obtain ⟨χ, ⟨hχ, hψχ⟩⟩ : ∃ (χ : form), χ ∈ tf ∧ ⊢'(χ ↔' ¬' ψ)
-    from s_f_closed hcl htf (Finset.subset_iff.mp (s_f_subset_cl _) hsf)
+  obtain ⟨χ, ⟨hχ, hψχ⟩⟩ : ∃ (χ : form), χ ∈ tf ∧ ⊢'(χ ↔' ¬' ψ) :=
+    s_f_closed hcl htf (Finset.subset_iff.mp (s_f_subset_cl _) hsf)
   -- 10. {ψ, χ} ⊆ sf ∪ tf := 4 & 9.
   -- 11. φsf ∧ φtf → ⊥, by propositional logic:= 5, 8 _∧ 10.
   apply contra_con_cons hψχ
-  exact (sf.1.1).mem_toList.mpr hsf
-  exact (tf.1.1).mem_toList.mpr hχ
+  repeat
+  · simp_all only [mem_mk, Finset.setOf_mem, Finset.mem_toList]
 
 -- sf ≠ tf ⇒ ⊢ phi sf → ¬ phi tf
 lemma unique_s_f {agents form : Type} [ha : Nonempty agents]
@@ -723,32 +728,39 @@ lemma unique_s_f {agents form : Type} [ha : Nonempty agents]
   {sf tf : (S_f (canonical_model_CL agents form hnpr) cl φ)} (hneq : sf ≠ tf) :
   ⊢' (phi_s_f sf →' ¬' (phi_s_f tf)) := by
   -- 1. Assume by contradiction ⊬ phi sf → ¬ phi tf
-  by_contra
+  by_contra h
   -- 2. ∃u ∈ SC′, ¬(phi sf → ¬ phi tf) ∈ u, because ¬(phi sf → ¬ phi tf) is consistent:= 1.
   obtain ⟨u', hexn, hun⟩ := exists_max_ax_consistent_neg_mem h
-  have hu : ∃ u : (canonical_model_CL agents form hnpr).f.states, u = ⟨u', hexn⟩
-    from exists_apply_eq_apply _ _
+  have hu : ∃ u : (canonical_model_CL agents form hnpr).f.states, u = ⟨u', hexn⟩ :=
+    exists_apply_eq_apply _ _
   cases' hu with u hu
   have hun : ¬' (phi_s_f sf →' ¬' (phi_s_f tf)) ∈ u:=  by
-    rw hu
+    rw [hu]
     exact hun
   -- 3. phi sf ∧ phi tf ∈ u, by propositional logic:= 2.
-  have hand : (phi_s_f sf ∧' (phi_s_f tf)) ∈ u
-    from by apply max_ax_contains_by_set_proof u.2 hun demorgans''
+  have hand : (phi_s_f sf ∧' (phi_s_f tf)) ∈ u := by
+    apply max_ax_contains_by_set_proof u.2 hun demorgans''
   -- 4. ∃ψ ∈ sf ∪ tf , ψ ∉ sf ∨ ψ  tf , because sf ≠ tf . Let vf be either sf or tf
-  have : ¬ (sf.1.1 ⊆ tf.1.1) ∨ ¬ (tf.1.1 ⊆ sf.1.1):= by
-    rw ←not_and_distrib
+  have : ¬ (sf.1.1 ⊆ tf.1.1) ∨ ¬ (tf.1.1 ⊆ sf.1.1) := by
+    rw [←not_and_or]
     rintro ⟨hst, hts⟩
     apply hneq
-    ext : 2
-    exact subset_antisymm hst hts
+    have := subset_antisymm hst hts
+    simp_all only [ne_eq, Finset.setOf_mem, Finset.Subset.refl, s_f_eq]
   obtain ⟨ψ, hun, hneq'⟩ : ∃ ψ, ψ ∈ (sf.1.1 ∪ tf.1.1) ∧ ((ψ ∉ sf.1.1) ∨ (ψ ∉ tf.1.1))
   · simp only [Finset.not_subset] at this
-    rcases' this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
-      use x;
-      simp only [Finset.mem_union, hxu, hxn, not_true, not_false_iff, true_or, or_true
-                  true_and]
-  rw Finset.mem_union at hun
+    rcases this with ⟨x, hxu, hxn⟩ | ⟨x, hxu, hxn⟩;
+    · use x;
+      simp_all only [ne_eq, Finset.setOf_mem, Finset.mem_union, or_false, not_true_eq_false,
+        not_false_eq_true, or_true, and_self]
+    · simp only [ne_eq, Finset.setOf_mem, Finset.mem_union]
+      apply Exists.intro
+      apply And.intro
+      apply Or.inr
+      exact hxu
+      simp_all only [not_false_eq_true, not_true_eq_false, or_false]
+
+  rw [Finset.mem_union] at hun
   -- 5-11. ⊢ phi sf ∧ phi tf → ⊥, using helper (steps 5-11)
   have hcontra : ⊢' phi_s_f sf ∧' phi_s_f tf →' ⊥':= by
     cases' hun with hxf hxf
@@ -762,7 +774,8 @@ lemma unique_s_f {agents form : Type} [ha : Nonempty agents]
       · by_contra
         exact hnf hxf
   -- 12. ⊥ ∈ u, by propositional logic:= 4 _∧ 11, which contradicts the consistency of u.
-  exact ax_neg_contains_pr_false u.2 hand hcontra
+  have := ax_neg_contains_pr_false u.2 hand hcontra
+  simp only at this
 
 -- Lemma 6
 ----------------------------------------------------------
@@ -779,16 +792,15 @@ lemma contra_fin_disjunct_psi_and_not {agents form : Type} [ha : Nonempty agents
   induction' sfs with sf sfs ih
   · unfold phi_X_list finite_disjunction
     exact p6 _ _
-  · unfold phi_X_list finite_disjunction at *
-    have hsfs' : ∀ sf : (S_f (canonical_model_CL agents form hnpr) cl φ)
-      sf ∈ sfs → ψ ∉ sf:= by
+  · have hsfs' : ∀ sf : (S_f (canonical_model_CL agents form hnpr) cl φ), sf ∈ sfs → ψ ∉ sf := by
       intro sf hsf
       apply hsfs
-      simp [hsf]
+      simp only [Bool.not_eq_true, List.mem_cons, hsf, or_true]
     specialize ih hsfs'
-    refine and_right_imp.mpr _
+    apply and_right_imp.mpr
     apply or_cases
-    · have hχ := s_f_closed hcl (hsfs sf (by simp)) hψ
+    · have hχ :=
+      s_f_closed hcl (hsfs sf (by simp only [Bool.not_eq_true, List.mem_cons, true_or])) hψ
       cases' hχ with χ hχ
       apply cut
       apply iff_l
@@ -798,8 +810,8 @@ lemma contra_fin_disjunct_psi_and_not {agents form : Type} [ha : Nonempty agents
       apply iff_l
       apply hχ.2
       exact iden
-    · refine and_right_imp.mp _
-      apply ih
+    · apply and_right_imp.mp
+      exact ih
 
 
 -- Lemma 6. ∀ ψ ∈ cl(φ), phi {sf | ψ ∈ sf} ↔ ψ
@@ -843,10 +855,12 @@ lemma phi_X_contains_iff_psi_finset {agents form : Type} [ha : Nonempty agents]
   ⊢' ( (phi_X_finset sfs) ↔' ψ) := by
   unfold phi_X_finset
   apply phi_X_contains_iff_psi_list hcl hψ
-  simp only [Finset.mem_toList], exact hsfs
+  simp only [Finset.mem_toList]
+  exact hsfs
   show ∀ tf, tf ∈ sfsᶜ.toList → ψ ∉ tf
-    simp only [Finset.mem_toList, Finset.mem_compl], exact htfs
-    exact hSf
+  simp only [Finset.mem_toList, Finset.mem_compl]
+  exact htfs
+  exact hSf
 
 
 lemma phi_X_contains_iff_psi {agents form : Type} [ha : Nonempty agents]
@@ -856,9 +870,9 @@ lemma phi_X_contains_iff_psi {agents form : Type} [ha : Nonempty agents]
   ⊢' (phi_X_set {sf : (S_f (canonical_model_CL _ _ hnpr) cl φ) | ψ ∈ sf} ↔' ψ) := by
   apply phi_X_contains_iff_psi_finset hcl hψ
   -- ∀ sf, sf ∈ phi {sf | ψ ∈ sf } → ψ ∈ sf
-  simp only [Finite.mem_to_finset, mem_setOf_eq, imp_self, forall_const]
+  simp only [Finite.mem_toFinset, mem_setOf_eq, imp_self, forall_const]
   -- ∀ tf, tf ∉ phi {sf | ψ ∈ sf } → ψ ∉ sf
-  simp only [Finite.mem_to_finset, mem_setOf_eq, imp_self, forall_const]
+  simp only [Finite.mem_toFinset, mem_setOf_eq, imp_self, forall_const]
   -- ⊢ (phi sfsᶜ) ∨ (phi sfs) ↔ ⊢ phi (sfsᶜ ∪ sfs)
   apply (phi_X_finset_disjunct_of_disjuncts _ _).mpr
   -- ⊢ phi Sf → phi sfsᶜ ∪ sfs and we have ⊢ phi Sf
@@ -867,10 +881,10 @@ lemma phi_X_contains_iff_psi {agents form : Type} [ha : Nonempty agents]
   apply phi_X_subset_Y_imp
   -- Sf ⊆ sfsᶜ ∪ sfs
   intro sf hsf
-  simp only [Finset.mem_union, Finset.mem_compl, Finite.mem_to_finset
-              mem_setOf_eq, ax_and, mem_univ] at *
-  rw Or.comm
-  exact (em (ψ ∈ sf))
+  simp only [Finset.mem_union, Finset.mem_compl, Finite.mem_toFinset, mem_setOf_eq,
+    ax_and, mem_univ] at *
+  rw [Or.comm]
+  exact (Classical.em (ψ ∈ sf))
 
 -- Lemma 7
 ----------------------------------------------------------
@@ -882,26 +896,27 @@ lemma E_s_contains_tilde_iff_E_in_s {agents form : Type} [ha : Nonempty agents]
   (s : (canonical_model_CL agents form hnpr).f.states) (G : Set agents) :
   (((tilde (canonical_model_CL agents form hnpr).f.states) ψ) ∈
     ((canonical_model_CL agents form hnpr).f.E.E s G)) ↔ ((['G] ψ) ∈ s) := by
-  let hE : (canonical_model_CL agents form hnpr).f.E.E = λ s G, {X | ite (G = univ)
-          (∀ φ, ({t | φ ∈ t} ⊆ Xᶜ) → (['∅] φ) ∉ s.val) (∃ φ, {t | φ ∈ t} ⊆ X ∧ (['G] φ) ∈ s.val)}
-        from rfl
+  let hE : (canonical_model_CL agents form hnpr).f.E.E = λ s G => {X | ite (G = univ)
+    (∀ φ, ({t | φ ∈ t} ⊆ Xᶜ) → (['∅] φ) ∉ s.val) (∃ φ, {t | φ ∈ t} ⊆ X ∧ (['G] φ) ∈ s.val)} := rfl
   -- We consider the case when G = N and G ≠ N separately.
-  cases' (em (G = univ)) with hG hG
+  cases' (Classical.em (G = univ)) with hG hG
   · -- 1. case G = N
-    rw hG
+    rw [hG]
     apply Iff.intro
     -- 1.1. ⇒
     · -- 1.1.1. Assume  ̃ψ ∈ EC′ (s)(N).
       intro h
       -- 1.1.2. ∀ ̃χ ⊆  ̃ψᶜ : [∅]χ ∉ s:= 1.1.1, by definition EC′.
-      simp only [hE, eq_self_iff_true, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe
-                  if_true, mem_setOf_eq] at h {eta := ff}, clear hE
+      simp only [hE, eq_self_iff_true, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe,
+                  if_true, mem_setOf_eq] at h
+      clear hE
       -- 1.1.3. ∀ ̃χ ⊆  ̃¬ψ : [∅]χ ∉ s:= 1.1.2, because  ̃ψᶜ =  ̃¬ψ.
       have h_subeq : {t : (canonical_model_CL agents form hnpr).f.states | (¬' ψ) ∈ t} ⊆
         (tilde ((canonical_model_CL agents form hnpr).f.states) ψ)ᶜ:= by
         intro t ht hf
         simp only [tilde, mem_setOf_eq] at *
-        exact contra_contains_pr_false t.2 hf ht
+        have := contra_contains_pr_false t.2 hf ht
+        simp only at this
       specialize h (¬' ψ) h_subeq
       -- 1.1.4. [N ]ψ ∈ s:= 1.1.3, by axiom N.
       have hin := not_in_from_notin s.2 h
@@ -910,25 +925,28 @@ lemma E_s_contains_tilde_iff_E_in_s {agents form : Type} [ha : Nonempty agents]
       -- 1.2.1. Assume [N ]ψ ∈ s.
       intro h
       -- 1.2.2. ¬[∅]¬ψ ∈ s:= 1.2.1
-      have hin : (¬' (['∅] (¬' ψ))) ∈ s
-        from by apply max_ax_contains_by_set_proof s.2 h (iff_l univ_iff_empty)
+      have hin : (¬' (['∅] (¬' ψ))) ∈ s := by
+        apply max_ax_contains_by_set_proof s.2 h (iff_l univ_iff_empty)
       -- 1.2.3. ¬∃χ,  ̃χ ⊆  ̃¬ψ : [∅]χ ∈ s:= proof by contradiction
         -- else by definition E we would have [∅]_¬ψ ∈ s, which contradicts with 1.2.2.
       have hne : ¬ ∃ χ , (tilde ((canonical_model_CL agents form hnpr).f.states) χ) ⊆
         (tilde ((canonical_model_CL agents form hnpr).f.states) (¬' ψ)) ∧ (['∅] χ) ∈ s:=  by
-        intro hf, cases' hf with χ hf, cases' hf with himp hf
-        simp only [tilde, set_of_subset_set_of] at himp
+        intro hf
+        cases' hf with χ hf
+        cases' hf with himp hf
+        simp only [tilde, setOf_subset_setOf] at himp
         have hax : ⊢' (χ →' (¬' ψ)):= ax_imp_from_ex himp
-        have hf : (['∅] (¬' ψ)) ∈ s
-          from by apply max_ax_contains_by_set_proof s.2 hf (derived_monoticity_rule hax)
-        apply contra_contains_pr_false s.2 hf hin
+        have hf : (['∅] (¬' ψ)) ∈ s := by
+          apply max_ax_contains_by_set_proof s.2 hf (derived_monoticity_rule hax)
+        have := contra_contains_pr_false s.2 hf hin
+        simp only at this
       -- 1.2.4. ∀χ,  ̃χ ⊆  ̃¬ψ : [∅]χ ∉ s:= 1.2.3, by first order logic.
       simp only [not_exists, not_and] at hne
       -- 1.2.5. ∀χ,  ̃χ ⊆  ̃ψ : [∅]χ ∉ s, because all s ∈ S are maximally consistent.
       simp only [h_tilde_compl hnpr ψ] at hne
       -- 1.2.6.  ̃ψ ∈ E(s)(N ):= 1.2.5, by definition E.
-      simp only [hE, eq_self_iff_true, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe
-                  if_true, mem_setOf_eq] {eta := ff}
+      simp only [hE, eq_self_iff_true, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe,
+        if_true, mem_setOf_eq]
       exact hne
   · -- 2. case G ≠ N
     apply Iff.intro
@@ -937,20 +955,21 @@ lemma E_s_contains_tilde_iff_E_in_s {agents form : Type} [ha : Nonempty agents]
       intro h
       -- 2.1.2. ∃ ̃χ ⊆  ̃ψ : [G]χ ∈ s:= 2.1.1, by definition E.
       simp only [hE, hG, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, if_false
-                  mem_setOf_eq] at h {eta := ff}
+                  mem_setOf_eq] at h
       -- 2.1.3. ⊢ χ → ψ:= 2.1.2.
-      cases' h with χ h, cases' h with himp h
-      simp only [tilde, set_of_subset_set_of] at himp
+      cases' h with χ h
+      cases' h with himp h
+      simp only [tilde, setOf_subset_setOf] at himp
       have hax : ⊢' (χ →' ψ):= ax_imp_from_ex himp
       -- 2.1.4. [G]ψ ∈ s:= 2.1.2 & 2.1.3, by lemma 2.
       apply max_ax_contains_by_set_proof s.2 h (derived_monoticity_rule hax)
     · -- 2.2. ⇐ is immediate by definition.
-      simp only [hE, hG, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, if_false
-                  mem_setOf_eq], clear hE
+      simp only [hE, hG, canonical_model_CL.f.states.val_eq_coe, SetLike.mem_coe, if_false,
+        mem_setOf_eq]
+      clear hE
       intro h
       apply Exists.intro ψ
-      apply Iff.intro
-      unfold tilde
+      simp only [tilde, setOf_subset_setOf, imp_self, implies_true, true_and]
       exact h
 
 -- Extra Helper Lemmas
@@ -962,10 +981,10 @@ lemma E_s_contains_tilde_iff_E_in_s {agents form : Type} [ha : Nonempty agents]
   (tilde (canonical_model_CL agents form hnpr).f.states
     (phi_X_set (univ : Set (S_f (canonical_model_CL agents form hnpr) cl φ)))) =
   (univ : Set (canonical_model_CL agents form hnpr).f.states) := by
-  simp[tilde]
-  ext1
-  refine iff_of_true _ trivial
-  simp
+  unfold tilde
+  ext1 x
+  apply iff_of_true _ trivial
+  rw [mem_setOf_eq]
   apply max_ax_contains_taut x.2
   apply univ_disjunct_provability
 
@@ -974,9 +993,9 @@ lemma phi_X_list_unique {agents form : Type} [ha : Nonempty agents]
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → Finset (form)} {φ : form}
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   {sfs tfs : List (S_f (canonical_model_CL agents form hnpr) cl φ)}
-  (hdis : sfs.disjoint tfs) :
+  (hdis : sfs.Disjoint tfs) :
   ⊢' ((finite_disjunction (phi_X_list sfs)) →' (¬' (finite_disjunction (phi_X_list tfs)))) := by
-  induction' sfs with sf sfs ihsfs
+  induction' sfs with sf sfs ihsfs generalizing tfs
   · simp only [phi_X_list, finite_disjunction, explosion]
   · simp only [phi_X_list, finite_disjunction]
     apply or_cases
@@ -984,26 +1003,26 @@ lemma phi_X_list_unique {agents form : Type} [ha : Nonempty agents]
     · induction' tfs with tf tfs ihtfs
       · simp only [phi_X_list, finite_disjunction]
         exact mp _ _ (p1 _ _) iden
-      · simp only [phi_X_list, finite_disjunction, List.nodup_cons, List.disjoint_cons_left
-                    and_imp, List.disjoint_cons_right, List.mem_cons] at *
+      · simp only [List.disjoint_cons_left, and_imp, List.disjoint_cons_right, finite_disjunction,
+        Bool.not_eq_true, List.mem_cons] at *
+        -- ⊢ phi tfs → ¬ phi sf ⇒ ⊢ phi sf → ¬ phi tfs
         -- ⊢ phi tfs → ¬ phi sf ⇒ ⊢ phi sf → ¬ phi tfs
         apply contrapos.mp
         apply cut (dne)
         apply or_cases
         -- ⊢ phi tf → ¬ phi sf
         · apply unique_s_f hcl
-          by_contra
-          simp only [h, eq_self_iff_true, true_or, not_true, false_and] at hdis
-          exact hdis
+          by_contra h
+          simp only [h, true_or, not_true_eq_false, false_and] at hdis
         -- ⊢ phi tfs' → ¬ phi sf (proved with ihtfs)
-        · rw ←contrapos
+        · rw [←contrapos]
           apply cut
           apply dne
           apply ihtfs
           exact hdis.2.1
           exact hdis.2.2
     -- ⊢ phi sfs' → ¬ phi tfs (proved with ihsfs)
-    · apply ihsfs hcl
+    · apply ihsfs
       apply List.disjoint_of_disjoint_cons_left hdis
 
 lemma phi_X_finset_unique {agents form : Type} [ha : Nonempty agents]
@@ -1012,14 +1031,13 @@ lemma phi_X_finset_unique {agents form : Type} [ha : Nonempty agents]
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   {X Y : Finset (S_f (canonical_model_CL agents form hnpr) cl φ)} (hXY : X ∩ Y = ∅) :
   ⊢' ((phi_X_finset X) →' ¬' (phi_X_finset (Y))) := by
-  simp[phi_X_finset]
+  unfold phi_X_finset
   apply phi_X_list_unique hcl
-  rw List.disjoint_left
+  rw [List.disjoint_left]
   intro f hf
   simp only [Finset.mem_toList, ax_and] at *
-  by_contra
+  by_contra h
   exact Finset.eq_empty_iff_forall_not_mem.mp hXY f (Finset.mem_inter_of_mem hf h)
-  repeat {exact Finset.nodup_toList _
 
 lemma phi_X_set_unique {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form]
@@ -1027,11 +1045,11 @@ lemma phi_X_set_unique {agents form : Type} [ha : Nonempty agents]
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   {X Y : Set (S_f (canonical_model_CL agents form hnpr) cl φ)} (hXY : X ∩ Y = ∅) :
   ⊢' ((phi_X_set X) →' ¬' (phi_X_set (Y))) := by
-  simp[phi_X_set]
+  unfold phi_X_set
   apply phi_X_finset_unique hcl
   apply Finset.eq_empty_iff_forall_not_mem.mpr
   intro f hf
-  simp only [Finset.mem_inter, Finite.mem_to_finset] at *
+  simp only [Finset.mem_inter, Finite.mem_toFinset] at *
   exact eq_empty_iff_forall_not_mem.mp hXY f ((mem_inter_iff f X Y).mpr hf)
 
 lemma phi_X_list_inter {agents form : Type} [ha : Nonempty agents]
@@ -1039,22 +1057,22 @@ lemma phi_X_list_inter {agents form : Type} [ha : Nonempty agents]
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → Finset (form)} {φ : form}
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   {X Y : List (S_f (canonical_model_CL agents form hnpr) cl φ)}
-  (hX : List.nodup X) (hY : List.nodup Y) :
+  (hX : List.Nodup X) (hY : List.Nodup Y) :
   ⊢' (finite_disjunction (phi_X_list X)→' finite_disjunction (phi_X_list Y) →'
         finite_disjunction (phi_X_list (X ∩ Y))) := by
   induction' X with x X ihx
   · simp only [phi_X_list, finite_disjunction, explosion]
-  · simp [phi_X_list, finite_disjunction]
+  · simp only [finite_disjunction]
     apply or_cases
-    · cases' (em (x ∈ Y))
+    · cases' (Classical.em (x ∈ Y)) with h h
       · apply cut
         apply iff_l
         apply phi_X_list_single
         apply cut _ (p1 _ _)
         apply imp_finite_disjunction_subset
         apply phi_X_list_subset
-        simp only [List.cons_subset, List.mem_inter, List.mem_cons, eq_self_iff_true, true_or
-                    true_and, List.nil_subset, and_true]
+        simp only [List.cons_subset, List.mem_inter_iff, Bool.not_eq_true, List.mem_cons, true_or,
+          true_and, List.nil_subset, and_true]
         exact h
       · apply cut
         apply iff_l
@@ -1064,14 +1082,14 @@ lemma phi_X_list_inter {agents form : Type} [ha : Nonempty agents]
         exact List.singleton_disjoint.mpr h
         exact explosion
     · simp only [List.nodup_cons] at hX
-      specialize ihx hcl hY hX.2
       apply cut1
       apply ihx
+      exact hX.right
       apply imp_finite_disjunction_subset
       apply phi_X_list_subset
       intro y hy
-      simp at *
-      apply Iff.intro
+      simp only [List.mem_inter_iff, Bool.not_eq_true, List.mem_cons] at *
+      apply And.intro
       apply Or.intro_right
       exact hy.1
       exact hy.2
@@ -1085,12 +1103,14 @@ lemma phi_X_finset_inter {agents form : Type} [ha : Nonempty agents]
   unfold phi_X_finset
   apply cut1
   apply phi_X_list_inter hcl
-  repeat {exact Finset.nodup_toList _
+  repeat · exact Finset.nodup_toList _
   apply imp_finite_disjunction_subset
   apply phi_X_list_subset
   intro x hx
-  simp only [Finset.mem_toList, Finset.mem_inter, List.mem_inter] at *
+  simp only [List.mem_inter_iff, Finset.mem_toList, Finset.mem_inter] at *
   exact hx
+
+set_option maxHeartbeats 4000000
 
 lemma phi_X_set_inter {agents form : Type} [ha : Nonempty agents]
   [pf : Pformula_ax form] [clf : CLformula agents form]
@@ -1098,12 +1118,12 @@ lemma phi_X_set_inter {agents form : Type} [ha : Nonempty agents]
   (hcl : ∀ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ))))
   (X Y : Set (S_f (canonical_model_CL agents form hnpr) cl φ)) :
   ⊢' ((phi_X_set X) →' (phi_X_set Y) →' (phi_X_set (X ∩ Y))) := by
-  simp[phi_X_set]
+  unfold phi_X_set
   apply cut1
   apply phi_X_finset_inter hcl
   apply phi_X_subset_Y_imp
   intro x hx
-  simp only [Finite.mem_to_finset, mem_inter_eq, Finset.mem_inter] at *
+  simp only [Finite.mem_toFinset, mem_inter_iff, Finset.mem_inter] at *
   exact hx
 
 end lemmas
@@ -1112,12 +1132,12 @@ end lemmas
 -- Effectivity
 ----------------------------------------------------------
 
-def E_f {agents form : Type} [ha : Nonempty agents]
-  [pf : Pformula_ax form] [clf : CLformula agents form]
+def E_f {agents form : Type} [Nonempty agents]
+[Pformula_ax form] [CLformula agents form]
   {hnpr : ¬ ⊢' (⊥' : form)} {cl : form → Finset (form)} {φ : form} :
   (S_f (canonical_model_CL agents form hnpr) cl φ) → (Set agents) →
     (Set (Set (S_f (canonical_model_CL agents form hnpr) cl φ))) :=
-λ sf G, {X | ite (G = univ)
+λ sf G => {X | ite (G = univ)
   -- condition G = N
   -- ∃t ∈ S, sf = tf and  ̃φX ∈ E(t)(N)
   (∃ t, sf = (s_f cl φ t) ∧ (tilde (canonical_model_CL agents form hnpr).f.states (phi_X_set X)) ∈
@@ -1142,12 +1162,12 @@ lemma Ef_liveness {agents form : Type} [ha : Nonempty agents]
   -- 1.2. Assume by contradiction ∅ ∈ Ef (sf)(G).
   intro hf
   unfold E_f at hf
-  apply Iff.intro_ifs at hf with h h
+  split_ifs at hf with h
   -- 1.3. Case: G = N
   · -- 1.3.1. ∃t ∈ S, sf = tf and  ̃φ∅ ∈ E(t)(N):= 1.2, by definition Ef .
-    simp only [h, Subtype.val_eq_coe, mem_setOf_eq] at hf
+    simp only [h, mem_setOf_eq] at hf
     -- 1.3.2. ∃t ∈ S, sf = tf and ∅ ∈ E(t)(N):= 1.3.1 & 1.1.
-    rw tilde_phi_empty at hf
+    rw [tilde_phi_empty] at hf
     cases' hf with t hf
     -- 1.3.3. ∀t, ∅ ∉ E(t)(N) because E(t) is live.
     have hlive := M.f.E.liveness t univ
@@ -1155,9 +1175,9 @@ lemma Ef_liveness {agents form : Type} [ha : Nonempty agents]
     exact hlive hf.right
   -- 1.4. Case: G ≠ N
   · -- 1.4.1. ∀t ∈ S, sf = tf ⇒  ̃φ∅ ∈ E(t)(G):= 1.2, by definition Ef
-    simp only [Subtype.val_eq_coe, mem_setOf_eq, mem_setOf_eq] at hf
+    simp only [mem_setOf_eq] at hf
     -- 1.4.2. ∀t ∈ S, sf = tf ⇒ ∅ ∈ E(t)(G):= 1.4.1 & 1.1
-    rw tilde_phi_empty at hf
+    rw [tilde_phi_empty] at hf
     -- 1.4.3. ∅ ∈ E(s)(G):= 1.4.2
     cases' (s_f_to_s sf) with s hs
     specialize hf s (sf_eq_s_f @hs)
@@ -1176,11 +1196,11 @@ lemma Ef_safety {agents form : Type} [ha : Nonempty agents]
   -- 2.1. First we note that  ̃φSf =  ̃⊤ = SC′:= Lemma 4. Proved by tilde_univ.
   cases' (s_f_to_s sf) with s hs
   -- 2.2. Case: G = N
-  cases' em (G = univ) with hG hG
+  cases' Classical.em (G = univ) with hG hG
   · -- 2.2.1. Sf ∈ Ef (sf )(N ) iff ∃t ∈ SC′, sf = tf and  ̃φSf ∈ EC′(t)(N ), by definition Ef .
-    simp only [E_f, hG, eq_self_iff_true, Subtype.val_eq_coe, if_true, mem_setOf_eq]
+    simp only [E_f, hG, eq_self_iff_true, if_true, mem_setOf_eq]
     -- 2.2.2. Sf ∈ Ef (sf )(N ) iff ∃t ∈ SC′, sf = tf and SC′ ∈ EC′(t)(N ):= 2.1 & 2.2.1.
-    rw tilde_univ
+    rw [tilde_univ]
     -- 2.2.3. ∃t ∈ SC′ , sf = tf and S ∈ EC′ (t)(N ), when t = s, because SC′ ∈ EC′ (t)(N )
       -- because EC′ is safe.
     apply Exists.intro s
@@ -1190,9 +1210,9 @@ lemma Ef_safety {agents form : Type} [ha : Nonempty agents]
   · -- 2.3.1. Sf ∈ Ef (sf )(G) iff ∀t ∈ SC′ , sf = tf ⇒  ̃φSf ∈ EC′ (t)(G), by definition Ef .
     simp only [E_f, hG, if_false, mem_setOf_eq]
     -- 2.3.2. Sf ∈ Ef (sf )(G) iff ∀t ∈ SC′ , sf = tf ⇒ SC′ ∈ EC′ (t)(G):= 2.1 & 2.3.1.
-    rw tilde_univ
+    rw [tilde_univ]
     -- Sf ∈ Ef (sf )(G):= 2.3.2, because EC′ (s) is safe, so ∀t, SC′ ∈ EC′ (t)(G).
-    intro t ht
+    intro t _
     exact M.f.E.safety t G
 
 -- 3. Ef (sf) is N-maximal: ∀X ⊆ Sf : Xᶜ ∉ Ef(sf)(∅) ⇒ X ∈ Ef(sf)(N)
@@ -1204,11 +1224,9 @@ lemma Ef_nmax {agents form : Type} [ha : Nonempty agents]
   let M := canonical_model_CL agents form hnpr
   -- 3.1. Assume some X ⊆ Sf such that Xᶜ ∉ Ef(sf)(∅).
   intro sf X hXc
-  -- 3.2. ¬(Xᶜ ∈ Ef sf ∅):= 3.1.
-  have hXc : ¬ (Xᶜ ∈ E_f sf ∅):= hXc
+  -- 3.2. ¬(Xᶜ ∈ Ef sf ∅) := 3.1.
   -- 3.3. ¬(∀t ∈ SC′, sf = tf ⇒ ~φXᶜ ∈ EC′(t)(∅)):= 3.2, by definition Ef .
-  simp only [E_f, empty_ne_univ, eq_self_iff_true, mem_mk, Subtype.val_eq_coe, if_true
-              mem_setOf_eq, if_false] at *
+  simp only [E_f, empty_ne_univ, ite_false, mem_setOf_eq, not_forall, ite_true] at *
   -- 3.4. ∃t ∈ SC′, sf = tf and ~φXᶜ ∉ EC′(t)(∅):= 3.3, by first order logic.
   simp only [not_forall, exists_prop] at hXc
   obtain ⟨s, hs, hXc⟩ := hXc
@@ -1222,13 +1240,13 @@ lemma Ef_nmax {agents form : Type} [ha : Nonempty agents]
     · intro hu
       apply max_ax_contains_by_set_proof u.2 hu
       apply (phi_X_set_disjunct_of_disjuncts _ _).mpr
-      rw (union_compl_self X)
+      rw [(union_compl_self X)]
       apply univ_disjunct_provability
   -- 3.6. ∃t ∈ SC′, sf = tf and ~¬φX ∉ EC′(t)(∅)):= 3.4 & 3.5
-  rw h_tilde at hXc
+  rw [h_tilde] at hXc
   -- 3.7. ∃t ∈ SC′, sf = tf and (~φX)ᶜ ∉ EC′(t)(∅)):= 3.6
     -- because all s ∈ S are maximally consistent.
-  rw h_tilde_compl hnpr at hXc
+  rw [h_tilde_compl hnpr] at hXc
   -- 3.8. ∃t ∈ SC′, sf = tf and  ̃φX ∈ EC′ ∈ EC′(t)(N)), when s = t from 3.7
     --  because EC′(s) is N-maximal
   apply Exists.intro s
@@ -1246,25 +1264,23 @@ lemma Ef_mono {agents form : Type} [ha : Nonempty agents]
   -- 4.1. Let G be some G ⊆ N and X and Y be some X ⊆ Y ⊆ Sf . Assume X ∈ Ef (sf )(G).
   -- 4.2. First we note that ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′(s)(G) ⇒  ̃φY ∈ EC′(s)(G)
   have himp : ∀ s G, (tilde (M.f.states) (phi_X_set X)) ∈ M.f.E.E s G →
-    (tilde (M.f.states) (phi_X_set Y)) ∈ M.f.E.E s G:= by
+    (tilde (M.f.states) (phi_X_set Y)) ∈ M.f.E.E s G := by
     -- 4.2.1. ⊢ φX → φY := 4.1 (X ⊆ Y ).
-    have hax : ⊢' ((phi_X_set X) →' (phi_X_set Y))
-      from phi_X_set_subset_Y_imp hXY
+    have hax : ⊢' ((phi_X_set X) →' (phi_X_set Y)) := phi_X_set_subset_Y_imp hXY
     -- 4.2.2.  ̃φX ⊆  ̃φY := 4.3.1, because all s ∈ SC′ are maximally consistent.
-    have h_phiXY : (tilde (M.f.states) (phi_X_set X)) ⊆ (tilde (M.f.states) (phi_X_set Y))
-      from λ t ht, by apply max_ax_contains_by_set_proof t.2 ht hax
+    have h_phiXY : (tilde (M.f.states) (phi_X_set X)) ⊆ (tilde (M.f.states) (phi_X_set Y)) :=
+      λ t ht => by apply max_ax_contains_by_set_proof t.2 ht hax
     -- 4.2.3. ∀s ∈ SC′ , ∀G ⊆ N,  ̃φX ∈ EC′ (s)(G) ⇒  ̃φY ∈ EC′ (s)(G):= 4.2.2
       --  because EC′ (s) is outcome monotonic.
-    exact λ s G, M.f.E.mono s G _ _ h_phiXY
+    exact λ s G => M.f.E.mono s G _ _ h_phiXY
   -- 4.3. Case G = N
-  cases' em (G = univ) with hG hG
+  cases' Classical.em (G = univ) with hG hG
   · -- 4.3.1. ∃t ∈ SC′, sf = tf and  ̃φX ∈ EC′ (t)(N ):= 4.1, by definition Ef .
-    simp only [E_f, hG, eq_self_iff_true, mem_mk, Subtype.val_eq_coe, if_true, mem_setOf_eq
+    simp only [E_f, hG, eq_self_iff_true, mem_mk, if_true, mem_setOf_eq,
                 eq_self_iff_true, if_true, mem_setOf_eq] at *
     -- 4.3.2. ∃t ∈ SC′, sf = tf and  ̃φY ∈ EC′ (t)(N ):= 4.2 & 4.3.1.
     obtain ⟨t, ⟨ht, hX⟩⟩ := hX
-    have hY : tilde M.f.states (phi_X_set Y) ∈ M.f.E.E t univ
-      from himp _ _ hX
+    have hY : tilde M.f.states (phi_X_set Y) ∈ M.f.E.E t univ := himp _ _ hX
     -- 4.3.3. Y ∈ Ef (sf )(N ):= 4.2.2, by definition Ef .
     apply Exists.intro t
     exact ⟨ht, hY⟩
@@ -1300,19 +1316,19 @@ lemma Ef_superadd_helper {agents form : Type} [ha : Nonempty agents]
   have h_tilde_eq : tilde (M.f.states) (phi_X_set X) ∩ tilde (M.f.states) (phi_X_set Y) =
     tilde (M.f.states) (phi_X_set (X ∩ Y)):= by
     ext1 s
-    simp only [tilde, mem_inter_eq, mem_setOf_eq]
+    simp only [tilde, mem_inter_iff, mem_setOf_eq]
     apply Iff.intro
     · intro h
       apply max_ax_contains_by_set_proof_2h s.2 h.1 h.2
       apply phi_X_set_inter hcl
     · intro h
-      apply Iff.intro
+      apply And.intro
       repeat
       · apply max_ax_contains_by_set_proof s.2 h
         apply phi_X_set_subset_Y_imp
-        simp
+        simp only [inter_subset_left]
   -- 5.2.3.  ̃φX∩Y ∈ EC′ (s)(G ∪ F ):= 5.2.2, because  ̃φX ∩  ̃φY =  ̃φX∩Y .
-  rw h_tilde_eq at hsuperadd
+  rw [h_tilde_eq] at hsuperadd
   exact hsuperadd
 
 
@@ -1330,13 +1346,14 @@ lemma Ef_superadd {agents form : Type} [ha : Nonempty agents]
     -- Let X, Y be some X, Y ⊆ SC′ such that X ∈ Ef (sf )(G) and Y ∈ Ef (sf )(F ).
   -- 5.2. First we note that ∀s ∈ SC′ , ∀G, F ⊆ N,such that G ∩ F = ∅
     --  ̃φX ∈ EC′ (s)(G) ⇒  ̃φY ∈ EC′ (s)(F ) ⇒  ̃φX∩Y ∈ EC′ (s)(G ∪ F)
-  have hint := Ef_superadd_helper hcl
+  have hint := @Ef_superadd_helper _ form ha pf clf hnpr _ _ hcl
 
   -- 5.3. Case G = N or F = N :
   have h_G_or_F_univ : ∀ X' Y', X' ∈ E_f sf univ → Y' ∈ E_f sf ∅ → (X' ∩ Y') ∈ E_f sf univ:= by
     -- 5.3.1. Note that the G or F that is not N , must be ∅.
       -- Thus, rename X & Y to X′ & Y ′, such that X′ ∈ Ef (sf )(N ) and Y ′ ∈ Ef (sf )(∅).
-    clear hX hY, intro X' Y'
+    clear hX hY
+    intro X' Y'
     -- 5.3.2. ∃t ∈ SC′, sf = tf and  ̃φX′ ∈ EC′(t)(N ), and ∀u ∈ SC′, sf = tf ⇒
       --  ̃φY ′ ∈ EC′(t)(∅) from 5.3.1 by definition Ef.
     intro hX hY
@@ -1344,28 +1361,27 @@ lemma Ef_superadd {agents form : Type} [ha : Nonempty agents]
     simp only [E_f, empty_ne_univ, eq_self_iff_true, if_true, mem_setOf_eq, if_false] at *
     cases' hX with t hX
     specialize hint t univ ∅ X' Y' top_inf_eq hX.right (hY t hX.left)
-    rw univ_union at hint
+    rw [univ_union] at hint
     -- 5.3.4. X′ ∩ Y ′ ∈ Ef (sf )(N = G′ ∪ F ′):= 5.3.3, by definition Ef
     exact ⟨t, ⟨hX.left, hint⟩⟩
-
-  cases' em (G = univ)
+  cases' Classical.em (G = univ) with h h
   -- case G = N
   · simp only [h, univ_union, univ_inter, eq_self_iff_true] at *
     simp only [hGF, eq_self_iff_true] at *
     exact h_G_or_F_univ X Y hX hY
   -- case G ≠ N
-  · cases' em (F = univ)
+  · cases' Classical.em (F = univ) with h_1 h_1
     -- case F = N
     · simp only [h_1, union_univ, inter_univ, eq_self_iff_true] at *
       simp only [hGF, eq_self_iff_true] at *
-      rw inter_comm X Y
+      rw [inter_comm X Y]
       exact h_G_or_F_univ Y X hY hX
     -- 5.4. Case G ≠ N and F ≠ N
     · -- 5.4.1. ∀t ∈ SC′, sf = tf ⇒  ̃φX ∈ EC′(t)(G), and
         -- ∀t ∈ SC′, sf = tf ⇒  ̃φY ∈ EC′(t)(F ):= 5.1, by definition Ef .
       simp only [E_f, h, h_1, mem_setOf_eq, if_false, eq_self_iff_true, if_true
                   forall_exists_index, and_imp, not_false_iff] at *
-      cases' em (G ∪ F = univ)
+      cases' Classical.em (G ∪ F = univ) with h_2 h_2
       -- 5.4.2. Case G ∪ F = N : ∃t ∈ SC′, sf = tf and  ̃φX∩Y ∈ EC′(s)(G ∪ F)
         -- when t = s from 5.2 & 5.4.1. Thus, X ∩ Y ∈ Ef (sf )(G ∪ F = N ), by definition Ef.
       · obtain ⟨s, hs⟩  := s_f_to_s sf
@@ -1375,7 +1391,7 @@ lemma Ef_superadd {agents form : Type} [ha : Nonempty agents]
       -- 5.4.3. Case G ∪ F ≠ N : ∀t ∈ SC′, sf = tf ⇒  ̃φX∩Y ∈ EC′(t)(G ∪ F ):= 5.2 & 5.4.1.
         -- Thus X ∩ Y ∈ Ef (sf )(G ∪ F ), by definition Ef .
       · simp only [h_2, if_false]
-        exact λ t ht, hint t G F X Y hGF (hX t @ht) (hY t @ht)
+        exact λ t ht => hint t G F X Y hGF (hX t @ht) (hY t @ht)
 
 ----------------------------------------------------------
 -- Building the coplete filtered model
@@ -1394,19 +1410,19 @@ noncomputable def filtered_modelECL_E (agents form : Type) [Nonempty agents]
   superadd   := Ef_superadd (hcl φ) }
 
 
-  noncomputable def filtered_modelECL (agents form : Type) [ha : Nonempty agents]
-  [pf : Pformula_ax form] [clf : CLformula agents form] [kf : Kformula agents form]
+  noncomputable def filtered_modelECL (agents form : Type) [Nonempty agents]
+  [Pformula_ax form] [CLformula agents form] [Kformula agents form]
   (hnpr : ¬ ⊢' (⊥' : form)) (cl : form → Finset (form))
   (hcl : ∀ φ χ, χ ∈ cl φ → ∃ ψ, (ψ ∈ cl φ ∧ ⊢' (ψ ↔' (¬' χ)))) (φ : form) :
   modelECL agents :=
 { f :=
   { states := S_f (canonical_model_CL agents form hnpr) cl φ
     hs := canonical.S_f.Nonempty _ _ _
-    E := truly_playable_from_finite filtered_modelECL_E
+    E := truly_playable_from_finite (filtered_modelECL_E agents form hnpr cl hcl φ)
     rel   := λ i s => {t | {φ | K' (i) (φ) ∈ s} = {φ | K' (i) (φ) ∈ t}}
-    rfl   := λ i s => rfl
-    sym   := λ i s t ht => eq.symm ht
-    trans := λ i s t u hst htu => eq.trans hst htu }
+    rfl   := λ _ _ => rfl
+    sym   := λ _ _ _ ht => Eq.symm ht
+    trans := λ _ _ _ _ hst htu => Eq.trans hst htu }
   v := λ  n => {s | (Pformula.var n) ∈ s.1.1} }
 
 end canonical
