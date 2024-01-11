@@ -48,8 +48,6 @@ noncomputable def cl {agents : Type} [Fintype agents] :
       or_false, or_true]
     simp only [Finset.mem_singleton, imp.injEq, Finset.mem_insert, true_or, or_true]
 
-
-
 @[simp] lemma cl_contains_bot {agents : Type} [hN : Fintype agents] (φ : formCLC agents) :
   _⊥ ∈ cl φ := by
   induction' φ with _ _ _ ih_φ ih_ψ _ _ ih_φ ih_ψ _ _ ih _ _ ih _ _ ih
@@ -390,11 +388,6 @@ lemma subformula.mem_cl {agents : Type} [hN : Fintype agents]
   {φ ψ : formCLC agents} (h : subformula φ ψ) : φ ∈ cl ψ :=
 h.cl_subset (cl_contains_phi φ)
 
-lemma test (h: List.Mem 1 []) : False := by
-  -- simp at h
-  exact List.ne_nil_of_mem h (by rfl)
-
--- set_option maxHeartbeats 200000000
 lemma subformula.in_cl_sub {agents : Type} [hN : Fintype agents]
   {φ ψ χ : formCLC agents} (hcl : ψ ∈ cl φ) (hsub : subformula χ ψ) : χ ∈ cl φ := by
   induction' hsub with _ _ _ _ hsub1 hsub2 hih1 hih2

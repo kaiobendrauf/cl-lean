@@ -32,7 +32,8 @@ Finset.attach (Finset.filter
   (Finset.powerset (cl φ)))
 
 /-- Allows us to write `φ ∈ sf` instead of `φ ∈ sf.1.1` -/
-protected instance S_f.SetLike {agents form : Type} (m : modelCL agents) [hm : SetLike m.f.states form]
+protected instance S_f.SetLike {agents form : Type}
+  (m : modelCL agents) [hm : SetLike m.f.states form]
   (cl : form → Finset (form)) (φ : form) :
   SetLike (S_f m cl φ) (form) :=
 { coe            := λ sf => sf.1.1

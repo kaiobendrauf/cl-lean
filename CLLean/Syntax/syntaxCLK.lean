@@ -1,6 +1,6 @@
 /-
 Authors: Kai Obendrauf
-Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge 
+Following the paper "Coalition Logic with Individual, Distributed and Common Knowledge
 by Thomas Ågotnes and Natasha Alechina
 and the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
@@ -11,9 +11,9 @@ as well as the axioms for CLK and instances of the differenct applicaple formula
 
 import CLLean.Syntax.formula
 
-open Set
+open Set Logic
 
-namespace Logic
+-- namespace Logic
 
 ----------------------------------------------------------
 -- Syntax
@@ -53,7 +53,7 @@ notation:1024 "_E"       => λ G φ => (finite_conjunction (List.map (λ i => _K
 -- -- Axioms
 -- ----------------------------------------------------------
 -- Proof system for CLK
-inductive axCLK {agents : Type} : formCLK agents → Prop 
+inductive axCLK {agents : Type} : formCLK agents → Prop
 -- (Prop) Propositional tautologies
 | Prop1 {φ ψ}                 : axCLK (φ _→ (ψ _→ φ))
 | Prop2 {φ ψ χ}               : axCLK ((φ _→ (ψ _→ χ)) _→ ((φ _→ ψ) _→ (φ _→ χ)))
@@ -71,10 +71,10 @@ inductive axCLK {agents : Type} : formCLK agents → Prop
 -- (M) [G](φ ∧ ψ) → [G]φ
 | M     {φ ψ} {G}             : axCLK ((_[G] (φ _∧ ψ)) _→ _[G] φ)
 -- (S) ([G]φ ∧ [F]ψ) → [G ∪ F](φ ∧ ψ), when G ∩ F = ∅
-| S     {φ ψ} {G F} 
+| S     {φ ψ} {G F}
         (hInt : G ∩ F = ∅)    : axCLK (((_[G]φ) _∧ (_[F]ψ)) _→ _[G ∪ F] (φ _∧ ψ))
 -- (MP) ⊢ φ, φ → ψ ⇒ ⊢ ψ
-| MP    {φ ψ} 
+| MP    {φ ψ}
         (hImp : axCLK (φ _→ ψ))
         (hL : axCLK φ)        : axCLK (ψ)
 -- (Eq) ⊢ φ ↔ ψ ⇒ ⊢ [G]φ ↔ [G]ψ
@@ -124,4 +124,4 @@ instance KformulaCLK {agents : Type} : Kformula agents (formCLK agents) :=
   Five  := @axCLK.Five agents
   RN    := @axCLK.RN agents, }
 
-end Logic
+-- end Logic
