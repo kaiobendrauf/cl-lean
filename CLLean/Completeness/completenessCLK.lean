@@ -361,5 +361,4 @@ theorem completenessCLK {agents : Type} [ha : Nonempty agents] [hN : Fintype age
   rw [hs]
   exact hnφ
 
-
 end canonical

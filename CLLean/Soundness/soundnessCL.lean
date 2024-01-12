@@ -3,8 +3,7 @@ Authors: Kai Obendrauf
 Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the proof that CL is complete.
-Given completeness we also prove that CL does not prove ⊥
-  by coming up with a simple instance of a coalition model.
+Given completeness we also prove that CL does not prove ⊥.
 -/
 
 import CLLean.Semantics.semanticsCL
@@ -96,66 +95,6 @@ theorem soundnessCL {agents : Type} (φ : formCL agents) : _⊢ φ → _⊨ φ :
 ----------------------------------------------------------
 -- CL does not prove ⊥
 ----------------------------------------------------------
--- create an example Model
-inductive single : Type
-  | one : single
-
-lemma univ_single : (Set.univ : Set single) = {single.one} :=  by
-  rw [eq_comm]
-  rw [Set.eq_univ_iff_forall]
-  intro x
-  cases x
-  simp only [mem_singleton_iff]
-
-instance single_nonempty : Nonempty single :=  by
-  apply exists_true_iff_nonempty.mp
-  apply Exists.intro single.one
-  exact trivial
-
-def m_ex {agents : Type} : modelCL agents :=
-{ f :=
-  { states := single
-    hs := single_nonempty
-    E  :=
-    { E := λ _ _ => {{single.one}}
-      liveness := by
-        intro _ _ hf
-        simp only [mem_singleton_iff] at hf
-        rw [Set.ext_iff] at hf
-        simp only [mem_empty_iff_false, mem_singleton_iff, iff_true, forall_const] at hf
-      safety := by
-          intro _ _
-          simp only [mem_singleton_iff] at *
-          exact univ_single
-      N_max := by
-          intro s X hxc
-          simp only [mem_singleton_iff] at *
-          rw [←univ_single] at *
-          have hcond : {single.one} ≠ (∅ : Set single)
-          · intro hf
-            rw [Set.ext_iff] at hf
-            simp only [compl_univ_iff, mem_singleton_iff, mem_empty_iff_false, iff_false,
-              not_true_eq_false, forall_const] at *
-          simp only [compl_univ_iff, ne_eq, singleton_ne_empty, not_false_eq_true] at *
-          by_contra
-          have hex : ∃ x, x ∈ X := nonempty_def.mp (nonempty_iff_ne_empty.mpr hxc)
-          cases hex
-          cases s
-          case _ h s hs =>
-            rw [←singleton_subset_iff] at hs
-            rw [←univ_single] at hs
-            exact h (univ_subset_iff.mp hs)
-      mono := by
-          intro _ _ _ _ hxy hx
-          simp only [← univ_single, mem_singleton_iff] at *
-          rw [hx] at hxy
-          exact univ_subset_iff.mp hxy
-      superadd := by
-        intro _ _ _ _ _ hX hY _
-        simp only [mem_singleton_iff] at *
-        simp only [hX, hY, inter_self] } },
-  v := λ _ => {}, }
-
 
 lemma nprfalseCL {agents : Type} : ¬ (_⊢ (_⊥ : formCL agents)) := by
   -- prove with the contrapositive of soundness : ¬ ⊨ ⊥
@@ -165,4 +104,4 @@ lemma nprfalseCL {agents : Type} : ¬ (_⊢ (_⊥ : formCL agents)) := by
   -- ⊨ ⊥ only holds if no model with states exists
   simp[global_valid, valid_m, s_entails_CL] at hf
   -- we create an example model with a single state to prove a contradiction
-  exact hf (m_ex) single.one
+  exact hf (m_ex_CM) single.one

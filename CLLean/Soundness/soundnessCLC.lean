@@ -3,8 +3,7 @@ Authors: Kai Obendrauf
 Following the thesis "A Formalization of Dynamic Epistemic Logic" by Paula Neeley
 
 This file contains the proof that CLC is complete.
-Given completeness we also prove that CLC does not prove ⊥
-  by coming up with a simple instance of a coalition model.
+Given completeness we also prove that CLC does not prove ⊥.
 -/
 
 import Mathlib.Tactic
@@ -178,75 +177,11 @@ theorem soundnessCLC {agents: Type} [hN : Fintype agents] (φ : formCLC agents) 
 ----------------------------------------------------------
 -- CL does not prove ⊥
 ----------------------------------------------------------
--- create an example Model
-inductive single : Type
-  | one: single
-
-lemma univ_single : (Set.univ: Set single) = {single.one} :=  by
-  rw [eq_comm, Set.eq_univ_iff_forall]
-  intro x
-  cases x
-  simp only [mem_singleton_iff]
-
-instance single_nonempty : Nonempty single :=  by
-  apply exists_true_iff_nonempty.mp
-  apply Exists.intro single.one
-  exact trivial
-
-instance single_finite : Fintype single :=  by
-  refine {elems := {single.one}, complete := (by simp only [Finset.mem_singleton, forall_const])}
-
-def e_ex {agents : Type} : playable_effectivity_struct agents single :=
-{ E := λ _ _ => {{single.one}}
-  liveness :=  by
-    intros _ _ hf
-    simp only [mem_singleton_iff, ext_iff, mem_empty_iff_false, iff_true, forall_const] at hf
-
-  safety:= by
-      intro _ _
-      simp only [mem_singleton_iff]
-      exact univ_single
-
-  N_max := by
-      intros s X hxc
-      simp only [← univ_single, mem_singleton_iff, compl_univ_iff] at *
-      by_contra
-      rename_i h
-      have hex: ∃ x, x ∈ X := nonempty_def.mp (Set.nonempty_iff_ne_empty.mpr hxc)
-      cases' hex with s hs
-      cases s
-      rw [←singleton_subset_iff, ←univ_single] at hs
-      exact h (univ_subset_iff.mp hs)
-  mono := by
-      intro _ _ _ _ hxy hx
-      simp only [← univ_single, mem_singleton_iff] at *
-      rw [hx] at hxy
-      exact univ_subset_iff.mp hxy
-  superadd := by
-    intro _ _ _ _ _ hX hY _
-    simp only [mem_singleton_iff] at *
-    simp only [hX, hY, inter_self] }
-
-def m_ex {agents : Type} : modelECL agents  :=
-{ f :=
-  { states := single
-    hs := single_nonempty
-    E  :=  truly_playable_from_finite e_ex
-    rel := λ _ s => {s}
-    rfl := by simp only [mem_singleton_iff, forall_const, implies_true]
-    sym := by
-      intro i s t _
-      simp only [mem_singleton_iff]
-    trans := by
-      intro i s t u _ _
-      simp only [mem_singleton_iff] }
-  v := λ _ => {} }
-
 
 lemma nprfalseCLC {agents : Type} [hN : Fintype agents] :
   ¬ (axCLC (formCLC.bot : formCLC agents )) := by
   apply (mt (soundnessCLC (@formCLC.bot agents)))
   intro hf
   simp only [global_valid, valid_m, s_entails_CLC] at hf
-  apply hf (m_ex)
+  apply hf (m_ex_ECM)
   exact single.one
