@@ -23,10 +23,10 @@ namespace Logic
 
 -- propositional formula
 class Pformula (form : Type) :=
-(bot : form)
-(var : ℕ → form)
-(and : form → form → form)
-(imp : form → form → form)
+  (bot : form)
+  (var : ℕ → form)
+  (and : form → form → form)
+  (imp : form → form → form)
 
 notation  "⊥'" => Pformula.bot
 infix :79 "∧'" => Pformula.and

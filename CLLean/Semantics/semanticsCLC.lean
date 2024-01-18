@@ -17,22 +17,22 @@ open Logic formCLC Set
 ----------------------------------------------------------
 def C_path {agents : Type} {m : modelECL agents} :
     List agents → List m.f.states →  m.f.states →  m.f.states → Prop
-  | List.nil,  _,         s, t  => false
-  | (i :: is), List.nil,  s, t  => t ∈ (m.f.rel i s)
-  | (i :: is), (u :: us), s, t => (u ∈ (m.f.rel i s) ∧ (C_path is us u t))
+  | List.nil,  _,         s, t => false
+  | (i :: is), List.nil,  s, t => t ∈ m.f.rel i s
+  | (i :: is), (u :: us), s, t => u ∈ m.f.rel i s ∧ C_path is us u t
 
 ----------------------------------------------------------
 -- Semantic Entailment
 ----------------------------------------------------------
 
 def s_entails_CLC {agents : Type} (m : modelECL agents) (s : m.f.states) :
-  formCLC agents → Prop
+    formCLC agents → Prop
   | .bot       => false
-  | (var n)   => s ∈ m.v n
-  | (imp φ ψ) => (s_entails_CLC m s φ) → (s_entails_CLC m s ψ)
-  | (.and φ ψ) => (s_entails_CLC m s φ) ∧ (s_entails_CLC m s ψ)
-  | (_[G] φ)   => {t : m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E (s) (G)
-  | (.K i φ)   => ∀ t : m.f.states, t ∈ (m.f.rel i s) → s_entails_CLC m t φ
+  | (var n)    => s ∈ m.v n
+  | (imp φ ψ)  => s_entails_CLC m s φ → s_entails_CLC m s ψ
+  | (.and φ ψ) => s_entails_CLC m s φ ∧ s_entails_CLC m s )
+  | (_[G] φ)   => {t : m.f.states | s_entails_CLC m t φ} ∈ m.f.E.E s G
+  | (.K i φ)   => ∀ t : m.f.states, t ∈ m.f.rel i s → s_entails_CLC m t φ
   | (.C G φ)   => ∀ t : m.f.states, (∃ la, (∀ a ∈ la, a ∈ G) ∧ ∃ ls, C_path la ls s t) →
                     s_entails_CLC m t φ
 

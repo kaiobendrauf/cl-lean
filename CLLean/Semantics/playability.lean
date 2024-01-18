@@ -23,17 +23,17 @@ open Set
 -- Effectivity Structures Type
 ----------------------------------------------------------
 @[simp] def effectivity_struct (agents states : Type) :=
-  states → (Set agents) → (Set (Set (states)))
+  states → Set agents → Set (Set states)
 
 ----------------------------------------------------------
 -- Definitions N maximality, regularity and principal
 ----------------------------------------------------------
 
-def N_max {agents states : Type} (E : (effectivity_struct agents states)) :=
-∀ s : states, ∀ X : Set states, (Xᶜ ∉ E (s) (∅)) → (X ∈ E (s) (univ))
+def N_max {agents states : Type} (E : effectivity_struct agents states) :=
+∀ s : states, ∀ X : Set states, Xᶜ ∉ E s ∅ → X ∈ E s univ
 
-def regular {agents states : Type} (E : (effectivity_struct agents states)) :=
-∀ s : states, ∀ G : (Set agents), ∀ X : (Set states), (X ∈ E (s) (G)) → (Xᶜ ∉ E (s) (Gᶜ))
+def regular {agents states : Type} (E : effectivity_struct agents states) :=
+∀ s : states, ∀ G : Set agents, ∀ X : Set states, X ∈ E s G → Xᶜ ∉ E s Gᶜ
 
 ----------------------------------------------------------
 -- Playability Structures

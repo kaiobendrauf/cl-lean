@@ -26,10 +26,10 @@ namespace canonical
 ----------------------------------------------------------
 -- S_f := {(s ∩ cl(φ)) | s ∈ S}
 def S_f {agents form : Type} (m : modelCL agents) [SetLike m.f.states form]
-  (cl : form → Finset (form)) (φ : form) : Type :=
-Finset.attach (Finset.filter
-  (λ sf => ∃ s: m.f.states, {x | x ∈ cl φ ∧ x ∈ s} = {x | x ∈ sf})
-  (Finset.powerset (cl φ)))
+    (cl : form → Finset (form)) (φ : form) : Type :=
+  Finset.attach (Finset.filter
+    (λ sf => ∃ s: m.f.states, {x | x ∈ cl φ ∧ x ∈ s} = {x | x ∈ sf})
+    (Finset.powerset (cl φ)))
 
 /-- Allows us to write `φ ∈ sf` instead of `φ ∈ sf.1.1` -/
 protected instance S_f.SetLike {agents form : Type}
@@ -285,9 +285,9 @@ lemma s_f_closed {agents form : Type} [ha : Nonempty agents]
 -- phi sf
 ----------------------------------------------------------
 noncomputable def phi_s_f {agents form : Type} [Pformula form]
-  {m : modelCL agents} [SetLike m.f.states form]
-  {cl : form → Finset (form)} {φ : form} (sf : S_f m cl φ) : form :=
-finite_conjunction (Finset.toList (sf.1))
+    {m : modelCL agents} [SetLike m.f.states form]
+    {cl : form → Finset (form)} {φ : form} (sf : S_f m cl φ) : form :=
+  finite_conjunction (Finset.toList (sf.1))
 
 -- phi sf ∈ s when M = canonical model
 lemma phi_s_f_in_s {agents form : Type} [ha : Nonempty agents]
@@ -363,10 +363,10 @@ lemma phi_s_f_conj_contains {agents form : Type} [pf : Pformula_ax form]
 -- phi X (given a List)
 ----------------------------------------------------------
 noncomputable def phi_X_list {agents form : Type} [Pformula form]
-  {m : modelCL agents} [SetLike m.f.states form] {cl : form → Finset (form)} {φ : form} :
-  List (S_f m cl φ) → List (form)
-| List.nil   => List.nil
-| (sf :: ss) => ((phi_s_f sf) :: phi_X_list ss)
+    {m : modelCL agents} [SetLike m.f.states form] {cl : form → Finset (form)} {φ : form} :
+    List (S_f m cl φ) → List (form)
+  | List.nil   => List.nil
+  | (sf :: ss) => ((phi_s_f sf) :: phi_X_list ss)
 
 -- if sf ∈ X, then phi sf is one of the disjuncts in phi X
 lemma phi_X_list_contains {agents form : Type} [pf : Pformula form]
@@ -500,9 +500,9 @@ lemma nk_phi_X_list_exists {agents form : Type} [ha : Nonempty agents]
 -- phi X (given a Finset)
 ----------------------------------------------------------
 noncomputable def phi_X_finset {agents form : Type} [Pformula form]
-  {m : modelCL agents} [SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
-  (X : Finset (S_f m cl φ)) : form :=
-finite_disjunction (phi_X_list (Finset.toList X))
+    {m : modelCL agents} [SetLike m.f.states form] {cl : form → Finset (form)} {φ : form}
+    (X : Finset (S_f m cl φ)) : form :=
+  finite_disjunction (phi_X_list (Finset.toList X))
 
 -- X ⊆ Y ⇒ ⊢ phi X → phi Y
 lemma phi_X_subset_Y_imp {agents form : Type} [pf : Pformula_ax form]

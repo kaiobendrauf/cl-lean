@@ -37,9 +37,9 @@ structure frameECL (agents : Type) :=
 (hs        : Nonempty states)
 (E         : truly_playable_effectivity_struct agents states)
 (rel       : agents → states → Set states)
-(rfl       : ∀ i s, s ∈ (rel i s))
-(sym       : ∀ i s t, t ∈ (rel i s) → s ∈ (rel i t))
-(trans     : ∀ i s t u, t ∈ (rel i s) → u ∈ (rel i t) → u ∈ (rel i s))
+(rfl       : ∀ i s, s ∈ rel i s)
+(sym       : ∀ i s t, t ∈ rel i s → s ∈ rel i t)
+(trans     : ∀ i s t u, t ∈ rel i s → u ∈ rel i t → u ∈ rel i s)
 
 structure modelECL (agents : Type) :=
 (f : frameECL agents)

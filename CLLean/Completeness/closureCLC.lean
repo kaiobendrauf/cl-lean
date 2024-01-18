@@ -17,9 +17,9 @@ open Classical Set axCLC formCLC
 -- Filtration closure cl
 ----------------------------------------------------------
 noncomputable def cl_C {agents : Type} [Fintype agents] (G : Set (agents))
-  (φ : formCLC agents) : Finset (formCLC agents) :=
-Finset.image (λ i => _K (i) (_C G φ)) (toFinset G) ∪
-  Finset.image (λ i => (_¬ _K (i) (_C G φ))) (toFinset G)
+    (φ : formCLC agents) : Finset (formCLC agents) :=
+  Finset.image (λ i => _K (i) (_C G φ)) (toFinset G) ∪
+    Finset.image (λ i => (_¬ _K (i) (_C G φ))) (toFinset G)
 
 noncomputable def cl {agents : Type} [Fintype agents] :
   formCLC agents → Finset (formCLC agents)
